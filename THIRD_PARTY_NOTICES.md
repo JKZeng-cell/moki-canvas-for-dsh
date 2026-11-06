@@ -92,3 +92,5 @@ Inter and Noto Sans SC use the SIL Open Font License 1.1. Their original license
 ## Demonstration assets
 
 The built-in introduction, camping checklist, short synthetic video and audio example were created for this project. The cover illustrations were generated for the project; the interface images are real captures of the bundled demo.
+
+The DeepSeek Harness whale, wordmark and HARNESS badge on the promotional covers are referenced from the application's bundled `renderer/assets/welcome-brand.svg`. These marks identify the host application and belong to their respective owner.
