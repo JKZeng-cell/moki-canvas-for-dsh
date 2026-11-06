@@ -1,0 +1,220 @@
+/* DSH secondary chrome. Scope to controls, never the canvas or document contents.
+   Include body portals as well as #root (e.g. the board card action menu). */
+html[data-dsh-embed] {
+  /* Compact controls supply their own dimensions; do not inherit the desktop 40px floor. */
+  --moki-button-min-height: 0px;
+  --dsh-focus: #5d7ce8;
+  --dsh-input-focus-border: color-mix(in srgb, var(--dsh-focus) 72%, var(--dsh-line));
+  --dsh-input-focus-ring: color-mix(in srgb, var(--dsh-focus) 12%, transparent);
+  --dsh-danger: #c04444;
+  --dsh-danger-bg: #fff1f1;
+  --dsh-primary-bg: #303030;
+  --dsh-primary-text: #fff;
+  --dialog-header-background: var(--dsh-surface);
+  --dialog-header-border: var(--dsh-line);
+  --dialog-header-ink: var(--dsh-label);
+  --dialog-header-muted: var(--dsh-muted);
+  --dialog-close-background: transparent;
+  --dialog-close-hover: var(--dsh-hover);
+}
+html[data-dsh-embed][data-color-scheme=dark] {
+  --dsh-focus: #8ca5ff;
+  --dsh-danger: #f09494;
+  --dsh-danger-bg: #382525;
+  --dsh-primary-bg: #ddd;
+  --dsh-primary-text: #202020;
+}
+
+html[data-dsh-embed] #root [aria-label="白板缩放工具"] > .dsh-whiteboard-materials {
+  display: flex; align-items: center; justify-content: center; flex: 0 0 auto; width: auto; gap: 4px; padding: 0 5px; font-size: 11px;
+}
+.dsh-material-count { color: var(--dsh-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.dsh-file-preview-text { margin: 0; height: 100%; overflow: auto; padding: 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.7; color: var(--dsh-label); background: var(--dsh-canvas); }
+.dsh-file-preview-message { padding: 16px; font-size: 12px; color: var(--dsh-muted); }
+
+html[data-dsh-embed][data-color-scheme] :is(#root, body) {
+  & :is(.moki-menu-surface, [data-dsh-ui=panel], [data-dsh-ui=dialog], [data-dsh-ui=preview-chrome], .native-mcp-modal) {
+    color: var(--dsh-label) !important; background: var(--dsh-surface) !important;
+    border-color: var(--dsh-line) !important; border-radius: 8px;
+    box-shadow: 0 4px 20px #00000012 !important; backdrop-filter: none;
+    font-size: 12px; line-height: 1.5; font-weight: 400; scrollbar-width: thin;
+    scrollbar-color: var(--dsh-selected) transparent; overscroll-behavior: contain;
+
+    & :is(h1, h2, h3, h4, b, strong, label, legend, button, [class*=font-bold], [class*=font-black], [class*=font-extrabold], [class*=font-semibold]) { font-weight: 500; }
+    & :is(h2, h3) { font-size: 13px; }
+    & :is(p, span, b, strong, h2, h3, h4, label, legend, small, input, select, textarea, button, kbd)[class*="text-[#"] {
+      color: var(--dsh-label) !important;
+    }
+    & :is(p, small, [class*="text-[#8"], [class*="text-[#9"], [class*="text-[#a0"]) {
+      color: var(--dsh-muted) !important;
+    }
+    & :is([class*="border-[#"], [class*="border-white"], .moki-menu-column-divider, hr) { border-color: var(--dsh-line) !important; }
+    & :is([class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-3xl"]) { border-radius: 5px; }
+    & :where(:is([class~="bg-white"], [class*="bg-[#f"], [class*="bg-[#e"]):not(button):not([role=button]):not([style*="background"]):not([data-page-group-accent])) {
+      background: var(--dsh-canvas) !important;
+    }
+    & :is(button, [role=button]):where(:not([style*="background"]):not(.native-whiteboard-color-swatch)) {
+      color: var(--dsh-label) !important; border-radius: 4px; font-size: 12px;
+      box-shadow: none !important; background: transparent !important;
+    }
+    & :is(button, [role=button]):where(:not(:disabled):not([style*="background"]):not(.native-whiteboard-color-swatch)):hover {
+      background: var(--dsh-hover) !important;
+    }
+    & :is(button, [role=button]):where(:not([style*="background"]):not(.native-whiteboard-color-swatch)):is([aria-selected=true], [aria-checked=true], [aria-pressed=true], [aria-current=page]) {
+      background: var(--dsh-selected) !important; color: var(--dsh-label) !important;
+    }
+    & :is(button, [role=button], input:is([type=checkbox], [type=radio], [type=range], [type=color])):focus-visible {
+      outline: 2px solid var(--dsh-focus); outline-offset: -2px;
+    }
+    & button:disabled { cursor: default; opacity: .4; }
+    & :is(input:where(:not([type=checkbox], [type=radio], [type=range], [type=color])), select, textarea) {
+      min-width: 0; min-height: 30px; border-radius: 5px; font-size: 12px; font-weight: 400;
+      border-color: var(--dsh-line) !important; background: var(--dsh-canvas) !important; color: var(--dsh-label) !important;
+      transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+
+      &:focus {
+        outline: 1px solid var(--dsh-input-focus-border); outline-offset: -1px;
+        border-color: var(--dsh-input-focus-border) !important; background: var(--dsh-surface) !important;
+        box-shadow: 0 0 0 2px var(--dsh-input-focus-ring) !important;
+      }
+    }
+    & input::placeholder, & textarea::placeholder { color: var(--dsh-muted); opacity: 1; }
+    & :is(input[type=checkbox], input[type=radio], input[type=range]) { accent-color: var(--dsh-focus); }
+    & :is(button.manager-primary, button[class~="bg-[#242a40]"], button[class~="bg-[#625bc5]"]) {
+      color: var(--dsh-primary-text) !important; background: var(--dsh-primary-bg) !important;
+    }
+    & :is(button.manager-primary, button[class~="bg-[#242a40]"], button[class~="bg-[#625bc5]"]):not(:disabled):hover { color: var(--dsh-primary-text) !important; background: var(--dsh-primary-bg) !important; filter: brightness(.93); }
+    & :is(.is-danger, [role=alert], .manager-dialog-error, button[class*="text-[#b"], button[class*="text-[#c"], [class~="bg-[#c43e68]"]) {
+      color: var(--dsh-danger) !important;
+    }
+    & :is(.is-danger, button[class~="bg-[#c43e68]"]):not(:disabled):hover { background: var(--dsh-danger-bg) !important; }
+    & .moki-menu-divider { height: 1px; background: var(--dsh-line); margin-block: 4px; }
+    & kbd { color: var(--dsh-muted) !important; background: var(--dsh-canvas) !important; border-color: var(--dsh-line) !important; box-shadow: none; font-weight: 400; }
+  }
+
+  /* A search field is one control, including its icon and optional clear button. */
+  & :is([data-dsh-input-group], .manager-shell .manager-search) {
+    border-radius: 5px; background: var(--dsh-canvas) !important;
+    outline: 1px solid var(--dsh-line); outline-offset: -1px;
+    transition: outline-color 120ms ease, border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+
+    &:focus-within {
+      outline-color: var(--dsh-input-focus-border); border-color: var(--dsh-input-focus-border) !important;
+      background: var(--dsh-surface) !important; box-shadow: 0 0 0 2px var(--dsh-input-focus-ring) !important;
+    }
+    & > svg { color: var(--dsh-muted); transition: color 120ms ease; }
+    &:focus-within > svg { color: var(--dsh-focus) !important; }
+    & > input, & > input:is(:focus, :focus-visible) {
+      background: transparent !important; border-color: transparent !important;
+      outline: none !important; box-shadow: none !important;
+    }
+  }
+
+  & .moki-menu-surface { border-radius: 6px; max-width: calc(100vw - 16px); }
+  & [data-whiteboard-toolbox][data-dsh-tools-expanded=true] { flex-wrap: wrap; width: max-content; }
+  & .moki-menu-surface :is([role=menuitem], [role=menuitemradio]) { min-height: 30px; height: auto; padding: 6px 8px; font-size: 12px; }
+  & [aria-label="形状选择"] [role=menuitemradio] { padding-inline: 5px; gap: 5px; }
+  & [aria-label="思维导图模板"] h4 { color: var(--dsh-muted) !important; font-size: 11px; }
+  & .board-more-menu { padding: 4px; }
+  & .board-more-menu button { min-height: 30px; padding: 6px 8px; }
+  & .moki-menu-surface [data-whiteboard-color-menu] { box-shadow: var(--dsh-shadow); }
+  & [data-whiteboard-page-toolbar] [aria-label="白板页面管理"] { width: 288px; }
+  & [aria-label="白板页面列表"] :is(li, [data-page-group-header]) { border-radius: 4px; }
+  & [aria-label="白板页面列表"] li:has(> button[aria-current=page]) { background: var(--dsh-selected) !important; border-color: var(--dsh-line) !important; }
+  & [aria-label="白板快捷键列表"] { padding: 10px; }
+  & [aria-label="白板快捷键列表"] > div:last-child { gap: 2px; }
+  & [aria-label="白板快捷键列表"] > div:last-child > div { background: transparent !important; border-radius: 3px; padding: 5px 6px; }
+
+  & [data-dsh-ui=panel] { width: min(288px, calc(100% - 16px)); border-radius: 6px; }
+  & [aria-label="当前页面素材列表"] > header { height: 38px; padding-inline: 10px; }
+  & [aria-label="当前页面素材列表"] > header span { border-radius: 4px; padding: 1px 5px; font-weight: 400; background: var(--dsh-hover) !important; color: var(--dsh-muted) !important; }
+  & [aria-label="当前页面素材列表"] > div:nth-child(2) { padding-inline: 8px; }
+  & [aria-label="当前页面素材列表"] > div:last-child { padding: 4px; }
+  & [aria-label="当前页面素材列表"] article[role=button] { padding: 7px 6px; margin: 0; border: 0; border-radius: 4px; }
+  & [aria-label="当前页面素材列表"] article[role=button] img { width: 32px; height: 32px; border-radius: 4px; }
+  & [aria-label="当前页面素材列表"] article[role=button] > div > span:first-child { color: var(--dsh-muted) !important; background: var(--dsh-hover) !important; border-radius: 4px; }
+  & [aria-label="当前页面素材列表"] article[role=button] span[title] { font-weight: 400; font-size: 12px; }
+  & [aria-label="白板版本记录"] { padding: 10px; }
+  & [aria-label="白板版本记录"] > div > button { border-bottom: 1px solid var(--dsh-line); padding: 8px 6px; }
+  & [aria-label="白板版本记录"] > div { display: grid; gap: 2px; }
+  & [data-dsh-canvas-fullscreen=true] button[aria-label="展开素材列表"] { top: 44px; right: 8px; width: 28px; height: 28px; }
+
+  & :is(.native-modal-backdrop, [data-dsh-ui=backdrop]) {
+    position: fixed; inset: 0; padding: 8px; backdrop-filter: none; background: #0005;
+    min-width: 0; min-height: 0;
+  }
+  & [data-dsh-ui=backdrop] { z-index: 1000; }
+  & :is([data-dsh-ui=dialog], .native-mcp-modal) {
+    box-sizing: border-box; min-width: 0; max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 16px) !important; padding: 16px;
+    border: 1px solid var(--dsh-line); border-radius: 8px; overflow-y: auto;
+    box-shadow: 0 10px 40px #0003 !important;
+  }
+  & [data-dsh-ui=dialog] { width: min(440px, calc(100vw - 16px)); scrollbar-gutter: stable; }
+  & [data-dsh-ui=dialog][aria-label^="预览 "] { padding: 10px; overflow: hidden; scrollbar-gutter: auto; }
+  & [data-dsh-ui=dialog][aria-label^="预览 "] > header { flex-shrink: 0; }
+  & :is([data-dsh-ui=dialog], .native-mcp-modal) :is(h2, h3) { font-size: 14px; font-weight: 500; }
+  & [data-dsh-ui=dialog] p { font-size: 12px; font-weight: 400 !important; line-height: 1.65; }
+  & .native-mcp-modal { width: min(520px, calc(100vw - 16px)); }
+  & .native-mcp-modal h2 { margin: 0 32px 16px 0; }
+  & .native-mcp-modal p { font-size: 12px; line-height: 1.65; }
+  & .native-mcp-modal pre { margin: 12px 0; padding: 10px; border: 1px solid var(--dsh-line); border-radius: 5px; background: var(--dsh-canvas) !important; color: var(--dsh-label); }
+  & .native-modal-close { top: 10px; right: 10px; display: grid; place-items: center; width: 28px; height: 28px; min-width: 28px; min-height: 28px; padding: 0; }
+  & .manager-dialog { max-width: 400px !important; }
+  & .manager-dialog label { font-size: 12px; }
+  & .manager-dialog input { padding: 7px 9px; margin-top: 7px; }
+  & .manager-dialog-actions { gap: 8px; margin-top: 18px; }
+  & .manager-dialog-actions button { min-height: 30px; padding: 5px 12px; }
+  & .native-mcp-modal .manager-primary { min-height: 30px; padding: 6px 12px; }
+  & .moki-dialog-header { margin-inline: 0; padding-inline: 0; border-radius: 0; background: transparent !important; }
+  & .moki-dialog-header :is(h2, h3, b) { font-weight: 500; font-size: 13px; }
+  & .moki-dialog-header p { font-size: 11px; line-height: 1.5; }
+
+  & .native-settings-modal { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  & .settings-dialog-header { flex-shrink: 0; padding: 14px 14px 0; border-bottom: 1px solid var(--dsh-line); }
+  & .settings-dialog-header > svg { display: none; }
+  & .settings-dialog-header h2 { font-size: 14px; margin: 0 32px 12px 0; }
+  & .settings-dialog-scroll { min-height: 0; overflow-y: auto; padding: 10px 14px 14px; scrollbar-width: thin; }
+  & .settings-tabs { padding: 0; margin: 0; gap: 4px; border-radius: 0; background: transparent !important; flex-wrap: nowrap; }
+  & .settings-tabs button { flex: 1 1 0; padding: 8px 6px; font-size: 12px; border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent; }
+  & .settings-tabs button[aria-selected=true] { background: transparent !important; border-bottom-color: var(--dsh-label); }
+  & .settings-theme-options, & .mcp-transport-switch { border-radius: 5px; padding: 3px; margin: 12px 0; background: var(--dsh-canvas) !important; border-color: var(--dsh-line); }
+  & .settings-theme-options button, & .mcp-transport-switch button { padding: 6px 8px; min-height: 30px; }
+  & .native-settings-modal h3 { font-size: 13px; margin: 16px 0 6px; }
+  & .native-settings-modal label { font-size: 12px; margin: 12px 0 6px; }
+  & .settings-toggle-row { gap: 12px; padding: 12px 0; border-color: var(--dsh-line) !important; }
+  & .settings-toggle-row strong { font-size: 12px; }
+  & .settings-toggle-row small { font-size: 11px; margin-top: 3px; line-height: 1.6; }
+  & .settings-toggle-row input { height: 20px; width: 34px; min-height: 0; background: var(--dsh-selected); }
+  & .settings-toggle-row input::before { width: 16px; height: 16px; }
+  & .settings-toggle-row input:checked { background: var(--dsh-focus); }
+  & .settings-toggle-row input:checked::before { transform: translateX(14px); }
+  & :is(.settings-secondary, .settings-cache-input button) { border-color: var(--dsh-line) !important; border-radius: 5px; padding: 7px 10px; }
+  & .settings-cache-input input { padding: 6px 8px; }
+  & .settings-about { margin-top: 16px; padding-top: 12px; border-color: var(--dsh-line) !important; font-size: 11px; color: var(--dsh-muted); }
+  & .settings-about a { color: var(--dsh-muted); font-weight: 400; }
+  & :is(.settings-lan-sharing, .settings-share-link, .settings-shared-empty, .settings-share-stats) { color: var(--dsh-muted); border-color: var(--dsh-line) !important; background: transparent !important; }
+  & .settings-share-link { padding: 10px; border-radius: 5px; }
+  & .board-share-dialog input { padding: 7px 9px; }
+  & [data-dsh-resource-picker] > header { gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  & [data-dsh-resource-picker] { width: min(720px, calc(100vw - 16px)); }
+  & [data-dsh-resource-picker] > footer { gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; flex-shrink: 0; }
+  & [data-dsh-resource-picker] [role=treeitem] { border-radius: 4px; }
+  & [data-dsh-preview] { border: 1px solid var(--dsh-line); border-radius: 8px; background: var(--dsh-surface) !important; color: var(--dsh-label); padding: 10px; max-width: calc(100% - 16px) !important; max-height: calc(100% - 16px) !important; }
+  & [data-dsh-ui=preview-chrome] { border: 0; box-shadow: none !important; border-radius: 0; }
+  & [data-dsh-ui=preview-chrome] button { height: 28px; width: auto; min-width: 28px; }
+}
+
+@media (max-width: 500px) {
+  html[data-dsh-embed] #root [aria-label="白板缩放工具"] > .dsh-whiteboard-materials { width: 24px; padding: 0; }
+  html[data-dsh-embed] .dsh-whiteboard-materials > span { display: none; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog] { padding: 12px; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] { padding: 8px; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] > header { flex-wrap: wrap; gap: 8px; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] > header > div:first-child { flex: 1; }
+  html[data-dsh-embed] :is(#root, body) .manager-section-title { gap: 10px; }
+  html[data-dsh-embed] :is(#root, body) .manager-search { width: 100%; padding: 7px 9px; }
+  html[data-dsh-embed] :is(#root, body) .manager-search input { width: 100%; max-width: none; }
+  html[data-dsh-embed] :is(#root, body) .whiteboard-canvas-frame:has([data-dsh-tools-expanded=true]) [data-dsh-ui=panel],
+  html[data-dsh-embed] :is(#root, body) [data-dsh-canvas-fullscreen=true]:has([data-dsh-tools-expanded=true]) [data-dsh-ui=panel] { bottom: 88px; }
+}

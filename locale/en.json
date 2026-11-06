@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "MOKI Canvas",
+    "description": "A local-first infinite canvas for DSH, with mind maps, media, and two-way AI collaboration."
+  },
+  "title": "Canvas",
+  "open": "Open MOKI Canvas",
+  "reload": "Reload the whiteboard",
+  "external": "Open in a browser",
+  "loading": "Starting the whiteboard…",
+  "failed": "The whiteboard service is not reachable",
+  "failedHint": "It starts with the Harness. Reload this tab, or open the address directly.",
+  "retry": "Retry"
+}

@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "MOKI 白板",
+    "description": "在右侧面板里运行 MOKI 无限白板，并让 Agent 读取和编辑白板内容与画布选区。"
+  },
+  "title": "白板",
+  "open": "打开 MOKI 白板",
+  "reload": "重新加载白板",
+  "external": "在浏览器中打开",
+  "loading": "正在启动白板…",
+  "failed": "无法连接白板服务",
+  "failedHint": "白板服务随 Harness 启动。可以重新加载此标签页，或直接打开该地址。",
+  "retry": "重试"
+}

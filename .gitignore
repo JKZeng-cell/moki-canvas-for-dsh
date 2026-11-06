@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+vendor/moki/dist/
+.dev/
+artifacts/
+*.log
+*.db
+*.db-shm
+*.db-wal
+.env*

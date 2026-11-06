@@ -1,0 +1,129 @@
+/* DSH chrome is intentionally opt-in. Canvas objects retain their own colors. */
+html[data-dsh-embed] {
+  --dsh-surface: #fff;
+  --dsh-canvas: #fafafa;
+  --dsh-line: #e6e6e6;
+  --dsh-label: #333;
+  --dsh-muted: #858585;
+  --dsh-hover: #f1f1f1;
+  --dsh-selected: #e8e8e8;
+  --dsh-shadow: 0 2px 8px #0000000d;
+}
+html[data-dsh-embed][data-color-scheme=dark] {
+  --dsh-surface: #202020;
+  --dsh-canvas: #191919;
+  --dsh-line: #343434;
+  --dsh-label: #ddd;
+  --dsh-muted: #929292;
+  --dsh-hover: #2d2d2d;
+  --dsh-selected: #3a3a3a;
+  --dsh-shadow: 0 2px 8px #0002;
+}
+html[data-dsh-embed] #root .moki-native-page { padding: 0; background: var(--dsh-canvas); }
+html[data-dsh-embed] #root .whiteboard-canvas-frame { border: 0 !important; border-radius: 0; box-shadow: none !important; }
+html[data-dsh-embed] #root .native-whiteboard.native-whiteboard { background: var(--dsh-canvas) !important; }
+.dsh-whiteboard-header { position: relative; display: flex; align-items: center; flex: 0 0 36px; gap: 2px; min-width: 0; height: 36px; padding: 4px 112px 4px 6px; color: var(--dsh-label); background: var(--dsh-canvas); border-bottom: 1px solid var(--dsh-line); z-index: 80; }
+/* Override the standalone button minimum so state backgrounds stay inside the compact row. */
+.dsh-whiteboard-header > button { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; min-height: 28px; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
+.dsh-whiteboard-header > button:not(:disabled):hover { background: var(--dsh-hover); }
+.dsh-whiteboard-header > button:is([aria-expanded=true], [aria-pressed=true]),
+.dsh-whiteboard-header > button:is([aria-expanded=true], [aria-pressed=true]):hover { background: var(--dsh-selected); }
+.dsh-whiteboard-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 5px; font-size: 12px; font-weight: 500; }
+.dsh-whiteboard-save { color: var(--dsh-muted) !important; }
+.dsh-whiteboard-save[data-state=error] { color: #df6375 !important; }
+.dsh-whiteboard-save[data-state=pending] { color: #bd8d47 !important; }
+.dsh-whiteboard-header button:focus-visible { outline: 2px solid #668bc7; outline-offset: -1px; }
+.dsh-whiteboard-actions { position: absolute; right: 112px; top: 35px; width: 190px; max-width: calc(100vw - 16px); padding: 4px; background: var(--dsh-surface); border: 1px solid var(--dsh-line); border-radius: 6px; box-shadow: 0 6px 20px #0002; max-height: calc(100dvh - 48px); overflow-y: auto; }
+.dsh-whiteboard-actions button { display: flex; align-items: center; gap: 9px; width: 100%; min-height: 30px; padding: 6px 8px; text-align: left; font-size: 12px; border-radius: 4px; cursor: pointer; }
+.dsh-whiteboard-actions button:hover { background: var(--dsh-hover); }
+.dsh-whiteboard-actions button:disabled { opacity: .4; cursor: default; }
+.dsh-whiteboard-actions hr { border: 0; border-top: 1px solid var(--dsh-line); margin: 4px; }
+
+html[data-dsh-embed] #root :is([data-whiteboard-control-surface], .moki-menu-surface, [data-whiteboard-control-button]) {
+  background: var(--dsh-surface) !important; border-color: var(--dsh-line) !important; color: var(--dsh-label) !important;
+  border-radius: 6px; box-shadow: var(--dsh-shadow) !important; backdrop-filter: none;
+}
+html[data-dsh-embed] #root :is([data-whiteboard-control-surface], .moki-menu-surface) button { border-radius: 4px; font-weight: 500; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button) { background: transparent !important; color: var(--dsh-label) !important; box-shadow: none !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button):hover { background: var(--dsh-hover) !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button):is([aria-pressed=true], [aria-expanded=true], [aria-checked=true]) { background: var(--dsh-selected) !important; }
+html[data-dsh-embed] #root [data-whiteboard-toolbox] { bottom: 10px; padding: 4px; gap: 2px; max-width: calc(100% - 16px); }
+html[data-dsh-embed] #root [data-whiteboard-toolbox] > div { position: static; gap: 2px; }
+html[data-dsh-embed] #root :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button) { width: 28px; height: 28px; min-height: 28px; flex-shrink: 0; }
+html[data-dsh-embed] #root [data-whiteboard-toolbox] > span { display: none; }
+html[data-dsh-embed] #root [data-whiteboard-toolbox] .moki-menu-surface { max-width: calc(100vw - 24px); max-height: calc(100dvh - 130px); overflow-y: auto; }
+html[data-dsh-embed] #root [data-whiteboard-toolbox][data-dsh-tools-expanded=false] > :is(
+  button[aria-label="橡皮"], div:has(> button[aria-label="插入思维导图"]),
+  div:has(> button[aria-label="添加文件"]), button[aria-label="链接"], button[aria-label="对齐工具"]
+), html[data-dsh-embed] #root [data-whiteboard-toolbox][data-dsh-tools-expanded=false] > div > button[aria-label="钢笔"] { display: none; }
+html[data-dsh-embed] #root [data-whiteboard-page-toolbar] { top: 8px; left: 8px; gap: 1px; padding: 2px; }
+html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > button { width: 24px; height: 24px; min-width: 24px; min-height: 24px; }
+html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > button:first-child { min-width: 60px; width: 100px; max-width: 100px; font-size: 11px; padding: 0 5px; }
+html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > span { margin: 0 2px; background: var(--dsh-line); }
+html[data-dsh-embed] #root [data-whiteboard-navigation] { top: 8px; right: 8px; bottom: auto; left: auto; width: 152px; gap: 6px; }
+html[data-dsh-embed] #root [data-whiteboard-navigation][data-has-navigation-actions=true] { width: 232px; }
+html[data-dsh-embed] #root [data-whiteboard-navigation] > canvas { order: 1; height: 94px; }
+html[data-dsh-embed] #root [data-dsh-navigation-open=false] > canvas { display: none; }
+html[data-dsh-embed] #root [aria-label="白板缩放工具"] { padding: 2px; height: 30px; }
+html[data-dsh-embed] #root [aria-label="白板缩放工具"] > button { width: 24px; height: 24px; min-height: 24px; flex-shrink: 0; }
+html[data-dsh-embed] #root [aria-label="白板缩放工具"] > button:focus-visible { outline: 2px solid var(--dsh-focus); outline-offset: -1px; }
+html[data-dsh-embed] #root :is([data-dsh-export], [data-dsh-shortcuts]) > button,
+html[data-dsh-embed] #root button[data-whiteboard-control-button][aria-label="画布全屏"] { display: none; }
+html[data-dsh-embed] #root [data-dsh-export] { top: 42px; right: 8px; }
+html[data-dsh-embed] #root [data-dsh-export] > .moki-menu-surface { top: 0; }
+html[data-dsh-embed] #root [data-dsh-shortcuts] { bottom: 50px; right: 8px; }
+html[data-dsh-embed] #root [data-dsh-shortcuts] > .moki-menu-surface { bottom: 0; }
+html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] [data-whiteboard-navigation] { right: 42px; }
+html[data-dsh-embed] #root button[aria-label="退出画布全屏"] { top: 8px; right: 8px; width: 28px; height: 30px; min-height: 30px; }
+html[data-dsh-embed] #root :is([aria-label="当前页面素材列表"], [aria-label="白板版本记录"]) { top: 44px; right: 8px; bottom: 52px; max-width: calc(100% - 16px); }
+html[data-dsh-embed] #root .native-whiteboard-text-toolbar { gap: 1px; }
+html[data-dsh-embed] #root [aria-label="思维导图节点操作"] { gap: 2px; padding: 3px; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas [aria-label="思维导图节点操作"] button { height: 28px; min-height: 28px; background: transparent !important; color: var(--dsh-label) !important; }
+html[data-dsh-embed] #root [aria-label="思维导图节点操作"] label { height: 28px; color: var(--dsh-label); border-color: var(--dsh-line); }
+html[data-dsh-embed] #root [aria-label="思维导图节点宽度"] { color: var(--dsh-label); border-color: var(--dsh-line); }
+html[data-dsh-embed] #root :is([aria-label="选中文字工具"], [aria-label="编辑文字字号"]) { width: max-content; max-width: calc(100% - 16px); padding: 3px; }
+html[data-dsh-embed] #root .native-whiteboard-text-toolbar { flex-wrap: wrap; justify-content: center; }
+html[data-dsh-embed] #root .native-whiteboard-text-sizes { padding: 2px; gap: 0; background: transparent !important; }
+html[data-dsh-embed] #root .native-whiteboard-text-toolbar-group { gap: 0; border-color: var(--dsh-line) !important; }
+html[data-dsh-embed] #root .native-whiteboard-text-toolbar-group:last-child { position: static; }
+html[data-dsh-embed] #root .native-whiteboard-text-toolbar [data-whiteboard-color-menu] { left: auto; right: 0; transform: none; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas .native-whiteboard-text-toolbar :is(.native-whiteboard-text-control, .native-whiteboard-text-color-trigger) { width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0 3px; background: transparent !important; color: var(--dsh-label) !important; box-shadow: none !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas .native-whiteboard-text-toolbar .native-whiteboard-text-control[aria-pressed=true] { background: var(--dsh-selected) !important; }
+
+/* The library uses the same restrained surface and tighter spacing. */
+html[data-dsh-embed] #root .manager-shell { padding: 16px; background: var(--dsh-canvas) !important; color: var(--dsh-label); }
+html[data-dsh-embed] #root .manager-header { gap: 12px; padding: 0 32px 14px 0; margin: 0; flex-wrap: wrap; }
+html[data-dsh-embed] #root .manager-header { flex-direction: row; align-items: center; gap: 8px; }
+html[data-dsh-embed] #root .manager-brand { gap: 7px; }
+html[data-dsh-embed] #root .manager-brand-icon { display: none; }
+html[data-dsh-embed] #root .manager-brand::before { content: ''; flex: 0 0 24px; width: 24px; height: 24px; mask: url('/moki-dsh-icon.svg') center / contain no-repeat; background: var(--dsh-label); }
+html[data-dsh-embed] #root .manager-header h1 { font-size: 15px; font-weight: 500; line-height: 1.3; color: var(--dsh-label); white-space: nowrap; }
+html[data-dsh-embed] #root .manager-header :is(p, .eyebrow) { display: none; }
+html[data-dsh-embed] #root .manager-brand > div > span { display: none; }
+html[data-dsh-embed] #root .manager-actions { flex-wrap: wrap; gap: 6px; }
+html[data-dsh-embed] #root .manager-actions button { min-height: 28px; padding: 5px 9px; border-radius: 5px; font-size: 12px; color: var(--dsh-label) !important; background: var(--dsh-surface) !important; border: 1px solid var(--dsh-line); box-shadow: none; }
+html[data-dsh-embed] #root .manager-actions button { padding: 5px 7px; font-size: 11px; }
+html[data-dsh-embed] #root .manager-actions button svg { width: 14px; height: 14px; }
+html[data-dsh-embed] #root .manager-content { padding: 14px; border: 1px solid var(--dsh-line) !important; border-radius: 6px; background: var(--dsh-surface) !important; box-shadow: none; }
+html[data-dsh-embed] #root .manager-section-title { margin-bottom: 12px; }
+html[data-dsh-embed] #root .board-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+html[data-dsh-embed] #root .board-card { border-color: var(--dsh-line); border-radius: 6px; background: var(--dsh-canvas) !important; box-shadow: none; }
+html[data-dsh-embed] #root .board-preview { height: 110px; }
+html[data-dsh-embed][data-color-scheme] #root .manager-shell :is(h1, h2, h3, .new-board-card, .new-board-card svg) { color: var(--dsh-label) !important; }
+html[data-dsh-embed][data-color-scheme] #root .manager-shell :is(p, small, .new-board-card > span) { color: var(--dsh-muted) !important; }
+html[data-dsh-embed] #root .manager-section-title h2 { font-size: 14px; font-weight: 500; }
+html[data-dsh-embed] #root .manager-section-title p { font-size: 11px; }
+html[data-dsh-embed][data-color-scheme] #root .manager-shell :is(.manager-search, .board-preview) { background: var(--dsh-canvas) !important; border-color: var(--dsh-line) !important; border-radius: 5px; }
+html[data-dsh-embed][data-color-scheme] #root .manager-shell .manager-search input { color: var(--dsh-label); }
+html[data-dsh-embed] #root .manager-footer { display: none; }
+@media (max-width: 410px) {
+  html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > button:first-child { width: 64px; }
+  .dsh-whiteboard-header { padding-right: 104px; }
+  .dsh-whiteboard-actions { right: 8px; }
+}
+@media (max-width: 500px) {
+  html[data-dsh-embed] #root [data-whiteboard-navigation][data-has-navigation-actions=true] { width: 180px; }
+  html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] [data-whiteboard-navigation] { top: 42px; right: 8px; }
+  html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] :is([aria-label="当前页面素材列表"], [aria-label="白板版本记录"]) { top: 80px; }
+  html[data-dsh-embed] #root :is([aria-label="选中文字工具"], [aria-label="编辑文字字号"]) { left: 50% !important; }
+}
