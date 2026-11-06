@@ -1,6 +1,6 @@
 # MOKI Canvas for DSH
 
-[简体中文](README.zh-CN.md) · [Download](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH plugin community](https://github.com/topics/dsh-plugin)
+[简体中文](README.zh-CN.md) · [Install with DSH](#install-by-chat) · [Import formats](#supported-imports) · [Download](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH plugin community](https://github.com/topics/dsh-plugin)
 
 ![MOKI Canvas for DSH — infinite canvas, mind maps, media and AI collaboration](docs/images/cover.png)
 
@@ -53,18 +53,60 @@ These are real, dark-theme DSH interface captures from a separate demo profile c
 - **Share a selection deliberately:** a composer hint previews the active selection; clicking adds its text and screenshot to the draft, preserving what you have typed. It does not send a message automatically.
 - **Learn by editing:** the bundled introduction contains six pages, native mind-map nodes, an expandable materials group, and small offline media examples.
 
+## Supported imports
+
+Drop files onto the canvas, paste images or URLs, or add materials from the toolbar. The following describes importing and previewing in **DSH plugin v1.5.1**:
+
+| Type | Formats | Behavior in the canvas |
+| --- | --- | --- |
+| Images | PNG, JPG / JPEG, WebP, GIF, AVIF, BMP, SVG | Place, move, resize, and view images on the canvas |
+| Video | MP4, WebM, M4V, MOV, OGV, MKV, AVI | Recognized as video cards; playback depends on DSH's embedded browser and the file's codecs |
+| Audio | MP3, WAV, M4A, AAC, OGG, OGA, Opus, FLAC | Drop as audio cards; playback also depends on browser codec support |
+| PDF | `.pdf` | Stored as file cards, with paginated previews in the materials dialog |
+| Text and code | `.txt`, `.md`, `.markdown`, `.json`, `.csv`, `.tsv`, `.log`, `.yaml`, `.yml`, `.xml`, `.css`, `.js`, `.ts`, `.py` | Plain-text preview in the materials dialog, up to 5 MB |
+| Office and other attachments | DOC / DOCX, XLS / XLSX, PPT / PPTX, ZIP, RAR, 7Z, and other files | Stored as file cards; use Open to access the original file. These formats currently have no inline preview in the DSH materials dialog |
+| Web and image links | HTTP / HTTPS URLs and direct image URLs | Paste as link cards or images; embedded web previews depend on the destination site's embedding policy |
+| MOKI board files | `.moki`, `.moki-board`, `.moki.json`, `.moki-board.json` | Use Open board file or drag and drop to import editable board content |
+
+Markdown, JSON, CSV, and TSV files are shown as source text in the current DSH materials dialog. Ordinary `.json` files are text attachments; MOKI board documents use the dedicated board importer.
+
 ## Install
 
 Tested with **DeepSeek Harness 0.2.2-rc.1 on Windows x64**. Other operating systems and DSH versions have not been verified for this release. The canvas UI and built-in tour are primarily Chinese; the plugin's DSH entry and selection controls also provide English labels.
 
+### Install by chat
+
+Open a DSH conversation with plugin management available. Copy the entire prompt below into the composer and send it:
+
+```text
+Please install and enable MOKI Canvas for DSH v1.5.1.
+
+Project: https://github.com/JKZeng-cell/moki-canvas-for-dsh
+Read the project's installation instructions, then use plugin_manager in the current DSH environment:
+First call list_bundles. If this version is installed, confirm it is enabled or enable it with set_bundle; do not reinstall it.
+If it is not installed, call install_bundle with enabled=true and this prebuilt package as the target:
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.5.1/dsh-moki-canvas-1.5.1.tgz
+
+After installation, check the version and enabled state of dsh-moki-canvas and explain how to open it from the sidebar or side workspace.
+If the result is restart-required, tell me to restart DSH. Preserve existing boards, attachments, and other plugins.
+```
+
+This uses the plugin manager in your current DSH environment. If the tool is unavailable, use a preset with plugin management enabled, such as Creator, or enter the same package URL on the sidebar's Plugins page. Check the reported version, enabled state, and any restart instruction. See the [DSH plugin-manager reference](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/boot/plugin-manager/README.md).
+
+### Manual installation
+
 1. Download `dsh-moki-canvas-1.5.1.tgz` from [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.5.1).
-2. In a terminal with a compatible `dsh` CLI, install the downloaded file into your desktop profile:
+2. For Desktop, use **Manage dsh Command…** in the application menu to install or repair the bundled command. Open a new terminal and run `dsh --version` to confirm it matches Desktop. Then fully quit DSH from its application or tray menu; closing the window may leave it running.
+3. In the directory containing the downloaded package, run:
 
    ```sh
    dsh plugin --profile desktop add ./dsh-moki-canvas-1.5.1.tgz
+   dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 
-3. Restart DSH. Open **MOKI Canvas / MOKI 白板** from the left sidebar, or add it as a tab in the right workspace. Open a chat to use selection-to-draft collaboration.
+4. Reopen DSH. Open **MOKI Canvas / MOKI 白板** from the left sidebar, or add it as a tab in the right workspace. Open a chat to use selection-to-draft collaboration.
+
+Manage the `desktop` profile with Desktop's bundled CLI; a separately npm-installed `dsh` cannot manage that profile. For Web or a custom profile, replace `desktop` with its actual name and use the same `DSH_HOME` as your running DSH. See the [Desktop command reference](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime).
 
 The release contains the built application and host bundle. You do not need the MOKI source repository or a separate MOKI desktop app. DSH downloads the declared runtime dependencies during installation. See the [official packaging and installation guide](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish).
 

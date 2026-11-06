@@ -1,6 +1,6 @@
 # MOKI 白板 for DSH
 
-[English](README.md) · [下载插件](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH 插件社区](https://github.com/topics/dsh-plugin)
+[English](README.md) · [发送给 DSH 安装](#通过对话安装) · [置入格式](#支持置入的格式) · [下载插件](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH 插件社区](https://github.com/topics/dsh-plugin)
 
 ![MOKI 白板 / MOKI Canvas for DSH](docs/images/cover.png)
 
@@ -53,18 +53,60 @@ MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限�
 - **选中后加入对话：**点击输入框旁的选区提示，将文字与截图加入草稿，保留已输入内容；不会自动发送消息。
 - **在介绍里直接试：**六页内置简介包含可编辑对象、真实脑图节点、可展开的素材分组，以及可离线使用的小型图片、音频和视频示例。
 
+## 支持置入的格式
+
+可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.5.1** 的置入与预览方式：
+
+| 类型 | 格式 | 在白板中的使用方式 |
+| --- | --- | --- |
+| 图片 | PNG、JPG / JPEG、WebP、GIF、AVIF、BMP、SVG | 作为图片置入画布，可移动、缩放和查看 |
+| 视频 | MP4、WebM、M4V、MOV、OGV、MKV、AVI | 识别为视频卡片；播放能力取决于 DSH 内置浏览器和文件编码 |
+| 音频 | MP3、WAV、M4A、AAC、OGG、OGA、Opus、FLAC | 拖入后作为音频卡片播放；同样受浏览器解码能力限制 |
+| PDF | `.pdf` | 作为文件卡片保存，在素材窗口分页预览 |
+| 文本与代码 | `.txt`、`.md`、`.markdown`、`.json`、`.csv`、`.tsv`、`.log`、`.yaml`、`.yml`、`.xml`、`.css`、`.js`、`.ts`、`.py` | 在素材窗口按文本预览；文本预览上限为 5 MB |
+| Office 与其他附件 | DOC / DOCX、XLS / XLSX、PPT / PPTX、ZIP、RAR、7Z 等文件 | 以文件卡片置入和保存，通过“打开”访问原文件；当前 DSH 素材窗口不提供这些格式的内嵌预览 |
+| 网页与图片链接 | HTTP / HTTPS 网址、图片直链 | 粘贴生成链接卡片或置入图片；网页预览取决于目标网站是否允许嵌入 |
+| MOKI 白板文件 | `.moki`、`.moki-board`、`.moki.json`、`.moki-board.json` | 通过“打开白板文件”或拖入导入，恢复可继续编辑的白板内容 |
+
+Markdown、JSON、CSV 和 TSV 文件在当前 DSH 素材窗口中按原文展示。普通 `.json` 属于文本附件；带 MOKI 格式的白板文件使用专用导入流程。
+
 ## 安装
 
 本版实测环境为 **DeepSeek Harness 0.2.2-rc.1 / Windows x64**。其他系统和 DSH 版本尚未验证。画布和内置导览目前以中文为主；插件入口与选区协同控件提供中英文文案。
 
+### 通过对话安装
+
+在 DSH 中打开一个可使用插件管理工具的对话，将下面整段文字复制到输入框并发送：
+
+```text
+请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.5.1。
+
+项目地址：https://github.com/JKZeng-cell/moki-canvas-for-dsh
+请先阅读项目安装说明，然后使用当前环境的 plugin_manager 工具：
+先用 list_bundles 检查已安装插件；同版本已安装时直接确认或用 set_bundle 启用，无需重复安装。
+尚未安装时，用 install_bundle 安装下面的预构建包，并设置 enabled=true：
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.5.1/dsh-moki-canvas-1.5.1.tgz
+
+安装后检查 dsh-moki-canvas 的版本和启用状态，告诉我从左侧栏或右侧工作区打开白板的方法。
+如果结果为 restart-required，请提醒我重启 DSH。保留现有白板、附件及其他插件。
+```
+
+安装通过 DSH 当前环境的插件管理器完成。工具不可用时，可切换到启用了插件管理的预设（如 Creator），或在左侧“插件”页使用同一个安装包地址。安装结果以工具返回的版本、启用状态及重启提示为准。参见 [DSH 插件管理说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/boot/plugin-manager/README.zh.md)。
+
+### 手动安装
+
 1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.5.1) 下载 `dsh-moki-canvas-1.5.1.tgz`。
-2. 在提供兼容版本 `dsh` 命令的终端中安装下载的文件：
+2. 桌面版用户从应用菜单的“管理 dsh 命令…”安装或修复桌面版自带命令，在新终端运行 `dsh --version` 确认版本与桌面端一致。然后从应用菜单或托盘完全退出 DSH；仅关闭窗口可能仍在后台运行。
+3. 在安装包所在目录执行：
 
    ```sh
    dsh plugin --profile desktop add ./dsh-moki-canvas-1.5.1.tgz
+   dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 
-3. 重启 DSH。从左侧栏底部打开 **MOKI 白板**，或在右侧工作区新建 MOKI 白板标签页。选区协同需要先打开一个对话。
+4. 重新打开 DSH。从左侧栏底部打开 **MOKI 白板**，或在右侧工作区新建 MOKI 白板标签页。选区协同需要先打开一个对话。
+
+桌面版的 `desktop` profile 应由桌面版自带 CLI 管理；通过 npm 安装的另一份 `dsh` 不能替代它。Web 或自定义 profile 请将命令中的 `desktop` 替换为实际名称，并保持与当前 DSH 相同的 `DSH_HOME`。参见 [桌面版命令说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime)。
 
 安装包已包含画布和宿主构建结果，无需下载 MOKI 源码或另装白板桌面客户端；安装时由 DSH 获取声明的运行依赖。安装机制见 [DSH 官方文档](https://deepseek-harness.github.io/deepseek-harness/develop/basic/publish)。
 
