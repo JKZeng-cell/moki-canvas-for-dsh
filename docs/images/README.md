@@ -2,6 +2,8 @@
 
 Product name: **MOKI Canvas for DSH** / **MOKI 白板 for DSH**.
 
+The media kit also includes [bilingual project introductions](../project-introduction.md) and a [Chinese Xiaohongshu post with a suggested image sequence](../xiaohongshu-post.md).
+
 | File | Content |
 | --- | --- |
 | `cover.png` | Dark bilingual landscape cover with the DSH logo, 1671 × 941 |

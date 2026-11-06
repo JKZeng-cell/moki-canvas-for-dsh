@@ -94,6 +94,6 @@ MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限�
 
 仓库同时提供插件源码、`vendor/moki` 中的画布源码快照与预构建文件。构建和测试命令见 [英文 README](README.md#develop)。发布检查见 [验证记录](docs/release-validation.md)。
 
-[中英文项目简介](docs/project-introduction.md) · [3:4 竖版封面](docs/images/cover-portrait-3x4.png)
+[中英文项目简介](docs/project-introduction.md) · [小红书发布文案](docs/xiaohongshu-post.md) · [3:4 竖版封面](docs/images/cover-portrait-3x4.png)
 
 使用 [MIT 许可证](LICENSE)。第三方软件和字体保留各自许可证，见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
