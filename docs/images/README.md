@@ -9,6 +9,7 @@ The media kit also includes [bilingual project introductions](../project-introdu
 | `cover.png` | Dark bilingual landscape cover with the DSH logo, 1671 × 941 |
 | `cover-portrait-3x4.png` | Dark bilingual portrait cover with the DSH logo, 1086 × 1448, exact 3:4 |
 | `dsh-workspace.png` | Full DSH interface with the MOKI side workspace, dark theme |
+| `sidebar-navigation.png` | Native global navigation in DSH 0.2.2-rc.1 with the MOKI Canvas 1.5.2 shortcut, dark theme |
 | `selection-ready.png` | Selected canvas content and the composer hint before adding to the draft |
 | `collaboration.png` | Full DSH interface showing a selection added to an unsent draft, dark theme |
 | `canvas.png` | Drawing tools, notes and shapes inside DSH, dark theme |

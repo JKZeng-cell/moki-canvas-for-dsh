@@ -1,4 +1,14 @@
-# Release validation · 1.5.1
+# Release validation
+
+## 1.5.2 · Global sidebar navigation
+
+Verified on 2026-11-09 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. In the running Desktop app the MOKI row appeared between Automation tasks and More. All three rows measured 36 px high and their icons shared the same horizontal position. The entry also worked after collapsing and reopening the sidebar.
+
+The public tarball was installed through the DSH CLI in an isolated Web profile. Opening the row with no active chat brought up a conversation and its canvas workspace. Repeated clicks and keyboard activation retained the existing canvas and opened one tab. Opening it from the Plugins page preserved an unsent draft. All seven plugin integration tests passed, and all 126 installed files matched the tarball.
+
+![MOKI Canvas in the native global navigation, dark theme](images/sidebar-navigation.png)
+
+## 1.5.1 · Initial release
 
 Validated on 2026-11-06, on Windows x64, using the locally installed DeepSeek Harness 0.2.2-rc.1 runtime in a separate web profile. No user account, private session, or existing board database was copied into that profile.
 

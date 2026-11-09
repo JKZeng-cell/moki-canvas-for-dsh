@@ -18,8 +18,6 @@ window.__ModuleLoader__.load({
       body:has([data-side][data-dragging=true]) .moki-dsh-body iframe{pointer-events:none}
       .moki-dsh-status{position:absolute;z-index:20;right:8px;top:42px;max-width:calc(100% - 16px);display:flex;align-items:center;gap:8px;font-size:12px;padding:6px 8px 6px 12px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1);border-radius:6px;box-shadow:0 2px 8px #0001}
       .moki-dsh-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px;text-align:center;background:var(--dsw-alias-bg-base)}
-      .moki-dsh-footer{display:flex;align-items:center;gap:9px;min-height:34px;width:100%;border:0;border-radius:8px;padding:7px 12px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;cursor:pointer}
-      .moki-dsh-footer:hover{background:var(--dsw-alias-interactive-bg-hover)}.moki-dsh-footer[data-wide=false]{width:34px;padding:7px;justify-content:center}
       [data-dockkit-tab]:has(.moki-dsh-tab-icon){min-width:104px}
       .moki-composer-selection{box-sizing:border-box;display:flex;align-items:center;gap:8px;min-width:0;width:calc(100% - var(--dsh-composer-side-clearance,16px) - var(--dsh-composer-side-clearance,16px));max-width:var(--dsh-composer-card-max-width,800px);margin:0 auto 5px;padding:6px 9px;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;line-height:1.5}
       .moki-composer-selection button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer}.moki-composer-selection button:disabled{cursor:default;opacity:.65}
@@ -182,8 +180,62 @@ window.__ModuleLoader__.load({
         h('div',{className:'moki-dsh-body'},url?h('iframe',{key:attempt,ref:frame,src:url,title:'MOKI 白板画布',allow:'clipboard-read; clipboard-write; fullscreen; autoplay',referrerPolicy:'no-referrer'}):null,
           phase!=='ready'?h('div',{className:'moki-dsh-loading'},h('span',null,t(phase==='failed'?'failed':'loading')),phase==='failed'?h('button',{className:'moki-dsh-button',onClick:()=>setAttempt(n=>n+1)},t('retry')):null):null))
     }}
+    // Native panel rows select the main column. Hand the selection back to the chat
+    // synchronously so its mounted canvas and draft survive repeated sidebar clicks.
+    function registerSidebarLauncher(ctx,t){
+      const layout=ctx.layout, current=ctx.uiSession.adapter.current
+      function SessionHint(){
+        return h('div',{role:'status',style:{padding:24}},t('noSession'))
+      }
+      ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:KIND,locale:'mokiWhiteboard'},SessionHint))
+      ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:KIND,order:20,locale:'mokiWhiteboard',label:()=>t('title')},Icon))
+      ctx.effect(()=>{
+        let previousPanel,timer,stopWaiting,showingHint=false
+        function cancelPending(){
+          clearTimeout(timer)
+          stopWaiting?.()
+          stopWaiting=undefined
+        }
+        function followSelection(){
+          const panel=layout.panelInfo.getSnapshot().activePanelId
+          if(panel===previousPanel)return
+          previousPanel=panel
+          cancelPending()
+          if(panel!==KIND||showingHint)return
+
+          layout.selectPanel(null)
+          function openWhenReady(sessionId,attempt){
+            if(current.getSnapshot().key!==sessionId)return
+            if(ctx.sidebarRight.mounted.getSnapshot()===sessionId){
+              try{ctx.sidebarRight.openTab(KIND);return}
+              catch(error){
+                // DSH can select a session one render before its dock store exists.
+                if(error?.message!=='sidebarRight: no session surface is mounted')throw error
+              }
+            }
+            if(attempt<30){timer=setTimeout(()=>openWhenReady(sessionId,attempt+1),100);return}
+            showingHint=true
+            try{layout.selectPanel(KIND)}finally{showingHint=false}
+          }
+          function openSelectedSession(){
+            const sessionId=current.getSnapshot().key
+            if(!sessionId)return
+            cancelPending()
+            openWhenReady(sessionId,1)
+          }
+          if(current.getSnapshot().key)openSelectedSession()
+          else{
+            stopWaiting=current.subscribe(openSelectedSession)
+            ctx.uiWorkspace.startSession()
+          }
+        }
+        const unsubscribe=layout.panelInfo.subscribe(followSelection)
+        followSelection()
+        return ()=>{unsubscribe();cancelPending()}
+      },'moki: sidebar navigation')
+    }
     return {
-      inject:['slots','sidebarRight','sidebarRightTabs','locale','layout','uiWorkspace','conversation'],
+      inject:['slots','sidebarRight','sidebarRightTabs','locale','layout','uiSession','uiWorkspace','conversation'],
       apply(ctx){
         try {
         const NS='mokiWhiteboard';ctx.effect(()=>ctx.locale.register(NS,COPY),'moki: locale');const t=ctx.locale.bind(NS)
@@ -191,17 +243,7 @@ window.__ModuleLoader__.load({
         ctx.slots.inject('sidebar.right.pane.tab',()=>ctx.slots.register({name:'sidebar.right.pane.tab',key:TYPE,locale:NS},panel(t,ctx.conversation)))
         ctx.slots.inject('sidebar.right.pane.tab.title',()=>ctx.slots.register({name:'sidebar.right.pane.tab.title',key:TYPE},BoardTitle))
         ctx.slots.inject('conversation.input.dock',()=>ctx.slots.register({name:'conversation.input.dock',id:'moki-whiteboard-selection',order:10,locale:NS},composerSelection(t)))
-        function Footer({wide}){
-          const [error,setError]=React.useState('')
-          const open=()=>{
-            setError('');ctx.layout.selectPanel(null)
-            let count=0
-            const attempt=()=>{try{ctx.sidebarRight.openTab(KIND)}catch{count++;if(count===10)ctx.uiWorkspace.startSession();if(count<30)setTimeout(attempt,100);else setError(t('noSession'))}}
-            attempt()
-          }
-          return h(React.Fragment,null,h('style',null,STYLE),h('button',{className:'moki-dsh-footer','data-wide':wide!==false,'aria-label':t('open'),title:error||t('open'),onClick:open},h(Icon),wide===false?null:h('span',null,t('title'))))
-        }
-        ctx.slots.inject('sidebar.footer.action',()=>ctx.slots.register({name:'sidebar.footer.action',id:'moki-whiteboard',order:20,label:()=>t('title')},Footer))
+        registerSidebarLauncher(ctx,t)
         } catch(error) { console.error('MOKI plugin activation failed',error); throw error }
       },
     }

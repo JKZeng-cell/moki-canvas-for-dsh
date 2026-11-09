@@ -21,6 +21,24 @@ async function harness(t){
   runInNewContext(clientSource,{window:win,document:win.document,location:win.location,localStorage:win.localStorage,console,crypto:globalThis.crypto,URL,URLSearchParams,ArrayBuffer,File,AbortController,MutationObserver:win.MutationObserver,getComputedStyle:win.getComputedStyle.bind(win),fetch:async()=>new Response(JSON.stringify({running:true,appUrl:'http://moki.test/'})),
     setTimeout:(fn,ms)=>{if(ms!==15000)return setTimeout(fn,ms);const timer={fn};timeouts.add(timer);return timer},clearTimeout:timer=>{if(timeouts.has(timer))timeouts.delete(timer);else clearTimeout(timer)}})
   const ctx={effect:fn=>fn(),locale:{register:()=>()=>{},bind:()=>key=>({selectionHint:'白板选区',selected:'已选 {count} 项',add:'加入对话',added:'已加入草稿',textOnly:'截图未就绪',changed:'选区已变化',timedOut:'读取超时'}[key]??key)},slots:{inject:(_name,fn)=>fn(),register:(spec,component)=>{components.set(spec.name,component);return()=>{}}},sidebarRightTabs:{register:()=>()=>{}},conversation:{createDrafts:(_id,files)=>{if(failImages)throw new Error('upload failed');return files.map((file,i)=>({id:`image-${i}`,file}))},releaseDraftAttachments:()=>{}},layout:{},sidebarRight:{},uiWorkspace:{}}
+  const registrations=new Map(), panelListeners=new Set(), sessionListeners=new Set()
+  const navigation={panel:null,session:'a',ready:true,starts:0,opened:[]}
+  const register=ctx.slots.register
+  ctx.slots.register=(spec,component)=>{registrations.set(spec.name,spec);return register(spec,component)}
+  ctx.layout={
+    panelInfo:{getSnapshot:()=>({activePanelId:navigation.panel}),subscribe:fn=>{panelListeners.add(fn);return()=>panelListeners.delete(fn)}},
+    selectPanel:id=>{navigation.panel=id;for(const fn of panelListeners)fn()},
+  }
+  navigation.selectSession=id=>{navigation.session=id;for(const fn of sessionListeners)fn()}
+  ctx.uiSession={adapter:{current:{getSnapshot:()=>({key:navigation.session}),subscribe:fn=>{sessionListeners.add(fn);return()=>sessionListeners.delete(fn)}}}}
+  ctx.uiWorkspace.startSession=()=>{navigation.starts++}
+  ctx.sidebarRight={
+    mounted:{getSnapshot:()=>navigation.session},
+    openTab:kind=>{
+      if(!navigation.ready)throw new Error('sidebarRight: no session surface is mounted')
+      navigation.opened.push([kind,navigation.session])
+    },
+  }
   plugin.apply(ctx)
   const actions={insertQuote:text=>{inserted.push(text);state.set({draft:state.value.draft+'\n\n'+text.split('\n').map(line=>'> '+line).join('\n')});return true},addAttachments:ids=>{attachments.push(...ids);state.set({attachmentIds:[...state.value.attachmentIds,...ids]});return true},persistDraft:()=>{}}
   const useInput=select=>select(React.useSyncExternalStore(state.subscribe,state.get,state.get))
@@ -33,8 +51,39 @@ async function harness(t){
   const message=async(data,origin='http://moki.test',source=frame.contentWindow)=>act(async()=>{win.dispatchEvent(new win.MessageEvent('message',{origin,source,data:{bridgeId,...data}}))})
   const select=selection=>message({type:'moki:state',boardId:'board:a',selection})
   await message({type:'moki:ready'});await select(null)
-  return {win,state,inserted,attachments,message,select,requests,timeouts,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
+  return {win,state,inserted,attachments,message,select,requests,timeouts,navigation,registrations,selectPanel:ctx.layout.selectPanel,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
 }
+
+test('the native sidebar row returns to the same chat and opens its canvas',async t=>{
+  const {navigation,registrations,selectPanel}=await harness(t)
+  const row=registrations.get('sidebar.panellist')
+  assert.equal(row.id,'moki-whiteboard')
+  assert.equal(registrations.get('main').key,row.id)
+  assert.equal(registrations.has('sidebar.footer.action'),false)
+  selectPanel('plugins')
+  selectPanel(row.id)
+  selectPanel(row.id)
+  assert.equal(navigation.panel,null)
+  assert.equal(navigation.starts,0)
+  assert.deepEqual(navigation.opened,[[row.id,'a'],[row.id,'a']])
+})
+
+test('sidebar launch waits for a new chat and cancels if the user navigates away',async t=>{
+  const {navigation,selectPanel}=await harness(t)
+  navigation.selectSession(undefined)
+  selectPanel('moki-whiteboard')
+  assert.equal(navigation.starts,1)
+  navigation.selectSession('b')
+  assert.deepEqual(navigation.opened,[['moki-whiteboard','b']])
+
+  navigation.ready=false
+  selectPanel('moki-whiteboard')
+  selectPanel('plugins')
+  navigation.ready=true
+  await new Promise(resolve=>setTimeout(resolve,130))
+  assert.equal(navigation.panel,'plugins')
+  assert.equal(navigation.opened.length,1)
+})
 
 test('composer hint adds one native quote and image, keeps typed text and allows re-adding after removal',async t=>{
   const h=await harness(t),selection=makeSelection()
