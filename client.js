@@ -7,8 +7,8 @@ window.__ModuleLoader__.load({
       zh: { title:'MOKI 白板',open:'打开 MOKI 白板',guide:'自由编辑画布，与 DSH 一起整理内容',share:'发送选区给 DSH',shareShort:'发给 DSH',reload:'重新加载白板',loading:'正在连接白板…',retry:'重试',empty:'选中画布内容后可发送给 DSH',sent:'已加入当前对话草稿',failed:'白板连接失败',noSession:'请先打开一个对话',noSelection:'请先在白板中选择内容',busy:'对话正在提交，请稍后再试' },
       en: { title:'MOKI Canvas',open:'Open MOKI Canvas',guide:'Edit a canvas and work with DSH',share:'Send selection to DSH',shareShort:'To DSH',reload:'Reload whiteboard',loading:'Connecting to whiteboard…',retry:'Retry',empty:'Select canvas content to share with DSH',sent:'Added to this chat draft',failed:'Whiteboard connection failed',noSession:'Open a chat first',noSelection:'Select something on the canvas first',busy:'The chat is submitting. Please try again.' },
     }
-    Object.assign(COPY.zh, {selectionHint:'白板选区',choose:'在白板中选择内容后，可点击此处加入对话',add:'加入对话',adding:'正在加入…',added:'已加入草稿',attached:'选区已加入草稿，发送消息时一起提交',textOnly:'文字与元素信息已加入；截图未完整加入',changed:'选区已变化，请重新点击加入对话',sendFailed:'加入失败，请重试',timedOut:'读取选区超时，请重试',plainOnly:'请先退出当前指令，或等待消息提交完成',selected:'已选 {count} 项',clickHint:'点击加入当前对话草稿',preview:'查看选区内容'})
-    Object.assign(COPY.en, {selectionHint:'Whiteboard selection',choose:'Select canvas content, then click here to add it to the chat',add:'Add to chat',adding:'Adding…',added:'Added to draft',attached:'Selection added to the draft; it will accompany your message',textOnly:'Text and element details added; some selection images are unavailable',changed:'Selection changed. Click again to add the new selection.',sendFailed:'Could not add selection. Try again.',timedOut:'Selection request timed out. Try again.',plainOnly:'Exit the current command or wait for the message to finish submitting',selected:'{count} selected',clickHint:'Click to add to this chat draft',preview:'Preview selection'})
+    Object.assign(COPY.zh, {sidebarTitle:'MOKI白板',selectionHint:'白板选区',choose:'在白板中选择内容后，可点击此处加入对话',add:'加入对话',adding:'正在加入…',added:'已加入草稿',attached:'选区已加入草稿，发送消息时一起提交',textOnly:'文字与元素信息已加入；截图未完整加入',changed:'选区已变化，请重新点击加入对话',sendFailed:'加入失败，请重试',timedOut:'读取选区超时，请重试',plainOnly:'请先退出当前指令，或等待消息提交完成',selected:'已选 {count} 项',clickHint:'点击加入当前对话草稿',preview:'查看选区内容'})
+    Object.assign(COPY.en, {sidebarTitle:COPY.en.title,selectionHint:'Whiteboard selection',choose:'Select canvas content, then click here to add it to the chat',add:'Add to chat',adding:'Adding…',added:'Added to draft',attached:'Selection added to the draft; it will accompany your message',textOnly:'Text and element details added; some selection images are unavailable',changed:'Selection changed. Click again to add the new selection.',sendFailed:'Could not add selection. Try again.',timedOut:'Selection request timed out. Try again.',plainOnly:'Exit the current command or wait for the message to finish submitting',selected:'{count} selected',clickHint:'Click to add to this chat draft',preview:'Preview selection'})
     const STYLE = `
       .moki-dsh-panel{position:relative;height:100%;min-height:0;display:flex;flex-direction:column;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}
       .moki-dsh-bar{position:absolute;z-index:10;top:0;right:4px;display:flex;align-items:center;gap:2px;height:36px;font-size:12px}
@@ -188,7 +188,7 @@ window.__ModuleLoader__.load({
         return h('div',{role:'status',style:{padding:24}},t('noSession'))
       }
       ctx.slots.inject('main',()=>ctx.slots.register({name:'main',key:KIND,locale:'mokiWhiteboard'},SessionHint))
-      ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:KIND,order:20,locale:'mokiWhiteboard',label:()=>t('title')},Icon))
+      ctx.slots.inject('sidebar.panellist',()=>ctx.slots.register({name:'sidebar.panellist',id:KIND,order:20,locale:'mokiWhiteboard',label:()=>t('sidebarTitle')},Icon))
       ctx.effect(()=>{
         let previousPanel,timer,stopWaiting,showingHint=false
         function cancelPending(){

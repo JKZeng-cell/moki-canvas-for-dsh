@@ -1,12 +1,16 @@
 # Release validation
 
+## 1.5.3 · Chinese sidebar label
+
+On 2026-11-10 the running Windows DSH Desktop app and an isolated Web profile both displayed **MOKI白板** as the sidebar text and accessible name. Clicking the packaged shortcut opened the canvas beside the conversation. All seven plugin integration tests passed.
+
+![MOKI白板 in the native DSH sidebar](images/sidebar-navigation.png)
+
 ## 1.5.2 · Global sidebar navigation
 
 Verified on 2026-11-09 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. In the running Desktop app the MOKI row appeared between Automation tasks and More. All three rows measured 36 px high and their icons shared the same horizontal position. The entry also worked after collapsing and reopening the sidebar.
 
 The public tarball was installed through the DSH CLI in an isolated Web profile. Opening the row with no active chat brought up a conversation and its canvas workspace. Repeated clicks and keyboard activation retained the existing canvas and opened one tab. Opening it from the Plugins page preserved an unsent draft. All seven plugin integration tests passed, and all 126 installed files matched the tarball.
-
-![MOKI Canvas in the native global navigation, dark theme](images/sidebar-navigation.png)
 
 ## 1.5.1 · Initial release
 

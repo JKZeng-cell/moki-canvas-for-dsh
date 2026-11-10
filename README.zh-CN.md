@@ -55,7 +55,7 @@ MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限�
 
 ## 支持置入的格式
 
-可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.5.2** 的置入与预览方式：
+可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.5.3** 的置入与预览方式：
 
 | 类型 | 格式 | 在白板中的使用方式 |
 | --- | --- | --- |
@@ -79,13 +79,13 @@ Markdown、JSON、CSV 和 TSV 文件在当前 DSH 素材窗口中按原文展示
 在 DSH 中打开一个可使用插件管理工具的对话，将下面整段文字复制到输入框并发送：
 
 ```text
-请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.5.2。
+请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.5.3。
 
 项目地址：https://github.com/JKZeng-cell/moki-canvas-for-dsh
 请先阅读项目安装说明，然后使用当前环境的 plugin_manager 工具：
 先用 list_bundles 检查已安装插件；同版本已安装时直接确认或用 set_bundle 启用，无需重复安装。
 尚未安装时，用 install_bundle 安装下面的预构建包，并设置 enabled=true：
-https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.5.2/dsh-moki-canvas-1.5.2.tgz
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.5.3/dsh-moki-canvas-1.5.3.tgz
 
 安装后检查 dsh-moki-canvas 的版本和启用状态，告诉我从左侧栏或右侧工作区打开白板的方法。
 如果结果为 restart-required，请提醒我重启 DSH。保留现有白板、附件及其他插件。
@@ -95,16 +95,16 @@ https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.5.2/dsh-
 
 ### 手动安装
 
-1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.5.2) 下载 `dsh-moki-canvas-1.5.2.tgz`。
+1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.5.3) 下载 `dsh-moki-canvas-1.5.3.tgz`。
 2. 桌面版用户从应用菜单的“管理 dsh 命令…”安装或修复桌面版自带命令，在新终端运行 `dsh --version` 确认版本与桌面端一致。然后从应用菜单或托盘完全退出 DSH；仅关闭窗口可能仍在后台运行。
 3. 在安装包所在目录执行：
 
    ```sh
-   dsh plugin --profile desktop add ./dsh-moki-canvas-1.5.2.tgz
+   dsh plugin --profile desktop add ./dsh-moki-canvas-1.5.3.tgz
    dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 
-4. 重新打开 DSH。点击左侧栏上方「自动化任务」下的 **MOKI 白板**，画布会在当前对话右侧打开。也可以在右侧工作区的新标签页中选择 **MOKI 白板**。
+4. 重新打开 DSH。点击左侧栏上方「自动化任务」下的 **MOKI白板**，画布会在当前对话右侧打开。也可以在右侧工作区的新标签页中选择 **MOKI 白板**。
 
 桌面版的 `desktop` profile 应由桌面版自带 CLI 管理；通过 npm 安装的另一份 `dsh` 不能替代它。Web 或自定义 profile 请将命令中的 `desktop` 替换为实际名称，并保持与当前 DSH 相同的 `DSH_HOME`。参见 [桌面版命令说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/desktop/README.md#bundled-command-runtime)。
 

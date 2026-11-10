@@ -1,6 +1,6 @@
 {
   "name": "dsh-moki-canvas",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "license": "MIT",
   "scripts": {
     "build": "npm run build --prefix vendor/moki && node scripts/build.mjs",

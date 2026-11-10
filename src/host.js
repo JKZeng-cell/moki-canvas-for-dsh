@@ -67,7 +67,7 @@ export async function createRuntime(config = {}) {
     await app.listen({ host: '127.0.0.1', port: config.port ?? 0 })
     const appUrl = `http://127.0.0.1:${app.server.address().port}/`
     mcp = createMcpServer(store)
-    client = new Client({ name: 'dsh-moki-whiteboard', version: '1.5.2' })
+    client = new Client({ name: 'dsh-moki-whiteboard', version: '1.5.3' })
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
     await mcp.connect(serverTransport)
     await client.connect(clientTransport)
@@ -110,7 +110,7 @@ export async function apply(ctx, config = {}) {
   ctx.effect(() => () => runtime.close(), 'moki-whiteboard: runtime')
   ctx.effect(() => ctx.webServer.register({
     kind: 'exact', path: '/moki-whiteboard/info',
-    resource: () => new Response(JSON.stringify({ appUrl: runtime.appUrl, running: true, version: '1.5.2' }), {
+    resource: () => new Response(JSON.stringify({ appUrl: runtime.appUrl, running: true, version: '1.5.3' }), {
       headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
     }),
   }), 'moki-whiteboard: discovery')
