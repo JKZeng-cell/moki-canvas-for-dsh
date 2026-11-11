@@ -1,6 +1,6 @@
 # MOKI 白板 for DSH
 
-[English](README.md) · [发送给 DSH 安装](#通过对话安装) · [置入格式](#支持置入的格式) · [下载插件](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH 插件社区](https://github.com/topics/dsh-plugin)
+[English](README.md) · [发送给 DSH 安装](#通过对话安装) · [置入格式](#支持置入的格式) · [下载插件](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH 插件社区](https://github.com/topics/dsh-plugin) · [官方社区展示](https://github.com/deepseek-ai/deepseek-harness/discussions/12943)
 
 ![MOKI 白板 / MOKI Canvas for DSH](docs/images/cover.png)
 

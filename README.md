@@ -1,6 +1,6 @@
 # MOKI Canvas for DSH
 
-[简体中文](README.zh-CN.md) · [Install with DSH](#install-by-chat) · [Import formats](#supported-imports) · [Download](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH plugin community](https://github.com/topics/dsh-plugin)
+[简体中文](README.zh-CN.md) · [Install with DSH](#install-by-chat) · [Import formats](#supported-imports) · [Download](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/latest) · [DSH plugin community](https://github.com/topics/dsh-plugin) · [Community showcase](https://github.com/deepseek-ai/deepseek-harness/discussions/12943)
 
 ![MOKI Canvas for DSH — infinite canvas, mind maps, media and AI collaboration](docs/images/cover.png)
 
