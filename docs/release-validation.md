@@ -1,5 +1,18 @@
 # Release validation
 
+## 1.6.0 · Chinese and English interface
+
+Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. The release tarball was installed through the DSH CLI in the isolated Web demo profile and opened beside a real DSH conversation.
+
+- Settings → General → Interface language switches the canvas, open menus, dialogs and DSH selection controls immediately between Simplified Chinese and English. The page, board name, snapshot and version were compared before and after switching and remained unchanged.
+- A DSH service restart assigned the canvas a different port; the saved English preference and unsent chat draft survived. A second canvas frame switched both mounted interfaces together.
+- Adding the selection to the DSH draft preserved the typed prompt and added the native quote and image. No model call was made.
+- New canvas pages and mind-map template labels use the selected language. Existing content and the built-in Chinese guide retain their text.
+- The 360 px embedded view has a 344 px settings dialog with no horizontal overflow. Its four English tabs remain 34 px high. Page search, materials, mind-map templates, toolbar and settings categories were checked in dark mode.
+- Type checking and production build passed. All 8 plugin integration tests passed; the canvas regression run passed 414 tests, followed by 29 focused tests including cross-frame language updates. The standalone macOS packaging test file was excluded because this plugin source snapshot does not ship its desktop packaging workflow; no macOS package was built or claimed.
+
+![English settings and selection controls inside DSH](images/interface-language.png)
+
 ## 1.5.3 · Chinese sidebar label
 
 On 2026-11-10 the running Windows DSH Desktop app and an isolated Web profile both displayed **MOKI白板** as the sidebar text and accessible name. Clicking the packaged shortcut opened the canvas beside the conversation. All seven plugin integration tests passed.

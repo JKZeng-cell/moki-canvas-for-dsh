@@ -1,3 +1,5 @@
+import {t, useI18n, getLanguage} from '../../../../web/i18n.js';
+import {newMindMapLabel} from '../../../../web/new-content-labels.js';
 import {WhiteboardMaterialsPanel,type WhiteboardMaterial} from '../components/whiteboard-materials-panel.js';
 import {rememberedWhiteboardPage} from '../lib/whiteboard-view-memory.js';
 import {
@@ -88,6 +90,8 @@ import type {
 import type { ResourceLibraryItem } from "../../shared/resource-library-contract.js";
 import {
   isNativeShape,
+  nativeRichText,
+  nativeRichTextValue,
 } from "../../whiteboard/native-whiteboard-model.js";
 import {
   buildMindMapTemplate,
@@ -222,7 +226,7 @@ function portableWhiteboardResources(
     .filter((record): record is NativeShape => isNativeShape(record) && pageIds.has(record.id))
     .flatMap((shape): WhiteboardPortableResource[] => {
       const localPath = typeof shape.props.localPath === "string" ? shape.props.localPath.trim() : "";
-      const name = String(shape.props.name ?? shape.props.altText ?? "白板资料").trim() || "白板资料";
+      const name = String(shape.props.name ?? shape.props.altText ?? t("白板资料")).trim() || t("白板资料");
       if (localPath) {
         return [{
           shapeId: shape.id,
@@ -234,7 +238,7 @@ function portableWhiteboardResources(
       if (shape.type !== "resource") return [];
       const libraryItemId = typeof shape.props.libraryItemId === "string" ? shape.props.libraryItemId : "";
       const item = libraryById.get(libraryItemId);
-      if (!item) throw new Error(`白板映射资料不存在，无法打包：${name}`);
+      if (!item) throw new Error(t("白板映射资料不存在，无法打包：{0}", name));
       if (item.target) {
         return [{
           shapeId: shape.id,
@@ -243,7 +247,7 @@ function portableWhiteboardResources(
           sources: [{ source: item.target, name: item.name }],
         }];
       }
-      if (item.kind !== "folder") throw new Error(`白板映射资料没有可读取来源：${item.name}`);
+      if (item.kind !== "folder") throw new Error(t("白板映射资料没有可读取来源：{0}", item.name));
       return [{
         shapeId: shape.id,
         name: item.name,
@@ -278,29 +282,29 @@ function assistantMediaRequestKey(request: AssistantMediaInsertRequest): string 
 const MAX_CANVAS_INSERT_SIZE = 620;
 const ALIGN_STAGGER_GAP = 10;
 const SHAPE_OPTIONS: ShapeOption[] = [
-  { geo: "rectangle", label: "矩形" },
-  { geo: "ellipse", label: "圆形" },
-  { geo: "triangle", label: "三角形" },
-  { geo: "diamond", label: "菱形" },
-  { geo: "cloud", label: "云朵" },
-  { geo: "star", label: "星形" },
+  { geo: "rectangle", get label() { return t("矩形"); } },
+  { geo: "ellipse", get label() { return t("圆形"); } },
+  { geo: "triangle", get label() { return t("三角形"); } },
+  { geo: "diamond", get label() { return t("菱形"); } },
+  { geo: "cloud", get label() { return t("云朵"); } },
+  { geo: "star", get label() { return t("星形"); } },
 ];
 const WHITEBOARD_SHORTCUTS = [
-  { label: "粘贴图片或元素", keys: "Ctrl / ⌘ + V" },
-  { label: "复制选中元素", keys: "Ctrl / ⌘ + C" },
-  { label: "全选当前页面", keys: "Ctrl / ⌘ + A" },
-  { label: "创建选中副本", keys: "Ctrl / ⌘ + D" },
-  { label: "编组选中元素", keys: "Ctrl / ⌘ + G" },
-  { label: "取消选中编组", keys: "Ctrl / ⌘ + Alt + G" },
-  { label: "撤销 / 重做", keys: "Ctrl / ⌘ + Z / Shift + Z" },
-  { label: "立即保存", keys: "Ctrl / ⌘ + S" },
-  { label: "适配当前页面", keys: "Ctrl / ⌘ + 0" },
-  { label: "按方向对齐选中元素", keys: "Ctrl / ⌘ + 方向键" },
-  { label: "删除选中元素", keys: "Delete / Backspace" },
-  { label: "指针 / 抓手", keys: "V / H" },
-  { label: "画笔 / 钢笔 / 文字 / 图形", keys: "P / B / T / R" },
-  { label: "新建便签", keys: "N" },
-  { label: "选择图片文件", keys: "I" },
+  { get label() { return t("粘贴图片或元素"); }, keys: "Ctrl / ⌘ + V" },
+  { get label() { return t("复制选中元素"); }, keys: "Ctrl / ⌘ + C" },
+  { get label() { return t("全选当前页面"); }, keys: "Ctrl / ⌘ + A" },
+  { get label() { return t("创建选中副本"); }, keys: "Ctrl / ⌘ + D" },
+  { get label() { return t("编组选中元素"); }, keys: "Ctrl / ⌘ + G" },
+  { get label() { return t("取消选中编组"); }, keys: "Ctrl / ⌘ + Alt + G" },
+  { get label() { return t("撤销 / 重做"); }, keys: "Ctrl / ⌘ + Z / Shift + Z" },
+  { get label() { return t("立即保存"); }, keys: "Ctrl / ⌘ + S" },
+  { get label() { return t("适配当前页面"); }, keys: "Ctrl / ⌘ + 0" },
+  { get label() { return t("按方向对齐选中元素"); }, get keys() { return t("Ctrl / ⌘ + 方向键"); } },
+  { get label() { return t("删除选中元素"); }, keys: "Delete / Backspace" },
+  { get label() { return t("指针 / 抓手"); }, keys: "V / H" },
+  { get label() { return t("画笔 / 钢笔 / 文字 / 图形"); }, keys: "P / B / T / R" },
+  { get label() { return t("新建便签"); }, keys: "N" },
+  { get label() { return t("选择图片文件"); }, keys: "I" },
 ] as const;
 
 function svgCursor(
@@ -385,32 +389,33 @@ const MIND_MAP_TEMPLATE_GROUPS: Array<{
   }>;
 }> = [
   {
-    label: "思维导图",
+    get label() { return t("思维导图"); },
     options: [
-      { id: "mind-right", label: "向右展开", description: "中心主题位于左侧", icon: "branch" },
-      { id: "mind-left", label: "向左展开", description: "中心主题位于右侧", icon: "branch" },
-      { id: "mind-down", label: "向下展开", description: "适合演示和拆解", icon: "fork" },
-      { id: "mind-both", label: "双向展开", description: "左右平衡组织", icon: "network" },
+      { id: "mind-right", get label() { return t("向右展开"); }, get description() { return t("中心主题位于左侧"); }, icon: "branch" },
+      { id: "mind-left", get label() { return t("向左展开"); }, get description() { return t("中心主题位于右侧"); }, icon: "branch" },
+      { id: "mind-down", get label() { return t("向下展开"); }, get description() { return t("适合演示和拆解"); }, icon: "fork" },
+      { id: "mind-both", get label() { return t("双向展开"); }, get description() { return t("左右平衡组织"); }, icon: "network" },
     ],
   },
   {
-    label: "树状图",
+    get label() { return t("树状图"); },
     options: [
-      { id: "tree-right", label: "右向树", description: "两级树状结构", icon: "tree" },
-      { id: "tree-left", label: "左向树", description: "从右向左阅读", icon: "tree" },
-      { id: "tree-down", label: "组织树", description: "自上而下分层", icon: "fork" },
+      { id: "tree-right", get label() { return t("右向树"); }, get description() { return t("两级树状结构"); }, icon: "tree" },
+      { id: "tree-left", get label() { return t("左向树"); }, get description() { return t("从右向左阅读"); }, icon: "tree" },
+      { id: "tree-down", get label() { return t("组织树"); }, get description() { return t("自上而下分层"); }, icon: "fork" },
     ],
   },
   {
-    label: "时间线",
+    get label() { return t("时间线"); },
     options: [
-      { id: "timeline-right", label: "横向时间线", description: "连续阶段向右推进", icon: "timeline" },
-      { id: "timeline-down", label: "纵向时间线", description: "连续阶段向下推进", icon: "timeline" },
+      { id: "timeline-right", get label() { return t("横向时间线"); }, get description() { return t("连续阶段向右推进"); }, icon: "timeline" },
+      { id: "timeline-down", get label() { return t("纵向时间线"); }, get description() { return t("连续阶段向下推进"); }, icon: "timeline" },
     ],
   },
 ];
 
 function MindMapTemplateIcon({ type }: { type: "branch" | "fork" | "network" | "tree" | "timeline" }) {
+  useI18n();
   const Icon = type === "branch"
     ? GitBranch
     : type === "fork"
@@ -424,6 +429,7 @@ function MindMapTemplateIcon({ type }: { type: "branch" | "fork" | "network" | "
 }
 
 function ShapeOptionIcon({ geo }: { geo: NativeGeoShape }) {
+  useI18n();
   const commonProps = {
     fill: "none",
     stroke: "currentColor",
@@ -764,12 +770,12 @@ function savedLabel(
   version?: number,
   createdAt?: string,
 ): string {
-  if (state === "pending") return "有未保存更改";
-  if (state === "saving") return "正在保存到本机";
-  if (state === "error") return "保存失败";
+  if (state === "pending") return t("有未保存更改");
+  if (state === "saving") return t("正在保存到本机");
+  if (state === "error") return t("保存失败");
   if (state === "saved" && version) {
     const time = createdAt
-      ? new Intl.DateTimeFormat("zh-CN", {
+      ? new Intl.DateTimeFormat(getLanguage(), {
           timeZone: "Asia/Shanghai",
           hour: "2-digit",
           minute: "2-digit",
@@ -777,9 +783,9 @@ function savedLabel(
           hour12: false,
         }).format(new Date(createdAt))
       : "";
-    return `已保存 · 版本 ${version}${time ? ` · ${time}` : ""}`;
+    return t("已保存 · 版本 {0}{1}", version, time ? ` · ${time}` : "");
   }
-  return "仅保存在本机";
+  return t("仅保存在本机");
 }
 
 function latestForWhiteboardPage(
@@ -853,7 +859,7 @@ function snapshotPageInfo(
     pageName:
       typeof page.name === "string" && page.name.trim()
         ? page.name.trim()
-        : "未命名页面",
+        : t("未命名页面"),
   };
 }
 
@@ -1060,7 +1066,7 @@ export function mergeWhiteboardPageAsNew(
   }
   const targetPage = currentValue.document.store[targetPageId];
   if (!targetPage || targetPage.typeName !== "page") {
-    throw new Error("新白板页面创建失败。");
+    throw new Error(t("新白板页面创建失败。"));
   }
   currentValue.document.store[targetPageId] = {
     ...targetPage,
@@ -1227,7 +1233,7 @@ async function getAssistantWhiteboardUpdate(
   }
   if (expectedVersion && (value.version ?? 0) < expectedVersion) {
     throw new Error(
-      `AI 白板版本 ${expectedVersion} 已保存，但前端暂未读取到该版本。`,
+      t("AI 白板版本 {0} 已保存，但前端暂未读取到该版本。", expectedVersion),
     );
   }
   return value;
@@ -1244,6 +1250,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
   onSaveAs?: (()=>Promise<void>) | undefined;
   fileStatus?: {path:string;label:string;state:'saved'|'pending'|'saving'|'error'} | undefined;
 } = {}) {
+  useI18n();
   const embeddedRootRef = useRef<HTMLDivElement>(null);
   const store = useMemo(() => createNativeWhiteboardStore(), []);
   const externalSaveRef=useRef(onSave);externalSaveRef.current=onSave;
@@ -1353,7 +1360,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       .flatMap((shape): WhiteboardMaterial[] => {
         if (shape.type === "link") {
           const url = typeof shape.props.url === "string" ? shape.props.url : "";
-          return [{ shapeId: shape.id, name: String(shape.props.title ?? url ?? "网页链接"), kind: "link" as const, previewUrl: url, openUrl: url }];
+          return [{ shapeId: shape.id, name: String(shape.props.title ?? url ?? t("网页链接")), kind: "link" as const, previewUrl: url, openUrl: url }];
         }
         if (shape.type === "resource") {
             const libraryItemId = typeof shape.props.libraryItemId === "string" ? shape.props.libraryItemId : "";
@@ -1364,7 +1371,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
               : undefined;
             return [{
               shapeId: shape.id,
-              name: whiteboardName ?? item?.name ?? "资料",
+              name: whiteboardName ?? item?.name ?? t("资料"),
               kind: "resource" as const,
               libraryItemId,
               ...(typeof shape.props.localPath === "string" ? { localPath: shape.props.localPath } : {}),
@@ -1376,7 +1383,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           const asset = snapshot.document.store[assetId];
           const props = asset?.props && typeof asset.props === "object" ? asset.props as Record<string, unknown> : {};
           const src = typeof props.src === "string" ? props.src : "";
-          return [{ shapeId: shape.id, name: String(shape.props.altText ?? props.name ?? "画布图片"), kind: "image" as const, previewUrl: src, openUrl: src }];
+          return [{ shapeId: shape.id, name: String(shape.props.altText ?? props.name ?? t("画布图片")), kind: "image" as const, previewUrl: src, openUrl: src }];
         }
         if (shape.type === "media") {
           const assetId = typeof shape.props.assetId === "string" ? shape.props.assetId : "";
@@ -1386,7 +1393,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           const mediaKind = shape.props.mediaKind === "audio" ? "audio" : "video";
           return [{
             shapeId: shape.id,
-            name: String(shape.props.name ?? props.name ?? (mediaKind === "video" ? "视频" : "音频")),
+            name: String(shape.props.name ?? props.name ?? (mediaKind === "video" ? t("视频") : t("音频"))),
             kind: "media" as const,
             mediaKind,
             previewUrl: src,
@@ -1395,23 +1402,23 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         }
         return [];
       });
-  }, [activePage?.pageId, canvasRevision, libraryItems, store]);
+  }, [activePage?.pageId, canvasRevision, libraryItems, store, getLanguage()]);
   const filteredMaterials = useMemo(() => {
     const query = materialQuery.trim().toLocaleLowerCase("zh-CN");
     if (!query) return currentMaterials;
     return currentMaterials.filter((material) => {
       const typeLabel = material.kind === "image"
-        ? "图片"
+        ? t("图片")
         : material.kind === "link"
-          ? "链接 网页"
+          ? t("链接 网页")
           : material.kind === "media"
-            ? material.mediaKind === "audio" ? "媒体 音频" : "媒体 视频"
-            : "资料 文件";
+            ? material.mediaKind === "audio" ? t("媒体 音频") : t("媒体 视频")
+            : t("资料 文件");
       return [material.name, material.localPath, material.openUrl, typeLabel]
         .filter((value): value is string => Boolean(value))
         .some((value) => value.toLocaleLowerCase("zh-CN").includes(query));
     });
-  }, [currentMaterials, materialQuery]);
+  }, [currentMaterials, materialQuery, getLanguage()]);
   const beginMaterialRename = useCallback((material: WhiteboardMaterial) => {
     setRenamingMaterialId(material.shapeId);
     setMaterialRenameValue(material.name);
@@ -1423,13 +1430,13 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
   const commitMaterialRename = useCallback((material: WhiteboardMaterial) => {
     const nextName = materialRenameValue.trim();
     if (!nextName) {
-      setError("内容名称不能为空");
+      setError(t("内容名称不能为空"));
       cancelMaterialRename();
       return;
     }
     const editor = editorRef.current;
     if (!editor?.renameMaterial(material.shapeId, nextName)) {
-      setError("内容重命名失败，请稍后重试");
+      setError(t("内容重命名失败，请稍后重试"));
       cancelMaterialRename();
       return;
     }
@@ -1524,7 +1531,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         setError(
           reason instanceof Error
             ? reason.message
-            : "白板加载失败",
+            : t("白板加载失败"),
         );
         setReady(true);
       });
@@ -1591,7 +1598,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           for (const [pageId, revision] of requestedPages) {
             const page = snapshotPageInfo(snapshotValue, pageId) ?? {
               pageId,
-              pageName: activePageRef.current?.pageName ?? "白板",
+              pageName: activePageRef.current?.pageName ?? t("白板"),
             };
             const result = await saveWhiteboard(
               extractWhiteboardPageSnapshot(snapshot, pageId),
@@ -1637,7 +1644,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           setError(
             reason instanceof Error
               ? reason.message
-              : "本地保存失败",
+              : t("本地保存失败"),
           );
         }
       } finally {
@@ -1667,10 +1674,10 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       while (saveInFlightRef.current && Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      if (saveInFlightRef.current) throw new Error("白板仍在保存，请稍后重试");
+      if (saveInFlightRef.current) throw new Error(t("白板仍在保存，请稍后重试"));
       if (!dirtyRef.current) return;
       await persist();
-      if (dirtyRef.current) throw new Error("白板尚未保存，请重试后再关闭");
+      if (dirtyRef.current) throw new Error(t("白板尚未保存，请重试后再关闭"));
     });
     return () => onCheckpointReady?.(undefined);
   }, [onCheckpointReady, persist]);
@@ -1709,7 +1716,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       downloadNativeWhiteboardImage(result);
       setExportMenuOpen(false);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "白板图片导出失败。");
+      setError(reason instanceof Error ? reason.message : t("白板图片导出失败。"));
     } finally {
       setExporting(false);
     }
@@ -1729,7 +1736,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         {
           ...(activePageRef.current?.pageId ? { pageId: activePageRef.current.pageId } : {}),
           ...(activePageRef.current?.pageName ? { pageName: activePageRef.current.pageName } : {}),
-          fileName: `MOKI-白板-${activePageRef.current?.pageName ?? "当前页面"}-${new Date().toISOString().slice(0, 10)}`,
+          fileName: t("MOKI-白板-{0}-{1}", activePageRef.current?.pageName ?? t("当前页面"), new Date().toISOString().slice(0, 10)),
           resources: portableWhiteboardResources(pageSnapshot, currentPageId, libraryItems),
           ...(window.mokiDesktop?.whiteboardFiles?.readResource
             ? { readResource: (input) => window.mokiDesktop!.whiteboardFiles!.readResource!(input) }
@@ -1738,7 +1745,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       );
       downloadWhiteboardTransferFile(result);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "白板文件导出失败。");
+      setError(reason instanceof Error ? reason.message : t("白板文件导出失败。"));
     } finally {
       setTransferring(undefined);
     }
@@ -1756,7 +1763,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       }
       const startedAt = Date.now();
       while (saveInFlightRef.current) {
-        if (Date.now() - startedAt > 10_000) throw new Error("当前白板仍在保存，请稍后重试导入。");
+        if (Date.now() - startedAt > 10_000) throw new Error(t("当前白板仍在保存，请稍后重试导入。"));
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
       const imported = await importWhiteboardTransferFile(file, {
@@ -1765,14 +1772,14 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           : {}),
       });
       const editor = editorRef.current;
-      if (!editor) throw new Error("当前白板页面尚未准备完成，请稍后重试。");
+      if (!editor) throw new Error(t("当前白板页面尚未准备完成，请稍后重试。"));
       const importedPage = snapshotPageInfo(imported.snapshot, imported.pageId);
-      if (!importedPage) throw new Error("导入文件中没有可用的白板页面。");
+      if (!importedPage) throw new Error(t("导入文件中没有可用的白板页面。"));
       const newPageId = editor.createPage();
       const filePageName = file.name.replace(/\.moki(?:-board)?(?:\.json)?$/iu, "");
       const newPage = {
         pageId: newPageId,
-        pageName: imported.pageName?.trim() || importedPage.pageName || filePageName || "导入白板",
+        pageName: imported.pageName?.trim() || importedPage.pageName || filePageName || t("导入白板"),
       };
       editor.renamePage(newPageId, newPage.pageName);
       const currentSnapshot = getNativeSnapshot(store);
@@ -1805,7 +1812,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       setCanvasRevision((value) => value + 1);
     } catch (reason) {
       applyingRemoteSnapshotRef.current = false;
-      setError(reason instanceof Error ? reason.message : "白板文件导入失败。");
+      setError(reason instanceof Error ? reason.message : t("白板文件导入失败。"));
     } finally {
       setTransferring(undefined);
     }
@@ -1943,7 +1950,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           setError(
             reason instanceof Error
               ? reason.message
-              : "AI 白板修改已保存，但画布刷新失败",
+              : t("AI 白板修改已保存，但画布刷新失败"),
           );
           setReady(true);
         });
@@ -1977,7 +1984,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
               ...common,
               type: "text",
                props: {
-                 richText: toNativeRichText("双击编辑文字"),
+                 richText: toNativeRichText(t("双击编辑文字")),
                  size: styleSize,
                  bold: textStyle.bold,
                  italic: textStyle.italic,
@@ -1990,7 +1997,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
               ...common,
               type: "note",
               props: {
-                richText: toNativeRichText("便签"),
+                richText: toNativeRichText(t("便签")),
                  color: selectedColor,
                  labelColor: selectedColor,
                  size: styleSize,
@@ -2022,6 +2029,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
     const dy = center.y - preferredCenter.y;
     const positionedShapes = mindMap.shapes.map((shape) => ({
       ...shape,
+      ...(shape.props?.mokiMindMapNode ? {props: {...shape.props, richText: nativeRichText(newMindMapLabel(nativeRichTextValue(shape.props.richText)))}} : {}),
       x: Number(shape.x ?? 0) + dx,
       y: Number(shape.y ?? 0) + dy,
     }));
@@ -2041,7 +2049,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
     if (!editor) return;
     const normalizedUrl = normalizeWhiteboardLinkUrl(linkUrl);
     if (!normalizedUrl) {
-      setLinkError("请输入有效的 http 或 https 链接");
+      setLinkError(t("请输入有效的 http 或 https 链接"));
       return;
     }
     const metrics = getCanvasInsertMetrics(editor);
@@ -2060,7 +2068,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       y: metrics.y,
       props: {
         url: normalizedUrl,
-        title: linkTitle.trim() || hostname || "网页链接",
+        title: linkTitle.trim() || hostname || t("网页链接"),
         titleAuto: !linkTitle.trim(),
         mode: linkMode,
         w: 360,
@@ -2087,7 +2095,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       await openResourceLibraryItem(libraryItemId);
       setError("");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "资料打开失败");
+      setError(reason instanceof Error ? reason.message : t("资料打开失败"));
     }
   }, [libraryItems]);
 
@@ -2104,16 +2112,16 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
     }
     const destination = await window.mokiDesktop?.selectLocalFolder?.();
     if (!destination) {
-      if (!window.mokiDesktop?.selectLocalFolder) setError("请在 MOKI 客户端中另存为白板资料夹");
+      if (!window.mokiDesktop?.selectLocalFolder) setError(t("请在 MOKI 客户端中另存为白板资料夹"));
       return;
     }
     setFolderExportBusy(true);
     try {
       const { folderId: _folderId, ...input } = request;
       const result = await exportWhiteboardFolder({ ...input, mode: "local", destination });
-      setFolderExportNotice(`资料夹已保存到 ${result.path}（${result.files} 个文件）`);
+      setFolderExportNotice(t("资料夹已保存到 {0}（{1} 个文件）", result.path, result.files));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "白板资料夹另存为失败");
+      setError(reason instanceof Error ? reason.message : t("白板资料夹另存为失败"));
     } finally {
       setFolderExportBusy(false);
     }
@@ -2133,9 +2141,9 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       setLibraryItems(await getResourceLibraryItems());
       setPendingFolderExport(undefined);
       setFolderExportTargetId("");
-      setFolderExportNotice(`已在资料库中创建“${result.item?.name ?? pendingFolderExport.name}”资料夹`);
+      setFolderExportNotice(t("已在资料库中创建“{0}”资料夹", result.item?.name ?? pendingFolderExport.name));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "保存到资料库失败");
+      setError(reason instanceof Error ? reason.message : t("保存到资料库失败"));
     } finally {
       setFolderExportBusy(false);
     }
@@ -2182,7 +2190,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       setCanvasRevision((value) => value + 1);
       queuePersist();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "资料添加到白板失败");
+      setError(reason instanceof Error ? reason.message : t("资料添加到白板失败"));
     }
   }, [queuePersist]);
 
@@ -2195,7 +2203,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       await insertLibraryItems(items);
       await refreshLibrary();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "本地文件添加失败");
+      setError(reason instanceof Error ? reason.message : t("本地文件添加失败"));
     }
   }, [insertLibraryItems, refreshLibrary]);
 
@@ -2213,7 +2221,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
 
   const openLocalPath = useCallback(async (path: string) => {
     const opened = await window.mokiDesktop?.openLocalPath?.(path);
-    if (!opened) setError("本地路径不存在或无法使用系统应用打开");
+    if (!opened) setError(t("本地路径不存在或无法使用系统应用打开"));
   }, []);
 
   const locateMaterial = useCallback((shapeId: string) => {
@@ -2231,14 +2239,14 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
     ) => {
       const editor = editorRef.current;
       if (!editor) {
-        if (throwOnError) throw new Error("白板尚未就绪");
+        if (throwOnError) throw new Error(t("白板尚未就绪"));
         return;
       }
       const imageFiles = Array.from(files).filter((file) =>
         file.type.startsWith("image/") || file.type.startsWith("video/") || /\.(?:gif|mp4|webm|mov|m4v|avi|mkv)$/iu.test(file.name),
       );
       if (imageFiles.length === 0) {
-        if (throwOnError) throw new Error("请选择图片或视频文件");
+        if (throwOnError) throw new Error(t("请选择图片或视频文件"));
         return;
       }
       const metrics = getCanvasInsertMetrics(editor);
@@ -2260,7 +2268,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         queuePersist();
       } catch (reason) {
         const resolved =
-          reason instanceof Error ? reason : new Error("图片插入失败");
+          reason instanceof Error ? reason : new Error(t("图片插入失败"));
         setError(resolved.message);
         if (throwOnError) throw resolved;
       }
@@ -2278,10 +2286,10 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       !isDirectory && isDroppedPreviewableMedia(file),
     );
     const mapped = items.filter((item) => !previewable.includes(item));
-    try{for(const item of mapped){if(!item.path&&!item.isDirectory){const uploaded=await uploadLibraryFile(item.file);if(!uploaded.target)throw new Error('本地文件没有可用路径');item.path=uploaded.target;}}}catch(reason){setError(reason instanceof Error?reason.message:'本地文件上传失败');return;}
+    try{for(const item of mapped){if(!item.path&&!item.isDirectory){const uploaded=await uploadLibraryFile(item.file);if(!uploaded.target)throw new Error(t("本地文件没有可用路径"));item.path=uploaded.target;}}}catch(reason){setError(reason instanceof Error?reason.message:t("本地文件上传失败"));return;}
     const unavailable = mapped.find((item) => !item.path);
     if (unavailable) {
-      setError(`无法读取本地路径：${unavailable.file.name}`);
+      setError(t("无法读取本地路径：{0}", unavailable.file.name));
       return;
     }
     const insertionPoint = point ?? editor.getViewportPageBounds().center;
@@ -2304,7 +2312,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           x: insertionPoint.x - 165 + (index % 2) * 350,
           y: insertionPoint.y - 41 + Math.floor(index / 2) * 102,
           props: {
-            name: item.file.name || item.path!.split(/[\\/]/u).pop() || "本地资料",
+            name: item.file.name || item.path!.split(/[\\/]/u).pop() || t("本地资料"),
             kind: item.isDirectory ? "local_folder" : "local_file",
             localPath: item.path,
             w: 330,
@@ -2317,7 +2325,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       setCanvasRevision((value) => value + 1);
       queuePersist();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "本地文件添加失败");
+      setError(reason instanceof Error ? reason.message : t("本地文件添加失败"));
     }
   }, [queuePersist]);
 
@@ -2330,19 +2338,19 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         body: JSON.stringify({ url }),
       });
       const payload = await cached.json() as { src?: string; mimeType?: string; error?: string };
-      if (!cached.ok || !payload.src) throw new Error(payload.error ?? "网络图片缓存失败");
+      if (!cached.ok || !payload.src) throw new Error(payload.error ?? t("网络图片缓存失败"));
       const response = await apiFetch(payload.src);
-      if (!response.ok) throw new Error(`读取本地图片缓存失败：HTTP ${response.status}`);
+      if (!response.ok) throw new Error(t("读取本地图片缓存失败：HTTP {0}", response.status));
       const blob = await response.blob();
       const sourceName = (() => {
-        try { return decodeURIComponent(new URL(url).pathname.split("/").pop() || "网络图片"); }
-        catch { return "网络图片"; }
+        try { return decodeURIComponent(new URL(url).pathname.split("/").pop() || t("网络图片")); }
+        catch { return t("网络图片"); }
       })();
       await insertImageFiles([
         new File([blob], sourceName, { type: payload.mimeType || blob.type || "image/png" }),
       ], point, true);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "网络图片缓存失败");
+      setError(reason instanceof Error ? reason.message : t("网络图片缓存失败"));
     }
   }, [insertImageFiles]);
 
@@ -2358,10 +2366,10 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         const blob = await response.blob();
         const mediaType = resolveAssistantImageMediaType(request, blob.type);
         if (!mediaType) {
-          throw new Error("当前白板只支持插入图片媒体");
+          throw new Error(t("当前白板只支持插入图片媒体"));
         }
         await insertImageFiles([
-          new File([blob], request.name || "AI 生成图片", { type: mediaType }),
+          new File([blob], request.name || t("AI 生成图片"), { type: mediaType }),
         ], undefined, true);
         const pending = window.localStorage.getItem(
           PENDING_ASSISTANT_MEDIA_KEY,
@@ -2378,7 +2386,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         }
       } catch (reason) {
         handledAssistantMediaRequestsRef.current.delete(requestKey);
-        setError(reason instanceof Error ? reason.message : "助手图片插入失败");
+        setError(reason instanceof Error ? reason.message : t("助手图片插入失败"));
       }
     };
     const handle = (event: Event) => {
@@ -2393,7 +2401,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
         void insertRequest(JSON.parse(pending) as AssistantMediaInsertRequest);
       } catch {
         window.localStorage.removeItem(PENDING_ASSISTANT_MEDIA_KEY);
-        setError("待插入的助手图片数据无效");
+        setError(t("待插入的助手图片数据无效"));
       }
     };
     const handleStoredRequest = (event: StorageEvent) => {
@@ -2414,7 +2422,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       const selectedShapeIds = editor.getSelectedShapeIds();
       const measuredEntries = measureAlignmentUnits(editor, selectedShapeIds);
       if (measuredEntries.length < 2) {
-        setError("请选择至少两个对象或编组后再进行对齐");
+        setError(t("请选择至少两个对象或编组后再进行对齐"));
         return;
       }
       const left = Math.min(...measuredEntries.map((item) => item.x));
@@ -2600,7 +2608,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           (activePageRef.current?.pageId !== pageId ||
             activePageRef.current?.pageName !== currentPage?.name)
         ) {
-          const pageName = editor.getCurrentPage().name || "未命名页面";
+          const pageName = editor.getCurrentPage().name || t("未命名页面");
           const page = { pageId, pageName };
           activePageRef.current = page;
           setActivePage(page);
@@ -2890,7 +2898,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       );
       const pageId = value.pageId ?? activePageRef.current?.pageId;
       if (!pageId) {
-        throw new Error("无法确定要恢复的白板页面。");
+        throw new Error(t("无法确定要恢复的白板页面。"));
       }
       loadNativeSnapshot(
         store,
@@ -2906,7 +2914,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       setError(
         reason instanceof Error
           ? reason.message
-          : "历史版本加载失败",
+          : t("历史版本加载失败"),
       );
     }
   }
@@ -2916,7 +2924,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
       clearTimeout(timerRef.current);
       timerRef.current = undefined;
     }
-    if(externalSaveRef.current)void externalSaveRef.current().catch(reason=>setError(reason instanceof Error?reason.message:'原文件保存失败'));
+    if(externalSaveRef.current)void externalSaveRef.current().catch(reason=>setError(reason instanceof Error?reason.message:t("原文件保存失败")));
     else void persist();
   }
 
@@ -2965,12 +2973,12 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           }}
         />
         {dshEmbed ? <DshWhiteboardHeader
-          title={boardTitle || '无限白板'}
+          title={boardTitle || t("无限白板")}
           status={fileStatus?.label ?? savedLabel(saveState, latest?.pageVersion ?? latest?.version ?? undefined, latest?.createdAt)}
           state={fileStatus?.state ?? saveState}
           transferring={Boolean(transferring)}
           onSave={manualSave}
-          onSaveAs={onSaveAs ? () => { void onSaveAs().catch(reason => setError(reason instanceof Error ? reason.message : '另存为失败')); } : undefined}
+          onSaveAs={onSaveAs ? () => { void onSaveAs().catch(reason => setError(reason instanceof Error ? reason.message : t("另存为失败"))); } : undefined}
           onImport={() => whiteboardInputRef.current?.click()}
           onExport={() => { void exportPortableWhiteboard(); }}
           onImage={() => { setExportMenuOpen(value => !value); setShortcutsOpen(false); }}
@@ -2980,14 +2988,14 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           onMaterials={() => { setHistoryOpen(false); setMaterialPanelOpen(value => !value); }}
         /> : <WorkbenchPageHeader
           eyebrow="MOKI Canvas"
-          title={<span className="block max-w-[min(60vw,36rem)] truncate" title={boardTitle || "无限白板"}>{boardTitle || "无限白板"}</span>}
-          description={fileStatus?<span className="block max-w-[min(50vw,32rem)] truncate" title={fileStatus.path}>正在编辑文件：{fileStatus.path.split(/[\\/]/u).pop()}</span>:"便签、文本、图片、链接与涂鸦均保存在当前电脑"}
+          title={<span className="block max-w-[min(60vw,36rem)] truncate" title={boardTitle || t("无限白板")}>{boardTitle || t("无限白板")}</span>}
+          description={fileStatus?<span className="block max-w-[min(50vw,32rem)] truncate" title={fileStatus.path}>{t("正在编辑文件：")}{fileStatus.path.split(/[\\/]/u).pop()}</span>:t("便签、文本、图片、链接与涂鸦均保存在当前电脑")}
           actionsClassName="gap-2"
           actions={(
             <>
             <div
               role="status"
-              aria-label="白板保存状态"
+              aria-label={t("白板保存状态")} data-moki-ui="save-status"
               title={fileStatus?`${fileStatus.label} · ${fileStatus.path}`:savedLabel(saveState, latest?.pageVersion ?? latest?.version ?? undefined, latest?.createdAt)}
               className={`flex h-9 items-center gap-2 rounded-[14px] border border-white/80 bg-white px-3 text-[0.6875rem] font-bold shadow-sm ${
                 (saveState === "error" || fileStatus?.state === 'error')
@@ -3004,7 +3012,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
               ) : (
                 <CheckCircle2 size={13} />
               )}
-              <span className={embedded ? "min-w-0 truncate" : undefined}>{fileStatus?(fileStatus.state==='error'||fileStatus.state==='saving'?fileStatus.label:saveState==='pending'||saveState==='saving'?'有更改 · 待写入原文件':fileStatus.label):savedLabel(
+              <span className={embedded ? "min-w-0 truncate" : undefined}>{fileStatus?(fileStatus.state==='error'||fileStatus.state==='saving'?fileStatus.label:saveState==='pending'||saveState==='saving'?t("有更改 · 待写入原文件"):fileStatus.label):savedLabel(
                 saveState,
                 latest?.pageVersion ?? latest?.version ?? undefined,
                 latest?.createdAt,
@@ -3012,7 +3020,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
             </div>
             <button
               type="button"
-              aria-label="立即保存白板"
+              aria-label={t("立即保存白板")}
               onClick={manualSave}
               className="grid size-9 place-items-center rounded-xl bg-white text-[#625bc5] shadow-sm"
             >
@@ -3021,8 +3029,8 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
             <div className="relative">
               <button
                 type="button"
-                aria-label="导入或导出白板文件"
-                title="导入或导出可在其他 MOKI 客户端使用的白板文件"
+                aria-label={t("导入或导出白板文件")}
+                title={t("导入或导出可在其他 MOKI 客户端使用的白板文件")}
                 aria-expanded={transferMenuOpen}
                 disabled={Boolean(transferring)}
                 onClick={() => setTransferMenuOpen((value) => !value)}
@@ -3032,16 +3040,16 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
               </button>
               {transferMenuOpen && (
                 <div className="moki-menu-surface absolute right-0 top-11 z-50 w-52 p-2 text-xs text-[#30364d]">
-                  <p className="px-2 py-1 font-black">白板文件</p>
-                  {onSaveAs?<button type="button" aria-label="另存为白板文件" onClick={()=>{setTransferMenuOpen(false);void onSaveAs().catch(reason=>setError(reason instanceof Error?reason.message:'另存为失败'));}} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff]"><Save size={14}/>另存为白板文件</button>:null}
-                  <button type="button" aria-label="导出白板文件" disabled={Boolean(transferring)} onClick={() => { setTransferMenuOpen(false); void exportPortableWhiteboard(); }} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff] disabled:opacity-45"><FileDown size={14} />导出白板文件</button>
-                  <button type="button" aria-label="导入白板文件" disabled={Boolean(transferring)} onClick={() => { setTransferMenuOpen(false); whiteboardInputRef.current?.click(); }} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff] disabled:opacity-45"><FileUp size={14} />导入白板文件</button>
+                  <p className="px-2 py-1 font-black">{t("白板文件")}</p>
+                  {onSaveAs?<button type="button" aria-label={t("另存为白板文件")} onClick={()=>{setTransferMenuOpen(false);void onSaveAs().catch(reason=>setError(reason instanceof Error?reason.message:t("另存为失败")));}} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff]"><Save size={14}/>{t("另存为白板文件")}</button>:null}
+                  <button type="button" aria-label={t("导出白板文件")} disabled={Boolean(transferring)} onClick={() => { setTransferMenuOpen(false); void exportPortableWhiteboard(); }} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff] disabled:opacity-45"><FileDown size={14} />{t("导出白板文件")}</button>
+                  <button type="button" aria-label={t("导入白板文件")} disabled={Boolean(transferring)} onClick={() => { setTransferMenuOpen(false); whiteboardInputRef.current?.click(); }} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left font-bold hover:bg-[#f2f1ff] disabled:opacity-45"><FileUp size={14} />{t("导入白板文件")}</button>
                 </div>
               )}
             </div>
             <button
               type="button"
-              aria-label="查看白板版本"
+              aria-label={t("查看白板版本")}
               onClick={() => setHistoryOpen((value) => !value)}
               className="grid size-9 place-items-center rounded-xl bg-[#242a40] text-white shadow-sm"
             >
@@ -3053,8 +3061,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
 
         {latest?.recoveredFromVersion && latest.version && (
           <div className="mb-2 rounded-[13px] bg-[#fff5e8] px-3 py-2 text-[0.6875rem] font-semibold text-[#a87632]">
-            版本 {latest.recoveredFromVersion} 损坏，已恢复版本{" "}
-            {latest.version}
+            {t('版本 {0} 损坏，已恢复版本 {1}', latest.recoveredFromVersion, latest.version)}
           </div>
         )}
         {error && (
@@ -3076,7 +3083,7 @@ export function WhiteboardPage({ embedded = false, active = true, boardTitle, in
           : "whiteboard-canvas-frame relative min-h-0 flex-1 overflow-hidden rounded-[24px] border border-white/90 bg-white shadow-[0_12px_38px_rgba(58,64,98,.08)]"
         }`}>
           {!ready ? (
-            <PageFeedback title="正在加载本地白板" description="正在恢复白板内容和上次浏览的位置。" />
+            <PageFeedback title={t("正在加载本地白板")} description={t("正在恢复白板内容和上次浏览的位置。")} />
           ) : (
             <div
               className="whiteboard-canvas absolute inset-0"
@@ -3133,24 +3140,23 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
 
               {pendingFolderExport && (
                 <div data-dsh-ui="backdrop" className="absolute inset-0 z-[72] grid place-items-center bg-[#171b2a]/30 p-6 backdrop-blur-[2px]">
-                  <section data-dsh-ui="dialog" role="dialog" aria-modal="true" aria-label="保存白板资料夹到资料库" className="w-full max-w-lg rounded-3xl border border-white bg-white p-5 shadow-[0_24px_70px_rgba(30,34,54,.24)]">
+                  <section data-dsh-ui="dialog" role="dialog" aria-modal="true" aria-label={t("保存白板资料夹到资料库")} className="w-full max-w-lg rounded-3xl border border-white bg-white p-5 shadow-[0_24px_70px_rgba(30,34,54,.24)]">
                     <header className="moki-dialog-header moki-dialog-header-inset-5 flex items-start justify-between gap-3">
-                      <div><h2 className="text-sm font-black text-[#242838]">保存到资料库</h2><p className="mt-1 text-[0.6875rem] leading-5 text-[#858b9c]">将在所选位置创建同名资料夹“{pendingFolderExport.name}”，并保存白板数据、文字、链接和可读取素材。</p></div>
-                      <button type="button" aria-label="关闭保存到资料库" onClick={() => { if (!folderExportBusy) setPendingFolderExport(undefined); }} className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#f4f5f8] text-[#555c70]"><X size={15}/></button>
+                      <div><h2 className="text-sm font-black text-[#242838]">{t("保存到资料库")}</h2><p className="mt-1 text-[0.6875rem] leading-5 text-[#858b9c]">{t("将在所选位置创建同名资料夹“")}{pendingFolderExport.name}{t("”，并保存白板数据、文字、链接和可读取素材。")}</p></div>
+                      <button type="button" aria-label={t("关闭保存到资料库")} onClick={() => { if (!folderExportBusy) setPendingFolderExport(undefined); }} className="grid size-8 shrink-0 place-items-center rounded-xl bg-[#f4f5f8] text-[#555c70]"><X size={15}/></button>
                     </header>
-                    <label className="mt-5 grid gap-2 text-xs font-bold text-[#555c70]">保存位置
-                      <select aria-label="资料库保存位置" value={folderExportTargetId} onChange={(event) => setFolderExportTargetId(event.target.value)} className="h-11 rounded-xl border border-[#dfe2ec] bg-white px-3 outline-none focus:border-[#625bc5]">
-                        <option value="">资料库根目录</option>
+                    <label className="mt-5 grid gap-2 text-xs font-bold text-[#555c70]">{t("保存位置")}<select aria-label={t("资料库保存位置")} value={folderExportTargetId} onChange={(event) => setFolderExportTargetId(event.target.value)} className="h-11 rounded-xl border border-[#dfe2ec] bg-white px-3 outline-none focus:border-[#625bc5]">
+                        <option value="">{t("资料库根目录")}</option>
                         {libraryItems.filter((item) => item.kind === "folder" || item.kind === "local_folder").map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                       </select>
                     </label>
-                    <footer className="mt-5 flex justify-end gap-2"><button type="button" disabled={folderExportBusy} onClick={() => setPendingFolderExport(undefined)} className="rounded-xl bg-[#f4f5f8] px-4 py-2 text-xs font-bold text-[#62687a] disabled:opacity-40">取消</button><button type="button" disabled={folderExportBusy} onClick={() => void savePendingFolderToLibrary()} className="flex items-center gap-1.5 rounded-xl bg-[#242a40] px-4 py-2 text-xs font-bold text-white disabled:opacity-40">{folderExportBusy ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}保存</button></footer>
+                    <footer className="mt-5 flex justify-end gap-2"><button type="button" disabled={folderExportBusy} onClick={() => setPendingFolderExport(undefined)} className="rounded-xl bg-[#f4f5f8] px-4 py-2 text-xs font-bold text-[#62687a] disabled:opacity-40">{t("取消")}</button><button type="button" disabled={folderExportBusy} onClick={() => void savePendingFolderToLibrary()} className="flex items-center gap-1.5 rounded-xl bg-[#242a40] px-4 py-2 text-xs font-bold text-white disabled:opacity-40">{folderExportBusy ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}{t("保存")}</button></footer>
                   </section>
                 </div>
               )}
               {previewMaterial?.previewUrl && (
                 <div data-dsh-ui="backdrop" className="absolute inset-0 z-[75] grid min-h-0 place-items-center overflow-hidden bg-[#171b2a]/35 p-4 backdrop-blur-[2px]">
-                  <section data-dsh-ui="dialog" role="dialog" aria-modal="true" aria-label={`预览 ${previewMaterial.name}`} className="flex min-h-0 min-w-0 flex-col rounded-3xl bg-white p-4 shadow-2xl" style={{ width: "64rem", height: "40rem", maxWidth: "calc(100% - 2rem)", maxHeight: "calc(100% - 2rem)" }}><header className="moki-dialog-header moki-dialog-header-inset-4 mb-3 flex items-center justify-between"><div className="min-w-0"><b className="block truncate text-[0.8125rem] text-[#30364d]">{previewMaterial.name}</b>{previewMaterial.kind === "link" ? <span className="text-[0.625rem] font-semibold text-[#8d6b2d]">网页交互保留在工作台内，弹窗不会调用系统浏览器</span> : null}</div><div className="flex gap-2">{previewMaterial.kind !== "link" ? <button type="button" onClick={() => openMaterial(previewMaterial)} className="flex items-center gap-1 rounded-xl bg-[#242a40] px-3 py-2 text-[0.6875rem] font-bold text-white"><ExternalLink size={12}/>打开</button> : null}<button type="button" aria-label="关闭素材预览" title="关闭预览" onClick={() => setPreviewMaterial(undefined)} className="grid size-8 place-items-center rounded-xl bg-[#f4f5f8] text-[#555c70] hover:bg-[#ebeafd] hover:text-[#242838]"><X size={15}/></button></div></header><div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-[#e4e6ef] bg-[#f5f6fa]">{previewMaterial.kind === "image" ? <img src={previewMaterial.previewUrl} alt={previewMaterial.name} className="size-full object-contain"/> : previewMaterial.kind === "media" ? (previewMaterial.mediaKind === "audio" ? <audio src={previewMaterial.previewUrl} controls autoPlay className="h-full w-full px-8"/> : <video src={previewMaterial.previewUrl} controls autoPlay className="size-full bg-[#171b2a] object-contain"/>) : dshEmbed && previewMaterial.kind === "resource" ? <DshFilePreview material={previewMaterial}/> : <iframe src={previewMaterial.previewUrl} title={previewMaterial.name} sandbox={previewMaterial.kind === "link" ? "allow-forms allow-same-origin allow-scripts" : undefined} className="size-full border-0"/>}</div></section>
+                  <section data-dsh-ui="dialog" role="dialog" aria-modal="true" aria-label={t("预览 {0}", previewMaterial.name)} data-moki-ui="material-preview" className="flex min-h-0 min-w-0 flex-col rounded-3xl bg-white p-4 shadow-2xl" style={{ width: "64rem", height: "40rem", maxWidth: "calc(100% - 2rem)", maxHeight: "calc(100% - 2rem)" }}><header className="moki-dialog-header moki-dialog-header-inset-4 mb-3 flex items-center justify-between"><div className="min-w-0"><b className="block truncate text-[0.8125rem] text-[#30364d]">{previewMaterial.name}</b>{previewMaterial.kind === "link" ? <span className="text-[0.625rem] font-semibold text-[#8d6b2d]">{t("网页交互保留在工作台内，弹窗不会调用系统浏览器")}</span> : null}</div><div className="flex gap-2">{previewMaterial.kind !== "link" ? <button type="button" onClick={() => openMaterial(previewMaterial)} className="flex items-center gap-1 rounded-xl bg-[#242a40] px-3 py-2 text-[0.6875rem] font-bold text-white"><ExternalLink size={12}/>{t("打开")}</button> : null}<button type="button" aria-label={t("关闭素材预览")} title={t("关闭预览")} onClick={() => setPreviewMaterial(undefined)} className="grid size-8 place-items-center rounded-xl bg-[#f4f5f8] text-[#555c70] hover:bg-[#ebeafd] hover:text-[#242838]"><X size={15}/></button></div></header><div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-[#e4e6ef] bg-[#f5f6fa]">{previewMaterial.kind === "image" ? <img src={previewMaterial.previewUrl} alt={previewMaterial.name} className="size-full object-contain"/> : previewMaterial.kind === "media" ? (previewMaterial.mediaKind === "audio" ? <audio src={previewMaterial.previewUrl} controls autoPlay className="h-full w-full px-8"/> : <video src={previewMaterial.previewUrl} controls autoPlay className="size-full bg-[#171b2a] object-contain"/>) : dshEmbed && previewMaterial.kind === "resource" ? <DshFilePreview material={previewMaterial}/> : <iframe src={previewMaterial.previewUrl} title={previewMaterial.name} sandbox={previewMaterial.kind === "link" ? "allow-forms allow-same-origin allow-scripts" : undefined} className="size-full border-0"/>}</div></section>
                 </div>
               )}
               {linkDialogOpen && (
@@ -3159,7 +3165,7 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                     data-dsh-ui="dialog"
                     role="dialog"
                     aria-modal="true"
-                    aria-label="插入白板链接"
+                    aria-label={t("插入白板链接")}
                     onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setLinkDialogOpen(false); setLinkError(''); } }}
                     className="w-full max-w-md rounded-3xl border border-white bg-white p-5 shadow-[0_24px_70px_rgba(30,34,54,.24)]"
                     onSubmit={(event) => {
@@ -3170,15 +3176,14 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                     <div className="mb-4 flex items-start gap-3">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ebeafd] text-[#625bc5]"><Link2 size={18} /></span>
                       <div>
-                        <h2 className="text-sm font-black text-[#242838]">插入网页链接</h2>
-                        <p className="mt-0.5 text-[0.6875rem] text-[#858b9c]">可保存为链接卡片，或直接嵌入网页进行预览与操作。</p>
+                        <h2 className="text-sm font-black text-[#242838]">{t("插入网页链接")}</h2>
+                        <p className="mt-0.5 text-[0.6875rem] text-[#858b9c]">{t("可保存为链接卡片，或直接嵌入网页进行预览与操作。")}</p>
                       </div>
                     </div>
                     <label className="grid gap-1.5 text-xs font-bold text-[#555c70]">
-                      链接地址
-                      <input
+                      {t("链接地址")}<input
                         autoFocus
-                        aria-label="链接地址"
+                        aria-label={t("链接地址")}
                         value={linkUrl}
                         onChange={(event) => {
                           linkUrlRef.current = event.target.value;
@@ -3200,17 +3205,16 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                       />
                     </label>
                     <label className="mt-3 grid gap-1.5 text-xs font-bold text-[#555c70]">
-                      显示标题（可选）
-                      <input
-                        aria-label="链接标题"
+                      {t("显示标题（可选）")}<input
+                        aria-label={t("链接标题")}
                         value={linkTitle}
                         onChange={(event) => setLinkTitle(event.target.value)}
-                        placeholder="未填写时自动获取网页标题"
+                        placeholder={t("未填写时自动获取网页标题")}
                         className="h-10 rounded-xl border border-[#dfe2ec] bg-[#f8f9fc] px-3 text-[#242838] outline-none focus:border-[#625bc5]"
                       />
                     </label>
                     <fieldset className="mt-4">
-                      <legend className="mb-1.5 text-xs font-bold text-[#555c70]">展示模式</legend>
+                      <legend className="mb-1.5 text-xs font-bold text-[#555c70]">{t("展示模式")}</legend>
                       <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#f4f5f8] p-1">
                         <button
                           type="button"
@@ -3218,16 +3222,14 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                           onClick={() => setLinkMode("link")}
                           className={`rounded-lg px-3 py-2 text-xs font-bold ${linkMode === "link" ? "bg-white text-[#625bc5] shadow-sm" : "text-[#73798b]"}`}
                         >
-                          链接卡片
-                        </button>
+                          {t("链接卡片")}</button>
                         <button
                           type="button"
                           aria-pressed={linkMode === "preview"}
                           onClick={() => setLinkMode("preview")}
                           className={`rounded-lg px-3 py-2 text-xs font-bold ${linkMode === "preview" ? "bg-white text-[#625bc5] shadow-sm" : "text-[#73798b]"}`}
                         >
-                          网页预览
-                        </button>
+                          {t("网页预览")}</button>
                       </div>
                     </fieldset>
                     {linkError && <p role="alert" className="mt-3 text-xs font-semibold text-[#bd4668]">{linkError}</p>}
@@ -3240,11 +3242,9 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                         }}
                         className="rounded-xl bg-[#f2f3f7] px-4 py-2 text-xs font-bold text-[#62687a]"
                       >
-                        取消
-                      </button>
+                        {t("取消")}</button>
                       <button type="submit" className="rounded-xl bg-[#242a40] px-4 py-2 text-xs font-bold text-white">
-                        插入链接
-                      </button>
+                        {t("插入链接")}</button>
                     </div>
                   </form>
                 </div>
@@ -3253,8 +3253,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <button
                   type="button"
                   data-whiteboard-control-button
-                  aria-label="白板快捷键"
-                  title="查看白板快捷键"
+                  aria-label={t("白板快捷键")}
+                  title={t("查看白板快捷键")}
                   aria-expanded={shortcutsOpen}
                   onClick={() => {
                     setShortcutsOpen((value) => !value);
@@ -3267,14 +3267,13 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 {shortcutsOpen && (
                   <section
-                    aria-label="白板快捷键列表"
+                    aria-label={t("白板快捷键列表")} data-moki-ui="keyboard-shortcuts"
                     className="moki-menu-surface absolute bottom-11 right-0 max-h-[min(32rem,calc(100dvh-14rem))] w-72 overflow-y-auto p-3"
                   >
                     <div className="mb-2.5">
-                      <p className="text-xs font-black text-[#30364d]">白板快捷键</p>
+                      <p className="text-xs font-black text-[#30364d]">{t("白板快捷键")}</p>
                       <p className="mt-0.5 text-[0.625rem] text-[#8b90a1]">
-                        在文字输入时不会触发画布快捷键
-                      </p>
+                        {t("在文字输入时不会触发画布快捷键")}</p>
                     </div>
                     <div className="grid gap-1.5">
                       {WHITEBOARD_SHORTCUTS.map((shortcut) => (
@@ -3298,8 +3297,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <button
                   type="button"
                   data-whiteboard-control-button
-                  aria-label="导出白板图片"
-                  title="导出为 PNG 图片"
+                  aria-label={t("导出白板图片")}
+                  title={t("导出为 PNG 图片")}
                   aria-expanded={exportMenuOpen}
                   onClick={() => {
                     setExportMenuOpen((value) => !value);
@@ -3312,10 +3311,9 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 {exportMenuOpen && (
                   <div className="moki-menu-surface absolute right-0 top-11 w-60 p-3 text-xs text-[#30364d]">
-                    <p className="font-black">导出白板图片</p>
+                    <p className="font-black">{t("导出白板图片")}</p>
                     <label className="mt-3 grid gap-1 font-bold text-[#62687a]">
-                      延展边缘边距（像素）
-                      <input
+                      {t("延展边缘边距（像素）")}<input
                         type="number"
                         min={0}
                         max={1000}
@@ -3332,16 +3330,14 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                         onClick={() => exportCurrentWhiteboard("selection")}
                         className="rounded-xl border border-[#dddff0] px-2 py-2 font-bold transition hover:bg-[#f0efff] disabled:opacity-50"
                       >
-                        导出选中内容
-                      </button>
+                        {t("导出选中内容")}</button>
                       <button
                         type="button"
                         disabled={exporting}
                         onClick={() => exportCurrentWhiteboard("canvas")}
                         className="rounded-xl bg-[#242a40] px-2 py-2 font-bold text-white transition hover:bg-[#30364d] disabled:opacity-50"
                       >
-                        导出整个画布
-                      </button>
+                        {t("导出整个画布")}</button>
                     </div>
                   </div>
                 )}
@@ -3349,8 +3345,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
             <button
                 type="button"
                 data-whiteboard-control-button
-                aria-label={isCanvasFullscreen ? "退出画布全屏" : "画布全屏"}
-                title={isCanvasFullscreen ? "退出全屏（Esc）" : "画布全屏"}
+                aria-label={isCanvasFullscreen ? t("退出画布全屏") : t("画布全屏")} data-moki-ui={isCanvasFullscreen ? "exit-fullscreen" : "canvas-fullscreen"}
+                title={isCanvasFullscreen ? t("退出全屏（Esc）") : t("画布全屏")}
                 aria-pressed={isCanvasFullscreen}
                 onClick={() => setIsCanvasFullscreen((value) => !value)}
                 className="absolute right-3 top-3 z-30 grid size-9 place-items-center rounded-xl border border-[#e2e4ed] bg-white/95 text-[#30364d] shadow-sm transition hover:bg-[#f0efff]"
@@ -3371,8 +3367,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
               >
                 <button
                   type="button"
-                  aria-label="选择"
-                  title="选择"
+                  aria-label={t("选择")}
+                  title={t("选择")}
                   aria-pressed={activeTool === "select"}
                   onClick={() => setCanvasTool("select")}
                   className={toolButtonClass("select")}
@@ -3381,8 +3377,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="拖动画布"
-                  title="拖动画布"
+                  aria-label={t("拖动画布")}
+                  title={t("拖动画布")}
                   aria-pressed={activeTool === "hand"}
                   onClick={() => setCanvasTool("hand")}
                   className={toolButtonClass("hand")}
@@ -3391,8 +3387,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="橡皮"
-                  title="橡皮"
+                  aria-label={t("橡皮")} data-moki-ui="eraser"
+                  title={t("橡皮")}
                   aria-pressed={activeTool === "eraser"}
                   onClick={() => setCanvasTool("eraser")}
                   className={toolButtonClass("eraser")}
@@ -3402,8 +3398,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative shrink-0">
                   <button
                     type="button"
-                    aria-label="箭头"
-                    title="箭头与连线"
+                    aria-label={t("箭头")}
+                    title={t("箭头与连线")}
                     aria-pressed={activeTool === "arrow"}
                     aria-expanded={arrowMenuOpen}
                     onClick={() => {
@@ -3418,7 +3414,7 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                   {activeTool === "arrow" && arrowMenuOpen && (
                     <div
                       role="menu"
-                      aria-label="箭头样式"
+                      aria-label={t("箭头样式")}
                       data-outside-dismiss="pass-through"
                       className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-44 -translate-x-1/2 p-2"
                       onMouseDown={(event) => {
@@ -3426,18 +3422,18 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                         event.preventDefault();
                       }}
                     >
-                      <p className="mb-1.5 px-1 text-[0.625rem] font-bold text-[#9297a7]">箭头样式</p>
+                      <p className="mb-1.5 px-1 text-[0.625rem] font-bold text-[#9297a7]">{t("箭头样式")}</p>
                       {([
-                        ["single", "单向箭头", "→"],
-                        ["double", "双向箭头", "↔"],
-                        ["line", "直线", "─"],
-                        ["dashed", "虚线箭头", "⇢"],
+                        ["single", t("单向箭头"), "→"],
+                        ["double", t("双向箭头"), "↔"],
+                        ["line", t("直线"), "─"],
+                        ["dashed", t("虚线箭头"), "⇢"],
                       ] as const).map(([style, label, preview]) => (
                         <button
                           type="button"
                           role="menuitemradio"
                           aria-checked={arrowStyle === style}
-                          aria-label={`箭头样式 ${label}`}
+                          aria-label={t("箭头样式 {0}", label)}
                           key={style}
                           onClick={() => applyArrowStyle(style)}
                           className={`native-whiteboard-edit-control flex h-9 w-full items-center gap-3 rounded-xl px-2 text-left text-xs font-bold transition ${arrowStyle === style ? "bg-[#ebeafd] text-[#625bc5]" : "text-[#555b70] hover:bg-[#f5f5fa]"}`}
@@ -3452,8 +3448,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative flex shrink-0 items-center gap-1">
                   <button
                     type="button"
-                    aria-label="钢笔"
-                    title="钢笔：点击添加锚点，拖拽调整曲线；双击或 Enter 完成，点击起点闭合"
+                    aria-label={t("钢笔")} data-moki-ui="pen"
+                    title={t("钢笔：点击添加锚点，拖拽调整曲线；双击或 Enter 完成，点击起点闭合")}
                     aria-pressed={activeTool === "pen"}
                     aria-expanded={activeTool === "pen" && drawMenuOpen}
                     onClick={() => {
@@ -3467,8 +3463,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                   </button>
                   <button
                     type="button"
-                    aria-label="画笔"
-                    title="自由绘制"
+                    aria-label={t("画笔")}
+                    title={t("自由绘制")}
                     aria-pressed={activeTool === "draw"}
                     aria-expanded={drawMenuOpen}
                     onClick={() => {
@@ -3482,7 +3478,7 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                   </button>
                   {(activeTool === "draw" || activeTool === "pen") && drawMenuOpen && (
                     <div
-                      aria-label="画笔粗细"
+                      aria-label={t("画笔粗细")}
                       data-outside-dismiss="false"
                       className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-52 -translate-x-1/2 p-2"
                       onMouseDown={(event) => {
@@ -3490,18 +3486,18 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                         event.preventDefault();
                       }}
                     >
-                      <p className="mb-2 px-1 text-[0.625rem] font-bold text-[#9297a7]">笔画粗细</p>
+                      <p className="mb-2 px-1 text-[0.625rem] font-bold text-[#9297a7]">{t("笔画粗细")}</p>
                       <div className="grid grid-cols-4 gap-1 rounded-xl bg-[#f4f5f8] p-1">
                         {([
-                          ["s", "细"],
-                          ["m", "中"],
-                          ["l", "粗"],
-                          ["xl", "特粗"],
+                          ["s", t("细")],
+                          ["m", t("中")],
+                          ["l", t("粗")],
+                          ["xl", t("特粗")],
                         ] as const).map(([size, label]) => (
                           <button
                             type="button"
                             key={size}
-                            aria-label={`画笔粗细 ${label}`}
+                            aria-label={t("画笔粗细 {0}", label)}
                             aria-pressed={drawSize === size}
                             onClick={() => applyDrawSize(size)}
                             className={`native-whiteboard-edit-control grid h-9 place-items-center rounded-lg transition ${drawSize === size ? "bg-white text-[#625bc5] shadow-sm" : "text-[#73798b] hover:text-[#30364d]"}`}
@@ -3516,14 +3512,14 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                       </div>
                       <div className="mb-2 mt-3 flex items-center gap-1.5 px-1 text-[0.625rem] font-bold text-[#9297a7]">
                         <Palette size={12} />
-                        <span>画笔颜色</span>
+                        <span>{t("画笔颜色")}</span>
                       </div>
-                      <div aria-label="画笔颜色" className="grid grid-cols-6 gap-1">
+                      <div aria-label={t("画笔颜色")} className="grid grid-cols-6 gap-1">
                         {NATIVE_COLOR_OPTIONS.map((option) => (
                           <button
                             type="button"
                             key={option.value}
-                            aria-label={`画笔颜色 ${option.label}`}
+                            aria-label={t("画笔颜色 {0}", option.label)}
                             aria-pressed={drawColor === option.value}
                             title={option.label}
                             onClick={() => applyDrawColor(option.value)}
@@ -3547,8 +3543,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative shrink-0">
                   <button
                     type="button"
-                    aria-label="文字"
-                    title="点击画布输入文字"
+                    aria-label={t("文字")}
+                    title={t("点击画布输入文字")}
                     aria-pressed={activeTool === "text"}
                     onClick={() => setCanvasTool("text")}
                     className={toolButtonClass("text")}
@@ -3558,8 +3554,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </div>
                 <button
                   type="button"
-                  aria-label="便签"
-                  title="添加便签"
+                  aria-label={t("便签")}
+                  title={t("添加便签")}
                   onClick={() => insertScaledShape("note")}
                   className={actionButtonClass}
                 >
@@ -3568,8 +3564,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative shrink-0">
                   <button
                     type="button"
-                    aria-label="插入思维导图"
-                    title="选择思维导图模板"
+                    aria-label={t("插入思维导图")} data-moki-ui="insert-mind-map"
+                    title={t("选择思维导图模板")}
                     aria-expanded={mindMapMenuOpen}
                     onClick={() => {
                       editorRef.current?.setCurrentTool("select");
@@ -3585,16 +3581,16 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                   {mindMapMenuOpen ? (
                     <div
                       role="menu"
-                      aria-label="思维导图模板"
+                      aria-label={t("思维导图模板")} data-moki-ui="mind-map-templates"
                       className="moki-menu-surface absolute bottom-full left-1/2 z-50 mb-2 max-h-[30rem] w-[24rem] -translate-x-1/2 overflow-y-auto p-3"
                       onPointerDown={(event) => event.stopPropagation()}
                     >
                       <div className="mb-3 flex items-center justify-between gap-3 px-1">
                         <span>
-                          <b className="block text-xs text-[#34394d]">从模板创建</b>
-                          <small className="mt-0.5 block text-[0.625rem] font-semibold text-[#9297a7]">创建后可无限添加、拖动改层级并收起分支</small>
+                          <b className="block text-xs text-[#34394d]">{t("从模板创建")}</b>
+                          <small className="mt-0.5 block text-[0.625rem] font-semibold text-[#9297a7]">{t("创建后可无限添加、拖动改层级并收起分支")}</small>
                         </span>
-                        <button type="button" aria-label="关闭思维导图模板" onClick={() => setMindMapMenuOpen(false)} className="grid size-7 place-items-center rounded-lg text-[#7a8092] hover:bg-[#f2f3f7]"><X size={14}/></button>
+                        <button type="button" aria-label={t("关闭思维导图模板")} onClick={() => setMindMapMenuOpen(false)} className="grid size-7 place-items-center rounded-lg text-[#7a8092] hover:bg-[#f2f3f7]"><X size={14}/></button>
                       </div>
                       <div className="space-y-3">
                         {MIND_MAP_TEMPLATE_GROUPS.map((group) => (
@@ -3606,7 +3602,7 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                                   type="button"
                                   role="menuitem"
                                   key={option.id}
-                                  aria-label={`使用${option.label}模板`}
+                                  aria-label={t("使用{0}模板", option.label)}
                                   title={option.description}
                                   onClick={() => insertMindMap(option.id)}
                                   className="native-whiteboard-menu-card group flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-[#dfe2eb] bg-white px-2 py-2 text-center text-[#3b4154] transition hover:border-[#aca7e6] hover:bg-[#f5f3ff] hover:text-[#5b54b5]"
@@ -3625,8 +3621,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative shrink-0">
                   <button
                     type="button"
-                    aria-label="形状"
-                    title="形状"
+                    aria-label={t("形状")}
+                    title={t("形状")}
                     aria-pressed={activeTool === "geo"}
                     aria-expanded={shapeMenuOpen}
                     onClick={() => {
@@ -3650,7 +3646,7 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                     <Square size={16} />
                   </button>
                   {shapeMenuOpen && (
-                    <div role="menu" aria-label="形状选择" data-outside-dismiss="pass-through" className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-60 -translate-x-1/2 p-2">
+                    <div role="menu" aria-label={t("形状选择")} data-moki-ui="shape-picker" data-outside-dismiss="pass-through" className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-60 -translate-x-1/2 p-2">
                       <div className="grid grid-cols-3 gap-1.5">
                         {SHAPE_OPTIONS.map((option) => (
                           <button
@@ -3677,8 +3673,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </div>
                 <button
                   type="button"
-                  aria-label="图片或 GIF"
-                  title="插入图片或 GIF（I），也可 Ctrl/⌘+V 粘贴"
+                  aria-label={t("图片或 GIF")}
+                  title={t("插入图片或 GIF（I），也可 Ctrl/⌘+V 粘贴")}
                   onClick={() => imageInputRef.current?.click()}
                   className={actionButtonClass}
                 >
@@ -3687,8 +3683,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <div className="relative">
                   <button
                     type="button"
-                    aria-label="添加文件"
-                    title="添加本地文件或文件夹"
+                    aria-label={t("添加文件")} data-moki-ui="add-file"
+                    title={t("添加本地文件或文件夹")}
                     aria-expanded={fileInsertMenuOpen}
                     onClick={() => setFileInsertMenuOpen((value) => !value)}
                     className={actionButtonClass}
@@ -3696,16 +3692,16 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                     <FileIcon size={16} />
                   </button>
                   {fileInsertMenuOpen ? (
-                    <div role="menu" aria-label="选择本地文件或文件夹" data-outside-dismiss="pass-through" className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-44 -translate-x-1/2 p-2">
-                      <button type="button" role="menuitem" onClick={() => void importLocalMaterial(false)} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-[0.6875rem] font-bold text-[#43495d] hover:bg-[#f2f1ff]"><FileIcon size={14}/>选择本地文件</button>
-                      <button type="button" role="menuitem" onClick={() => void importLocalMaterial(true)} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-[0.6875rem] font-bold text-[#43495d] hover:bg-[#f2f1ff]"><Folder size={14}/>选择本地文件夹</button>
+                    <div role="menu" aria-label={t("选择本地文件或文件夹")} data-outside-dismiss="pass-through" className="moki-menu-surface absolute bottom-full left-1/2 z-40 mb-2 w-44 -translate-x-1/2 p-2">
+                      <button type="button" role="menuitem" onClick={() => void importLocalMaterial(false)} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-[0.6875rem] font-bold text-[#43495d] hover:bg-[#f2f1ff]"><FileIcon size={14}/>{t("选择本地文件")}</button>
+                      <button type="button" role="menuitem" onClick={() => void importLocalMaterial(true)} className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-[0.6875rem] font-bold text-[#43495d] hover:bg-[#f2f1ff]"><Folder size={14}/>{t("选择本地文件夹")}</button>
                     </div>
                   ) : null}
                 </div>
                 <button
                   type="button"
-                  aria-label="链接"
-                  title="插入网页链接"
+                  aria-label={t("链接")} data-moki-ui="link"
+                  title={t("插入网页链接")}
                   onClick={() => {
                     setLinkDialogOpen(true);
                     setLinkError("");
@@ -3718,8 +3714,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 <span className="mx-1 h-6 w-px shrink-0 bg-[#e2e4ed]" />
                 <button
                   type="button"
-                  aria-label="对齐工具"
-                  title={alignmentToolsOpen ? "收起对齐工具" : "展开对齐工具"}
+                  aria-label={t("对齐工具")} data-moki-ui="alignment"
+                  title={alignmentToolsOpen ? t("收起对齐工具") : t("展开对齐工具")}
                   aria-expanded={alignmentToolsOpen}
                   onClick={() => setAlignmentToolsOpen(value => !value)}
                   className={`${actionButtonClass} ${alignmentToolsOpen ? "bg-[#ebeafd] text-[#625bc5]" : ""}`}
@@ -3729,8 +3725,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 {alignmentToolsOpen ? <>
                 <button
                   type="button"
-                  aria-label="左对齐"
-                  title="左对齐"
+                  aria-label={t("左对齐")}
+                  title={t("左对齐")}
                   onClick={() => alignSelectedShapes("left")}
                   className={actionButtonClass}
                 >
@@ -3738,8 +3734,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="水平居中"
-                  title="水平居中"
+                  aria-label={t("水平居中")}
+                  title={t("水平居中")}
                   onClick={() => alignSelectedShapes("center-x")}
                   className={actionButtonClass}
                 >
@@ -3747,8 +3743,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="右对齐"
-                  title="右对齐"
+                  aria-label={t("右对齐")}
+                  title={t("右对齐")}
                   onClick={() => alignSelectedShapes("right")}
                   className={actionButtonClass}
                 >
@@ -3756,8 +3752,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="顶部对齐"
-                  title="顶部对齐"
+                  aria-label={t("顶部对齐")}
+                  title={t("顶部对齐")}
                   onClick={() => alignSelectedShapes("top")}
                   className={actionButtonClass}
                 >
@@ -3765,8 +3761,8 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="垂直居中"
-                  title="垂直居中"
+                  aria-label={t("垂直居中")}
+                  title={t("垂直居中")}
                   onClick={() => alignSelectedShapes("center-y")}
                   className={actionButtonClass}
                 >
@@ -3774,15 +3770,15 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                 </button>
                 <button
                   type="button"
-                  aria-label="底部对齐"
-                  title="底部对齐"
+                  aria-label={t("底部对齐")}
+                  title={t("底部对齐")}
                   onClick={() => alignSelectedShapes("bottom")}
                   className={actionButtonClass}
                 >
                   <AlignEndHorizontal size={16} />
                 </button>
                 </> : null}
-                {dshEmbed && <button type="button" aria-label={moreToolsOpen ? '收起更多工具' : '更多绘图工具'} title={moreToolsOpen ? '收起更多工具' : '更多工具：钢笔、橡皮、思维导图、文件、链接、对齐'} aria-expanded={moreToolsOpen} onClick={() => {
+                {dshEmbed && <button type="button" aria-label={moreToolsOpen ? t("收起更多工具") : t("更多绘图工具")} title={moreToolsOpen ? t("收起更多工具") : t("更多工具：钢笔、橡皮、思维导图、文件、链接、对齐")} aria-expanded={moreToolsOpen} onClick={() => {
                   setMoreToolsOpen(value => !value);
                   setMindMapMenuOpen(false);
                   setFileInsertMenuOpen(false);
@@ -3795,19 +3791,17 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
 
           {historyOpen && (
             <aside
-              aria-label="白板版本记录"
+              aria-label={t("白板版本记录")} data-moki-ui="version-history"
               data-dsh-ui="panel"
               data-whiteboard-control-surface
               className="absolute bottom-3 right-3 top-3 z-50 w-[250px] overflow-auto rounded-[18px] border border-[#e2e4ed] bg-white/95 p-3 shadow-[0_18px_46px_rgba(23,27,44,.18)] backdrop-blur"
             >
               <header className="mb-3 relative pr-7">
-                <button type="button" aria-label="关闭白板版本记录" onClick={() => setHistoryOpen(false)} className="absolute right-0 top-0 grid size-7 place-items-center rounded-lg text-[#73798b]"><X size={14}/></button>
+                <button type="button" aria-label={t("关闭白板版本记录")} onClick={() => setHistoryOpen(false)} className="absolute right-0 top-0 grid size-7 place-items-center rounded-lg text-[#73798b]"><X size={14}/></button>
                 <h2 className="text-[0.75rem] font-black">
-                  {activePage?.pageName ?? "当前页面"} · 版本记录
-                </h2>
+                  {activePage?.pageName ?? t("当前页面")} {t("· 版本记录")}</h2>
                 <p className="text-[0.625rem] text-[#9297a7]">
-                  每个页面独立保存，最多保留最近 20 个版本
-                </p>
+                  {t("每个页面独立保存，最多保留最近 20 个版本")}</p>
               </header>
               <div className="space-y-1.5">
                 {versions.map((version) => (
@@ -3819,10 +3813,10 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                   >
                     <span>
                       <b className="block text-[0.6875rem]">
-                        版本 {version.pageVersion ?? version.version}
+                        {t("版本")}{version.pageVersion ?? version.version}
                       </b>
                       <small className="text-[0.625rem] text-[#9297a7]">
-                        {new Intl.DateTimeFormat("zh-CN", {
+                        {new Intl.DateTimeFormat(getLanguage(), {
                           timeZone: "Asia/Shanghai",
                           month: "numeric",
                           day: "numeric",
@@ -3833,14 +3827,12 @@ html[data-color-scheme="dark"] .whiteboard-canvas[data-tool-cursor="true"] .nati
                       </small>
                     </span>
                     <span className="text-[0.625rem] font-bold text-[#625bc5]">
-                      恢复
-                    </span>
+                      {t("恢复")}</span>
                   </button>
                 ))}
                 {versions.length === 0 && (
                   <p className="py-8 text-center text-[0.6875rem] text-[#9297a7]">
-                    保存后将显示版本记录
-                  </p>
+                    {t("保存后将显示版本记录")}</p>
                 )}
               </div>
             </aside>

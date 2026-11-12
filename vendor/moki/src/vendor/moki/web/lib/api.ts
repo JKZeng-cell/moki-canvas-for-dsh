@@ -1,3 +1,4 @@
+import {t} from '../../../../web/i18n.js';
 import type { WhiteboardLatest, WhiteboardVersion, WhiteboardVersionSummary, WhiteboardSaveResult, WhiteboardPageSyncResult } from '../../shared/whiteboard-contract.js';
 import { apiFetch } from './api-fetch.js';
 const baselines=new Map<string,number>();
@@ -8,7 +9,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if(init?.method)headers.set('x-moki-retryable-write','true');
   const response = await apiFetch(path, {...init,headers});
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? '白板请求失败');
+  if (!response.ok) throw new Error(body.error ?? t("白板请求失败"));
   const version=Number(response.headers.get('x-moki-board-version'));
   if(version>0&&(path.split('?')[0]==='/api/whiteboard'||init?.method))baselines.set(boardKey(),version);
   return body as T;

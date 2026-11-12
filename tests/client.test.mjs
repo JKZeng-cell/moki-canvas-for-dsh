@@ -110,6 +110,22 @@ test('composer hint adds one native quote and image, keeps typed text and allows
   assert.equal(h.attachments.length,1,'reuses the image still attached after removing its quote')
 })
 
+test('canvas language updates selection controls, preserving the draft and rejecting foreign frame messages',async t=>{
+  const h=await harness(t)
+  await h.select(makeSelection())
+  const draft=h.state.value.draft
+  await h.message({type:'moki:language',language:'en'},'http://untrusted.test')
+  assert.match(h.hint().textContent,/已选 1 项/)
+  await h.message({type:'moki:language',language:'en'})
+  assert.match(h.hint().textContent,/Whiteboard selection · 1 selected/)
+  assert.match(h.hint().textContent,/Add to chat/)
+  assert.equal(h.state.value.draft,draft)
+  await h.message({type:'moki:language',language:'unknown'})
+  assert.match(h.hint().textContent,/Whiteboard selection/)
+  await h.message({type:'moki:language',language:'zh-CN'})
+  assert.match(h.hint().textContent,/白板选区/)
+})
+
 test('rejects foreign messages, changed selections and late responses after hiding the panel',async t=>{
   const h=await harness(t),selection=makeSelection()
   await h.message({type:'moki:state',boardId:'wrong',selection},'http://other.test')

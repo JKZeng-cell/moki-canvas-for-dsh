@@ -1,7 +1,8 @@
+import {t} from '../../../../web/i18n.js';
 /** Images drawn without CORS permission permanently taint their destination canvas. */
 export class CanvasImageUnavailableError extends Error {
   constructor() {
-    super("部分图片暂时无法生成截图。请等待图片加载完成；若图片来源限制跨域访问，请下载后作为本地图片重新置入。");
+    super(t("部分图片暂时无法生成截图。请等待图片加载完成；若图片来源限制跨域访问，请下载后作为本地图片重新置入。"));
     this.name = "CanvasImageUnavailableError";
   }
 }

@@ -18,6 +18,7 @@ import {FileEditConflict} from '../vendor/moki/documents/file-edit-guard.js';
 import {ResourceCache} from './resource-cache.js';
 import {APP_VERSION} from './app-metadata.js';
 import {registerLanSharing} from './lan-sharing.js';
+import {registerUiPreferences} from './ui-preferences.js';
 import {WHITEBOARD_HTTP_BODY_LIMIT} from '../vendor/moki/shared/whiteboard-transfer-limits.js';
 
 const IdParams = z.object({ id: z.string().min(1) });
@@ -30,6 +31,7 @@ export async function createApp(options: { store: WhiteboardStore; resourceCache
   const { store } = options;
   store.db.exec('CREATE TABLE IF NOT EXISTS native_agent_context (board_id TEXT PRIMARY KEY,context_json TEXT NOT NULL)');
   const cache=options.resourceCache??new ResourceCache(store);
+  registerUiPreferences(app, store);
   await registerNativeRoutes(app, store,cache);
   registerLibraryRoutes(app, store,cache);
   registerThumbnailRoutes(app,store);

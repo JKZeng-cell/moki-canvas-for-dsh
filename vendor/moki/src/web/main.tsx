@@ -9,9 +9,12 @@ import './dsh-embed.css';
 import './dsh-surfaces.css';
 import { installModalOutsideDismiss } from '../vendor/moki/web/lib/modal-outside-dismiss.js';
 import {installBrowserResourceBridge} from './library-adapter.js';
+import {initializeLanguage} from './i18n.js';
 
 installModalOutsideDismiss();
 const shareToken=/^\/share\/([A-Za-z0-9_-]+)$/u.exec(location.pathname)?.[1];
 if(!shareToken)installBrowserResourceBridge();
 
-createRoot(document.getElementById("root")!).render(<StrictMode>{shareToken?<SharedWhiteboard token={shareToken}/>:<App/>}</StrictMode>);
+void initializeLanguage().finally(() => {
+  createRoot(document.getElementById("root")!).render(<StrictMode>{shareToken?<SharedWhiteboard token={shareToken}/>:<App/>}</StrictMode>);
+});

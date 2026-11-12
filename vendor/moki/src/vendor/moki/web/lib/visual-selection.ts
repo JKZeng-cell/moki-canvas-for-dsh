@@ -1,3 +1,4 @@
+import {t} from '../../../../web/i18n.js';
 import { apiFetch } from "./api-fetch.js";
 import { CanvasImageUnavailableError, loadCanvasImage } from "./canvas-image.js";
 
@@ -57,7 +58,7 @@ export async function cropVisualSelection(
   options: { highlightRect?: VisualSelectionRect } = {},
 ): Promise<{ blob: Blob; width: number; height: number }> {
   const image = await imageElement(source);
-  if (surface.width <= 0 || surface.height <= 0) throw new Error("选区尺寸无效");
+  if (surface.width <= 0 || surface.height <= 0) throw new Error(t("选区尺寸无效"));
   const scaleX = image.naturalWidth / surface.width;
   const scaleY = image.naturalHeight / surface.height;
   const sourceX = Math.max(0, Math.round(rect.x * scaleX));
@@ -71,7 +72,7 @@ export async function cropVisualSelection(
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("当前设备无法生成选区图片");
+  if (!context) throw new Error(t("当前设备无法生成选区图片"));
   context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
   if (options.highlightRect) {
     const highlight = options.highlightRect;
@@ -88,7 +89,7 @@ export async function cropVisualSelection(
     context.restore();
   }
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
-    (value) => value ? resolve(value) : reject(new Error("选区图片生成失败")),
+    (value) => value ? resolve(value) : reject(new Error(t("选区图片生成失败"))),
     "image/jpeg",
     0.82,
   ));
@@ -99,7 +100,7 @@ export async function storeVisualSelectionImage(
   blob: Blob,
   input: { name: string; width?: number; height?: number },
 ): Promise<StoredVisualSelection> {
-  if (!blob.size || !blob.type.startsWith("image/")) throw new Error("选区图片内容无效");
+  if (!blob.size || !blob.type.startsWith("image/")) throw new Error(t("选区图片内容无效"));
   const response = await apiFetch("/api/whiteboard/assets", {
     method: "POST",
     headers: {
@@ -114,7 +115,7 @@ export async function storeVisualSelectionImage(
   });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
   if (!response.ok || typeof result.src !== "string") {
-    throw new Error(typeof result.error === "string" ? result.error : "选区图片保存失败");
+    throw new Error(typeof result.error === "string" ? result.error : t("选区图片保存失败"));
   }
   return {
     id: result.src.split("/").at(-1) || `selection-${Date.now()}`,

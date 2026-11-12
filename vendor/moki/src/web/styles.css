@@ -30,3 +30,13 @@ html[data-color-scheme=dark] .native-mcp-modal{background:#242a3c;color:#eef0f8}
  html[data-color-scheme=dark] .whiteboard-window-progress{background:#171c2bcc;color:#c0baff}
  html[data-color-scheme=dark] .whiteboard-window-progress>span{background:#242a3c;border-color:#3a4157}
 html[data-color-scheme=dark] #root .whiteboard-canvas-frame{border-color:#30384c!important;box-shadow:0 12px 38px rgba(5,8,18,.12)}
+.settings-language-section { padding-bottom: 14px; border-bottom: 1px solid var(--dsh-line, #dde0e9); }
+.settings-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.settings-language-row > span { min-width: 0; }
+.settings-language-row strong, .settings-language-row small { display: block; }
+.settings-language-row strong { font-size: 13px; font-weight: 500; }
+.settings-language-row small { margin-top: 4px; font-size: 11px; line-height: 1.6; color: var(--dsh-muted, #8b90a1); }
+.settings-language-row select { flex: 0 0 auto; width: 130px; min-height: 32px; padding: 5px 8px; border: 1px solid var(--dsh-line, #dde0e9); border-radius: 5px; background: var(--dsh-surface, #fff); color: inherit; font: inherit; }
+.settings-language-row select:focus-visible { outline: 2px solid var(--dsh-focus, #625bc5); outline-offset: 2px; }
+html[data-color-scheme=dark] .settings-language-row select { background: var(--dsh-surface, #242a3c); border-color: var(--dsh-line, #3a4157); }
+@media (max-width: 400px) { .settings-language-row { align-items: flex-start; flex-direction: column; gap: 8px; } .settings-language-row select { width: 100%; } }

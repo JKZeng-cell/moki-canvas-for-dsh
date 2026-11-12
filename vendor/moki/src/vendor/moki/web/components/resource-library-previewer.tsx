@@ -1,3 +1,4 @@
+import {t, useI18n, getLanguage} from '../../../../web/i18n.js';
 import { SpreadsheetPreview } from "./spreadsheet-preview.js";
 import { apiFetch } from "../lib/api-fetch.js";
 import "@extend-ai/react-pptx/styles.css";
@@ -271,7 +272,7 @@ export function serializeDelimitedRows(rows: string[][], delimiter: "," | "\t"):
 
 async function copyCanvas(canvas: HTMLCanvasElement): Promise<void> {
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-  if (!blob || !navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error("当前环境不支持复制图像");
+  if (!blob || !navigator.clipboard?.write || typeof ClipboardItem === "undefined") throw new Error(t("当前环境不支持复制图像"));
   await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
 }
 
@@ -320,6 +321,7 @@ function StructuredPresentationSlides({
 }: {
   preview: Extract<ResourceLibraryStructuredPreview, { kind: "presentation" }>;
 }) {
+  useI18n();
   return <div className="grid size-full gap-4 overflow-auto bg-[#e8eaf0] p-5 md:grid-cols-2">
     {preview.slides.map((slide) => <article key={slide.number} className="relative aspect-video overflow-auto rounded-lg bg-white p-8 shadow-sm">
       <span className="absolute bottom-2 right-3 text-[0.625rem] font-bold text-[#a0a5b5]">{slide.number}</span>
@@ -448,6 +450,7 @@ function contentEditableCaretPosition(element: HTMLElement): { x: number; y: num
 }
 
 export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, layerClassName = "z-[80]", displayMode = "modal", contained = false, onDirtyChange, active = true, onCheckpointReady, onCloseRequestReady }: Props) {
+  useI18n();
   const previewUrl = resourceLibraryPreviewUrl(item);
   const kind = enhancedResourcePreviewKind(item);
   const extension = resourcePreviewExtension(item);
@@ -535,7 +538,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       try { result=JSON.parse(responseText) as Record<string,unknown>; }
       catch { result={error:responseText}; }
     }
-    if(!response.ok)throw new Error(typeof result.error === 'string' ? result.error : response.statusText || '自动保存草稿失败');
+    if(!response.ok)throw new Error(typeof result.error === 'string' ? result.error : response.statusText || t("自动保存草稿失败"));
     return result as T;
   }
   function persistDraft(syncFrame=true): Promise<void> {
@@ -546,17 +549,17 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         if(!current.dirty) return;
         if(syncFrame) await prepareOfficeEditorSave(current.session);
         const saved=await draftRequest<{savedAt:string}>(`univer-session/${current.session.sessionId}/checkpoint`,'POST',{});
-        setAutosaveStatus(`草稿已自动保存 · ${new Date(saved.savedAt).toLocaleTimeString()}`);
+        setAutosaveStatus(t("草稿已自动保存 · {0}", new Date(saved.savedAt).toLocaleTimeString(getLanguage())));
       } else if(current.editingText || current.dirty) {
         const signature=JSON.stringify([current.textContent,current.textSourceVersion]);
         if(signature===lastTextCheckpoint.current)return;
         const saved=await draftRequest<{savedAt:string}>('draft','PUT',{content:current.textContent,version:current.textSourceVersion});
         lastTextCheckpoint.current=signature;
-        setAutosaveStatus(`草稿已自动保存 · ${new Date(saved.savedAt).toLocaleTimeString()}`);
+        setAutosaveStatus(t("草稿已自动保存 · {0}", new Date(saved.savedAt).toLocaleTimeString(getLanguage())));
       }
     });
     autosavePending.current=pending;
-    return pending.catch(error=>{setAutosaveStatus(`草稿自动保存失败：${error.message}`);throw error;});
+    return pending.catch(error=>{setAutosaveStatus(t("草稿自动保存失败：{0}", error.message));throw error;});
   }
   const persistDraftRef=useRef(persistDraft);persistDraftRef.current=persistDraft;
   useEffect(()=>{
@@ -610,15 +613,15 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
   useEffect(() => {
     if (!embedded || !active || (!univerSession && !editingText)) return;
     publishWorkbenchSelectionContext({
-      source: 'library', label: `资料库编辑：${item.name}`, itemCount: 1,
+      source: 'library', label: t("资料库编辑：{0}", item.name), itemCount: 1,
       content: JSON.stringify({
         file: { id: item.id, name: item.name, type: univerSession ? 'Office' : 'text' },
         unsavedDraft: univerSession ? JSON.stringify({ editor: 'univer', sessionId: univerSession.sessionId,
           worktreeId: univerSession.worktreeId, unitId: univerSession.unitId, kind: univerSession.kind, units: univerSession.units ?? [] }) : textContent.slice(0, 16000),
         draftTruncated: !univerSession && textContent.length > 16000,
         assistantContext: univerSession
-          ? '当前侧边工作区有活动 Univer 隔离草稿。使用精确文件 id 和 sessionId，先调用 workbench_univer_office_status / workbench_univer_office_inspect；不熟悉的功能先查 workbench_univer_office_api。通过 workbench_univer_office_execute_preview 调用完整 Univer Facade，新增或删除 Unit 使用 workbench_univer_unit_preview；插入用户图片时先检索资料库，再调用 workbench_univer_office_insert_library_image。工具直接修改隔离草稿，修改可在编辑器中回退或放弃，由用户点击保存后才写回文件。'
-          : '当前侧边工作区有未保存文本草稿。编辑前结合草稿与原文生成确认预览，保留用户已有修改。',
+          ? t("当前侧边工作区有活动 Univer 隔离草稿。使用精确文件 id 和 sessionId，先调用 workbench_univer_office_status / workbench_univer_office_inspect；不熟悉的功能先查 workbench_univer_office_api。通过 workbench_univer_office_execute_preview 调用完整 Univer Facade，新增或删除 Unit 使用 workbench_univer_unit_preview；插入用户图片时先检索资料库，再调用 workbench_univer_office_insert_library_image。工具直接修改隔离草稿，修改可在编辑器中回退或放弃，由用户点击保存后才写回文件。")
+          : t("当前侧边工作区有未保存文本草稿。编辑前结合草稿与原文生成确认预览，保留用户已有修改。"),
       }),
     });
     return () => {
@@ -652,7 +655,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       }
       setNotice(successNotice);
     } catch {
-      setNotice("当前环境无法访问剪贴板");
+      setNotice(t("当前环境无法访问剪贴板"));
     }
   }
 
@@ -698,11 +701,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
           if (!cancelled) {
             setStructuredPreview(result);
             setSavedStructuredPreview(result);
-            if (extension === "doc") setNotice("DOC 文本预览：不保留原始分页、图片和复杂排版，原文件不会被修改。");
+            if (extension === "doc") setNotice(t("DOC 文本预览：不保留原始分页、图片和复杂排版，原文件不会被修改。"));
             if (result.kind === "spreadsheet") setActiveSheetIndex(Math.max(0, result.sheets.findIndex(sheet => !sheet.layout?.hidden)));
           }
         })
-        .catch((error) => { if (!cancelled) setNotice(error instanceof Error ? error.message : "Office 文件预览失败"); })
+        .catch((error) => { if (!cancelled) setNotice(error instanceof Error ? error.message : t("Office 文件预览失败")); })
         .finally(() => { if (!cancelled) setLoading(false); });
       return () => { cancelled = true; };
     }
@@ -719,10 +722,10 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
           if(cancelled || !draft)return;
           setTextContent(draft.content);setTextSourceVersion(draft.version ?? result.version);
           setEditingText(true);setDirty(draft.content!==result.content);
-          setNotice('已恢复上次自动保存的草稿；原文件未被覆盖');
+          setNotice(t("已恢复上次自动保存的草稿；原文件未被覆盖"));
         }).catch(error=>{if(!cancelled)setNotice(String(error));});
       })
-      .catch((error) => { if (!cancelled) setNotice(error instanceof Error ? error.message : "文本读取失败"); })
+      .catch((error) => { if (!cancelled) setNotice(error instanceof Error ? error.message : t("文本读取失败")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [extension, item.id, kind]);
@@ -740,11 +743,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       if (activeSession) {
         setDirty(true);
         setAutosaveStatus("");
-        setNotice("MOKI 已完成写入；编辑结果已在当前编辑器中显示，请检查后选择保存或取消");
+        setNotice(t("MOKI 已完成写入；编辑结果已在当前编辑器中显示，请检查后选择保存或取消"));
         return;
       }
       if (kind === "text" && textDraftActiveRef.current) {
-        setNotice("原文件已更新，当前编辑草稿已保留。保存前请核对最新文件，或将草稿另存为。");
+        setNotice(t("原文件已更新，当前编辑草稿已保留。保存前请核对最新文件，或将草稿另存为。"));
         return;
       }
       setLoading(true);
@@ -756,9 +759,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
             setSavedTextContent(result.content);
             setTextSourceVersion(result.version);
             setDirty(false);
-            setNotice("已同步 MOKI 确认后的编辑结果");
+            setNotice(t("已同步 MOKI 确认后的编辑结果"));
           })
-          .catch((error) => setNotice(error instanceof Error ? error.message : "MOKI 编辑结果同步失败"))
+          .catch((error) => setNotice(error instanceof Error ? error.message : t("MOKI 编辑结果同步失败")))
           .finally(() => setLoading(false));
         return;
       }
@@ -768,9 +771,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
           setSavedStructuredPreview(structuredClone(result));
           setDirty(false);
           setOfficeRevision(new Date().toISOString());
-          setNotice("已同步 MOKI 确认后的编辑结果");
+          setNotice(t("已同步 MOKI 确认后的编辑结果"));
         })
-        .catch((error) => setNotice(error instanceof Error ? error.message : "MOKI 编辑结果同步失败"))
+        .catch((error) => setNotice(error instanceof Error ? error.message : t("MOKI 编辑结果同步失败")))
         .finally(() => setLoading(false));
     };
     window.addEventListener(WORKBENCH_DATA_UPDATED_EVENT, handleUpdate);
@@ -804,7 +807,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
   const renderReadOnlyTable = !editingText && tableMode && tableCellCount <= 12_000;
 
   async function copySource() {
-    await copyText(item.target || previewUrl || item.name, "已复制文件位置");
+    await copyText(item.target || previewUrl || item.name, t("已复制文件位置"));
   }
 
   async function copyImageOrFrame(media: HTMLImageElement | HTMLVideoElement | null) {
@@ -818,7 +821,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       canvas.height = height;
       canvas.getContext("2d")?.drawImage(media, 0, 0, width, height);
       await copyCanvas(canvas);
-      setNotice(media instanceof HTMLVideoElement ? "已复制当前帧" : "已复制图片");
+      setNotice(media instanceof HTMLVideoElement ? t("已复制当前帧") : t("已复制图片"));
     } catch {
       await copySource();
     }
@@ -932,9 +935,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setDirty(false);
       setEditingText(false);
       finishMokiEditorAssistance();
-      setNotice("已保存到原文件");
+      setNotice(t("已保存到原文件"));
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "文本保存失败");
+      setNotice(error instanceof Error ? error.message : t("文本保存失败"));
       if (propagate) throw error;
     } finally {
       setSaving(false);
@@ -945,9 +948,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
     if (univerSessionRef.current) return univerSessionRef.current;
     if (!officeEditable) {
       setNotice(extension === "ppt"
-        ? "旧版 .ppt 仅支持预览，请另存为 .pptx 后编辑"
-        : "当前格式不支持 Office 编辑");
-      if (propagate) throw new Error("当前格式不支持 Office 编辑");
+        ? t("旧版 .ppt 仅支持预览，请另存为 .pptx 后编辑")
+        : t("当前格式不支持 Office 编辑"));
+      if (propagate) throw new Error(t("当前格式不支持 Office 编辑"));
       return;
     }
     setNotice("");
@@ -958,10 +961,10 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setUniverSession(session);
       setEditingOffice(true);
       setDirty(session.recoveredDraft === true);
-      setNotice(session.recoveredDraft ? "正在恢复上次自动保存的草稿…" : "正在打开编辑器…");
+      setNotice(session.recoveredDraft ? t("正在恢复上次自动保存的草稿…") : t("正在打开编辑器…"));
       return session;
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "编辑器打开失败");
+      setNotice(error instanceof Error ? error.message : t("编辑器打开失败"));
       if (propagate) throw error;
     } finally {
       setLoading(false);
@@ -980,9 +983,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setEditingOffice(false);
       finishMokiEditorAssistance();
       setDirty(false);
-      setNotice("已放弃草稿，原文件没有被修改");
+      setNotice(t("已放弃草稿，原文件没有被修改"));
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "草稿放弃失败");
+      setNotice(error instanceof Error ? error.message : t("草稿放弃失败"));
       if (propagate) throw error;
     } finally {
       setSaving(false);
@@ -1000,7 +1003,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
   async function prepareOfficeEditorSave(session: ResourceLibraryUniverSession): Promise<void> {
     const frame = officeEditorFrameRef.current;
     const target = frame?.contentWindow;
-    if (!frame || !target) throw new Error('Office 编辑器尚未就绪，无法同步保存');
+    if (!frame || !target) throw new Error(t("Office 编辑器尚未就绪，无法同步保存"));
     const expectedOrigin = new URL(session.viewerUrl, window.location.href).origin;
     const requestId = `save-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const synced = await new Promise<boolean>((resolve) => {
@@ -1022,13 +1025,13 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       window.addEventListener("message", handleMessage);
       target.postMessage({ type: "moki:univer-prepare-save", requestId }, expectedOrigin);
     });
-    if (!synced) throw new Error("编辑内容仍在同步，请稍后再次保存");
+    if (!synced) throw new Error(t("编辑内容仍在同步，请稍后再次保存"));
   }
 
   async function readUniverEditorSelection(session: ResourceLibraryUniverSession): Promise<UniverImageSelection | undefined> {
     const frame = officeEditorFrameRef.current;
     const target = frame?.contentWindow;
-    if (!target) throw new Error("Office 编辑器尚未就绪");
+    if (!target) throw new Error(t("Office 编辑器尚未就绪"));
     const expectedOrigin = new URL(session.viewerUrl, window.location.href).origin;
     const requestId = `selection-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise((resolve) => {
@@ -1060,7 +1063,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
     try {
       setLibraryImageItems(await getResourceLibraryItems());
     } catch (error) {
-      setLibraryImageError(error instanceof Error ? error.message : "资料库加载失败");
+      setLibraryImageError(error instanceof Error ? error.message : t("资料库加载失败"));
     } finally {
       setLibraryImageLoading(false);
     }
@@ -1075,7 +1078,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
     setNotice("");
     try {
       const selection = libraryImageSelectionRef.current ?? await readUniverEditorSelection(session);
-      if (!selection?.unitId) throw new Error("无法确认当前编辑位置，请先在编辑器中点选插入位置后重试");
+      if (!selection?.unitId) throw new Error(t("无法确认当前编辑位置，请先在编辑器中点选插入位置后重试"));
       const selectionKind = selection.kind;
       const target = selection.kind === "slide"
         ? { unitId: selection.unitId, slideId: selection.slideId }
@@ -1091,11 +1094,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setDirty(true);
       setAutosaveStatus("");
       setNotice(result.optimization?.optimized
-        ? `已将“${result.image.name}”优化为 ${result.optimization.embeddedFormat.toUpperCase()} 并插入当前${selectionKind === "slide" ? "幻灯片" : selectionKind === "sheet" ? "工作表" : selectionKind === "document" ? "文档" : "白板"}`
-        : `已将“${result.image.name}”插入当前${selectionKind === "slide" ? "幻灯片" : selectionKind === "sheet" ? "工作表" : selectionKind === "document" ? "文档" : "白板"}，可继续调整位置和大小`);
+        ? t("已将“{0}”优化为 {1} 并插入当前{2}", result.image.name, result.optimization.embeddedFormat.toUpperCase(), selectionKind === "slide" ? t("幻灯片") : selectionKind === "sheet" ? t("工作表") : selectionKind === "document" ? t("文档") : t("白板"))
+        : t("已将“{0}”插入当前{1}，可继续调整位置和大小", result.image.name, selectionKind === "slide" ? t("幻灯片") : selectionKind === "sheet" ? t("工作表") : selectionKind === "document" ? t("文档") : t("白板")));
       void persistDraftRef.current(false).catch(() => undefined);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "资料库图片插入失败");
+      setNotice(error instanceof Error ? error.message : t("资料库图片插入失败"));
     } finally {
       setInsertingLibraryImage(false);
       libraryImageSelectionRef.current = undefined;
@@ -1116,7 +1119,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       finishMokiEditorAssistance();
       setDirty(false);
       setOfficeRevision(result.updatedAt);
-      setNotice(kind === "workspace" ? "已确认合并 Univer 草稿，并原子保存到原生工作区文件" : "已确认合并 Univer 草稿，并原子保存到原 Office 文件");
+      setNotice(kind === "workspace" ? t("已确认合并 Univer 草稿，并原子保存到原生工作区文件") : t("已确认合并 Univer 草稿，并原子保存到原 Office 文件"));
       // The save response is authoritative. Rebuilding the read-only preview
       // can take much longer for rich Word files, so it must not keep the Save
       // button spinning after the source file has already been written.
@@ -1127,7 +1130,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         }).catch(() => undefined);
       }
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "文件保存失败");
+      setNotice(error instanceof Error ? error.message : t("文件保存失败"));
       if (propagate) throw error;
     } finally {
       setSaving(false);
@@ -1141,8 +1144,8 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
     const destination = destinationOverride ?? (selectSavePath ? await selectSavePath(item.name) : undefined);
     if (selectSavePath && !destination) return { cancelled: true as const };
     if (destination && sameSourcePath(destination)) {
-      setNotice('另存为不能覆盖原文件，请选择其他路径');
-      if (propagate) throw new Error('另存为不能覆盖原文件');
+      setNotice(t("另存为不能覆盖原文件，请选择其他路径"));
+      if (propagate) throw new Error(t("另存为不能覆盖原文件"));
       return;
     }
     setSaving(true);
@@ -1156,10 +1159,10 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setEditingOffice(false);
       finishMokiEditorAssistance();
       setDirty(false);
-      setNotice(result.path ? `已另存为“${result.path}”，原文件未修改` : "已下载当前编辑内容，原文件未修改");
+      setNotice(result.path ? t("已另存为“{0}”，原文件未修改", result.path) : t("已下载当前编辑内容，原文件未修改"));
       return result;
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "文件另存为失败");
+      setNotice(error instanceof Error ? error.message : t("文件另存为失败"));
       if (propagate) throw error;
     } finally {
       setSaving(false);
@@ -1173,12 +1176,12 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
   function textHistoryStep(operation: 'undo' | 'redo') {
     const source = textHistory[operation];
     const previous = source.at(-1);
-    if (previous === undefined) throw new Error('没有可回退的助手编辑');
+    if (previous === undefined) throw new Error(t("没有可回退的助手编辑"));
     setTextHistory(operation === 'undo'
       ? {undo:source.slice(0,-1),redo:[...textHistory.redo,textContent]}
       : {undo:[...textHistory.undo,textContent],redo:source.slice(0,-1)});
     setTextContent(previous);setDirty(previous !== savedTextContent);
-    setNotice(operation === 'undo' ? '已撤销助手编辑，原文件未修改' : '已重做助手编辑，尚未保存');
+    setNotice(operation === 'undo' ? t("已撤销助手编辑，原文件未修改") : t("已重做助手编辑，尚未保存"));
   }
 
   async function discardTextDraft(propagate = false) {
@@ -1191,9 +1194,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       setTextContent(savedTextContent);setTextHistory({undo:[],redo:[]});
       setDirty(false);setEditingText(false);finishMokiEditorAssistance();
       setRenderedTextPreview(['md','markdown','html','htm','json'].includes(extension));
-      setNotice("已放弃草稿，原文件没有被修改");
+      setNotice(t("已放弃草稿，原文件没有被修改"));
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "草稿放弃失败");
+      setNotice(error instanceof Error ? error.message : t("草稿放弃失败"));
       if (propagate) throw error;
     } finally {
       setSaving(false);
@@ -1241,56 +1244,56 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
   }, [item.id, onCloseRequestReady]);
 
   async function executeWorkspaceCommand(command: WorkspaceEditorCommand): Promise<WorkspaceEditorResult> {
-    if (loading || saving) throw new Error('编辑器正在加载或保存，请稍后重试');
-    if (!editorOperations.includes(command.operation)) throw new Error('当前格式或状态不支持此操作');
+    if (loading || saving) throw new Error(t("编辑器正在加载或保存，请稍后重试"));
+    if (!editorOperations.includes(command.operation)) throw new Error(t("当前格式或状态不支持此操作"));
     if (command.operation === 'edit') {
-      if (kind === 'text') { setEditingText(true); setRenderedTextPreview(false); setNotice('已进入文本编辑'); }
-      else { const session = await startOfficeEditing(true); return {status:'completed', message:'已打开或复用 Office 草稿', sessionId:session!.sessionId}; }
-      return {status:'completed',message:'已进入文本编辑，尚未写入原文件'};
+      if (kind === 'text') { setEditingText(true); setRenderedTextPreview(false); setNotice(t("已进入文本编辑")); }
+      else { const session = await startOfficeEditing(true); return {status:'completed', message:t("已打开或复用 Office 草稿"), sessionId:session!.sessionId}; }
+      return {status:'completed',message:t("已进入文本编辑，尚未写入原文件")};
     }
-    if (command.operation === 'read_text') return {status:'completed',message:'当前文本草稿（含未保存修改）',content:textContent};
+    if (command.operation === 'read_text') return {status:'completed',message:t("当前文本草稿（含未保存修改）"),content:textContent};
     if (command.operation === 'replace_text' || command.operation === 'patch_text') {
       const nextContent = command.operation === 'patch_text' ? applyTextDraftPatches(textContent, command.patches ?? []) : command.content!;
-      if (nextContent === textContent) return {status:'completed',message:'草稿内容未变化'};
+      if (nextContent === textContent) return {status:'completed',message:t("草稿内容未变化")};
       const undo=[...textHistory.undo,textContent].slice(-20);
       while(undo.length>1 && undo.reduce((size,text)=>size+text.length,0)>5_000_000) undo.shift();
       setTextHistory({undo,redo:[]});
       setTextContent(nextContent); setDirty(true);
-      return {status:'completed',message:'当前文本草稿已直接更新，可撤销；尚未保存到原文件'};
+      return {status:'completed',message:t("当前文本草稿已直接更新，可撤销；尚未保存到原文件")};
     }
     if (command.operation === 'undo' || command.operation === 'redo') {
       textHistoryStep(command.operation);
-      return {status:'completed',message:command.operation === 'undo' ? '已撤销助手编辑，原文件未修改' : '已重做助手编辑，尚未保存'};
+      return {status:'completed',message:command.operation === 'undo' ? t("已撤销助手编辑，原文件未修改") : t("已重做助手编辑，尚未保存")};
     }
     if (command.operation === 'discard') {
       if (editingOffice) await cancelOfficeEditing(true);else await discardTextDraft(true);
-      return {status:'completed',message:'已放弃当前未保存草稿，恢复原文件预览'};
+      return {status:'completed',message:t("已放弃当前未保存草稿，恢复原文件预览")};
     }
     if (command.operation === 'save') {
       if (editingOffice && univerSessionRef.current) await saveOffice(true);
       else if (editingText) await saveText(true);
-      else throw new Error('没有活动编辑草稿');
-      return {status:'completed',message:'编辑内容已保存到原文件',path:item.target ?? undefined};
+      else throw new Error(t("没有活动编辑草稿"));
+      return {status:'completed',message:t("编辑内容已保存到原文件"),path:item.target ?? undefined};
     }
     if (editingOffice && univerSessionRef.current) {
       const result = await saveOfficeAs(command.destination, true);
-      if (result && 'cancelled' in result) return {status:'cancelled',message:'用户取消了另存，草稿和原文件保留'};
-      if (!result) throw new Error('未能确认另存结果');
-      return {status:'completed',message:result.path ? '当前草稿已另存，原文件未修改' : '已发起当前草稿下载，原文件未修改',path:result.path};
+      if (result && 'cancelled' in result) return {status:'cancelled',message:t("用户取消了另存，草稿和原文件保留")};
+      if (!result) throw new Error(t("未能确认另存结果"));
+      return {status:'completed',message:result.path ? t("当前草稿已另存，原文件未修改") : t("已发起当前草稿下载，原文件未修改"),path:result.path};
     }
     const selectSavePath=window.mokiDesktop?.selectSavePath;
     const destination=command.destination ?? (selectSavePath ? await selectSavePath(item.name) : undefined);
-    if (selectSavePath && !destination) return {status:'cancelled',message:'用户取消了另存'};
-    if (destination && sameSourcePath(destination)) throw new Error('另存为不能覆盖原文件');
+    if (selectSavePath && !destination) return {status:'cancelled',message:t("用户取消了另存")};
+    if (destination && sameSourcePath(destination)) throw new Error(t("另存为不能覆盖原文件"));
     setSaving(true);
     try {
       if (kind === 'text') {
         const result=await saveAsResourceLibraryText(item.id,textContent,item.name,destination ?? undefined);
-        return {status:'completed',message:result.path ? '当前文本已另存，原文件和活动草稿保留' : '已发起当前文本下载，原文件未修改',path:result.path};
+        return {status:'completed',message:result.path ? t("当前文本已另存，原文件和活动草稿保留") : t("已发起当前文本下载，原文件未修改"),path:result.path};
       }
-      if (!destination) throw new Error('此格式另存需要选择本地目标路径');
+      if (!destination) throw new Error(t("此格式另存需要选择本地目标路径"));
       const result=await exportResourceLibraryItem(item.id,{destination,mode:'file'});
-      return {status:'completed',message:'预览文件已另存，原文件未修改',path:result.path};
+      return {status:'completed',message:t("预览文件已另存，原文件未修改"),path:result.path};
     } finally {setSaving(false);}
   }
 
@@ -1335,12 +1338,12 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       : structuredPreview && structuredPreview.kind !== "pdf"
         ? JSON.stringify(structuredPreview, null, 2)
         : "";
-    const fileType = kind === "text" ? "Markdown" : kind === "workspace" ? "Univer 多 Unit" : "Office";
+    const fileType = kind === "text" ? "Markdown" : kind === "workspace" ? t("Univer 多 Unit") : "Office";
     mokiAssistancePendingRef.current = true;
     mokiEditorAssistantOpenedRef.current = true;
     requestMokiAssistance({
       source: "library",
-      label: `资料库编辑：${item.name}`,
+      label: t("资料库编辑：{0}", item.name),
       itemCount: 1,
       content: JSON.stringify({
         file: { id: item.id, name: item.name, type: fileType },
@@ -1349,16 +1352,16 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         unsavedDraft: draft.slice(0, 16_000),
         draftTruncated: draft.length > 16_000,
         assistantContext: univerSession
-          ? "当前为正在运行的 Univer 隔离草稿。先用精确 sessionId 调用 workbench_univer_office_status 获取全部 Unit，再用 workbench_univer_office_inspect 检查目标 Unit；不确定 Facade 能力时先调用 workbench_univer_office_api。若 editorSelection.kind 为 document，普通续写必须在其 startOffset 插入；存在选区时仅替换 startOffset 到 endOffset。不得默认追加到文末或重写整段。插入文本先去除首尾空白和空行，除用户明确要求排版、分段、列表或换页外，不得添加多余换行或空白段落。所有文档、表格、演示文稿的内容、格式、公式、表格、图表、图片、形状、页面布局与多 Unit 操作均通过 workbench_univer_office_execute_preview 调用完整 Univer Facade 直接写入隔离草稿；新增或删除 Unit 使用 workbench_univer_unit_preview；插入用户图片时先用 workbench_resource_library 找到唯一图片，再用 workbench_univer_office_insert_library_image。草稿可回退或放弃，只有用户保存后才写回原文件。"
-          : "根据用户接下来输入的指令协助编辑当前资料；涉及写入时先生成确认预览。",
+          ? t("当前为正在运行的 Univer 隔离草稿。先用精确 sessionId 调用 workbench_univer_office_status 获取全部 Unit，再用 workbench_univer_office_inspect 检查目标 Unit；不确定 Facade 能力时先调用 workbench_univer_office_api。若 editorSelection.kind 为 document，普通续写必须在其 startOffset 插入；存在选区时仅替换 startOffset 到 endOffset。不得默认追加到文末或重写整段。插入文本先去除首尾空白和空行，除用户明确要求排版、分段、列表或换页外，不得添加多余换行或空白段落。所有文档、表格、演示文稿的内容、格式、公式、表格、图表、图片、形状、页面布局与多 Unit 操作均通过 workbench_univer_office_execute_preview 调用完整 Univer Facade 直接写入隔离草稿；新增或删除 Unit 使用 workbench_univer_unit_preview；插入用户图片时先用 workbench_resource_library 找到唯一图片，再用 workbench_univer_office_insert_library_image。草稿可回退或放弃，只有用户保存后才写回原文件。")
+          : t("根据用户接下来输入的指令协助编辑当前资料；涉及写入时先生成确认预览。"),
       }, null, 2),
-    }, `请协助编辑资料库中的${fileType}文件“${item.name}”。当前文件 ID 是 ${item.id}，编辑器草稿、光标位置与选中文字已作为工作台选区提供。我的编辑要求是：${instruction.trim() || "请在当前光标或选区位置协助续写、改写或排版"}。${univerSession ? "这是正在运行的 Univer 隔离草稿；普通文本只在 editorSelection 指定的光标位置插入或替换选区，先清理生成内容首尾空白，除版式确有需要外不增加换行或空白段落。先读取会话与目标 Unit，再使用工作台选区中的精确 sessionId 调用完整 Univer 编辑工具直接修改草稿；插入资料库图片时使用专用图片插入工具。草稿可回退或放弃，我会在完整编辑器里复核并决定保存。" : "需要写入文件时，先读取精确文件并生成确认预览，只有我确认后才能保存。"}`, {
+    }, t("请协助编辑资料库中的{0}文件“{1}”。当前文件 ID 是 {2}，编辑器草稿、光标位置与选中文字已作为工作台选区提供。我的编辑要求是：{3}。{4}", fileType, item.name, item.id, instruction.trim() || t("请在当前光标或选区位置协助续写、改写或排版"), univerSession ? t("这是正在运行的 Univer 隔离草稿；普通文本只在 editorSelection 指定的光标位置插入或替换选区，先清理生成内容首尾空白，除版式确有需要外不增加换行或空白段落。先读取会话与目标 Unit，再使用工作台选区中的精确 sessionId 调用完整 Univer 编辑工具直接修改草稿；插入资料库图片时使用专用图片插入工具。草稿可回退或放弃，我会在完整编辑器里复核并决定保存。") : t("需要写入文件时，先读取精确文件并生成确认预览，只有我确认后才能保存。")), {
       ...(anchor ? { anchor } : {}),
       preferInline: true,
       prefillPrompt: false,
       editorAssist: true,
     });
-    setNotice("已唤醒 MOKI，并带入当前文件、草稿和选中文字");
+    setNotice(t("已唤醒 MOKI，并带入当前文件、草稿和选中文字"));
   }
 
   function finishMokiEditorAssistance() {
@@ -1472,12 +1475,12 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
     setNotice("");
     try {
       const result = await getResourceLibraryStructuredPreview(item.id);
-      if (result.kind !== "pdf") throw new Error("PDF 提取结果无效");
+      if (result.kind !== "pdf") throw new Error(t("PDF 提取结果无效"));
       setStructuredPreview(result);
-      if (!result.text) setNotice("未提取到文字；扫描版 PDF 需要 OCR 后才能读取文本");
+      if (!result.text) setNotice(t("未提取到文字；扫描版 PDF 需要 OCR 后才能读取文本"));
     } catch (error) {
       setPdfTextOpen(false);
-      setNotice(error instanceof Error ? error.message : "PDF 文本提取失败");
+      setNotice(error instanceof Error ? error.message : t("PDF 文本提取失败"));
     } finally {
       setLoading(false);
     }
@@ -1495,9 +1498,9 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         setOcrProgress,
       );
       setStructuredPreview(result);
-      setNotice(`DeepSeek OCR 已完成，共识别 ${result.totalPages} 页`);
+      setNotice(t("DeepSeek OCR 已完成，共识别 {0} 页", result.totalPages));
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : "DeepSeek OCR 识别失败");
+      setNotice(error instanceof Error ? error.message : t("DeepSeek OCR 识别失败"));
     } finally {
       setLoading(false);
       setOcrProgress(undefined);
@@ -1595,11 +1598,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
 
   const toolButton = "grid size-9 shrink-0 place-items-center rounded-xl border border-[#dedfea] bg-white text-[#5f6579] transition hover:border-[#bcb8ec] hover:bg-[#f1f0ff] hover:text-[#5f58bd] disabled:opacity-40";
 
-  return <div data-moki-preview-location={visualLocationContext} className={embedded ? "flex size-full min-h-0 flex-col" : `${contained ? "absolute" : "fixed"} inset-0 grid min-h-0 place-items-center overflow-hidden bg-[#111827]/40 p-4 backdrop-blur-sm ${layerClassName}`} role={embedded ? "region" : "dialog"} aria-modal={embedded ? undefined : true} aria-label={`预览 ${item.name}`}>
+  return <div data-moki-preview-location={visualLocationContext} className={embedded ? "flex size-full min-h-0 flex-col" : `${contained ? "absolute" : "fixed"} inset-0 grid min-h-0 place-items-center overflow-hidden bg-[#111827]/40 p-4 backdrop-blur-sm ${layerClassName}`} role={embedded ? "region" : "dialog"} aria-modal={embedded ? undefined : true} aria-label={t("预览 {0}", item.name)} data-moki-ui="material-preview">
     <section
       ref={previewWindowRef}
       data-dsh-preview
-      aria-label="文件预览窗口"
+      aria-label={t("文件预览窗口")}
       onKeyDownCapture={openMokiAtCaret}
       onFocusCapture={rememberOfficeEditorFocus}
       className={embedded
@@ -1629,50 +1632,50 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
       <header data-dsh-ui="preview-chrome" className="moki-dialog-header mb-3 flex shrink-0 flex-wrap items-center justify-between gap-2">
         <div className="min-w-0 flex-1">{editingOffice ? <div className="flex min-w-0 items-center gap-2"><b className="shrink-0 truncate text-[0.875rem]">{item.name}</b><span className={embedded ? "min-w-0 truncate text-[0.625rem] text-[#9096a8]" : "max-w-[42vw] truncate text-[0.625rem] text-[#9096a8]"} title={item.target ?? undefined}>{item.target}</span></div> : <><b className="block truncate text-[0.875rem]">{item.name}</b><span className={embedded ? "block truncate text-[0.625rem] text-[#9096a8]" : "block max-w-[54vw] truncate text-[0.625rem] text-[#9096a8]"} title={item.target ?? undefined}>{item.target}</span></>}</div>
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-          {(kind === "audio" || kind === "embedded" || kind === "web" || kind === "unsupported") ? <button type="button" aria-label="复制文件位置" onClick={() => void copySource()} className={toolButton}><Copy size={14}/></button> : null}
+          {(kind === "audio" || kind === "embedded" || kind === "web" || kind === "unsupported") ? <button type="button" aria-label={t("复制文件位置")} onClick={() => void copySource()} className={toolButton}><Copy size={14}/></button> : null}
           {item.kind === "local_file" && (officeEditable || kind === "workspace") ? editingOffice ? <>
-            <span className="hidden rounded-full bg-[#f0efff] px-2.5 py-1 text-[0.625rem] font-extrabold text-[#625bc5] sm:inline">草稿</span>
-            <button type="button" disabled={saving} onClick={() => void requestEditorExit("cancel")} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">取消</button>
-            <button type="button" disabled={!dirty || saving} onClick={() => void saveOfficeAs()} className="flex h-9 items-center gap-1.5 rounded-xl border border-[#cfd2df] bg-white px-3 text-[0.6875rem] font-bold text-[#4f566b] hover:bg-[#f5f4ff] disabled:opacity-40"><Save size={13}/>另存为</button>
-            <button type="button" disabled={!dirty || saving} onClick={() => void saveOffice()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}保存</button>
+            <span className="hidden rounded-full bg-[#f0efff] px-2.5 py-1 text-[0.625rem] font-extrabold text-[#625bc5] sm:inline">{t("草稿")}</span>
+            <button type="button" disabled={saving} onClick={() => void requestEditorExit("cancel")} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">{t("取消")}</button>
+            <button type="button" disabled={!dirty || saving} onClick={() => void saveOfficeAs()} className="flex h-9 items-center gap-1.5 rounded-xl border border-[#cfd2df] bg-white px-3 text-[0.6875rem] font-bold text-[#4f566b] hover:bg-[#f5f4ff] disabled:opacity-40"><Save size={13}/>{t("另存为")}</button>
+            <button type="button" disabled={!dirty || saving} onClick={() => void saveOffice()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}{t("保存")}</button>
           </> : <>
-            <button type="button" aria-label={kind === "workspace" ? "编辑 Univer" : "编辑 Office"} title={kind === "workspace" ? "编辑 Univer" : "编辑 Office"} disabled={loading} onClick={() => void startOfficeEditing()} className={toolButton}><Pencil size={14}/></button>
-            <button type="button" aria-label="复制文件位置" onClick={() => void copySource()} className={toolButton}><Copy size={14}/></button>
+            <button type="button" aria-label={kind === "workspace" ? t("编辑 Univer") : t("编辑 Office")} title={kind === "workspace" ? t("编辑 Univer") : t("编辑 Office")} disabled={loading} onClick={() => void startOfficeEditing()} className={toolButton}><Pencil size={14}/></button>
+            <button type="button" aria-label={t("复制文件位置")} onClick={() => void copySource()} className={toolButton}><Copy size={14}/></button>
           </> : null}
           {kind === "embedded" && extension === "pdf" ? <>
-            {pdfTextOpen && structuredPreview?.kind === "pdf" && structuredPreview.text ? <button type="button" aria-label="复制 PDF 文本" onClick={() => void copyText(structuredPreview.text, "已复制 PDF 文本")} className={toolButton}><Copy size={14}/></button> : null}
-            {pdfTextOpen && structuredPreview?.kind === "pdf" ? <button type="button" disabled={loading} onClick={() => void recognizePdf()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#625bc5] px-3 text-[0.6875rem] font-bold text-white hover:bg-[#554fb4] disabled:opacity-40">{ocrProgress ? <LoaderCircle size={13} className="animate-spin"/> : <ScanText size={13}/>} {ocrProgress ? `${ocrProgress.phase === "rendering" ? "渲染" : "识别"} ${ocrProgress.currentPage}/${ocrProgress.totalPages}` : structuredPreview.source === "deepseek-ocr" ? "重新 OCR" : "DeepSeek OCR"}</button> : null}
-            <button type="button" disabled={loading} onClick={() => void togglePdfText()} className="flex h-9 items-center gap-1.5 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff] disabled:opacity-40">{loading ? <LoaderCircle size={13} className="animate-spin"/> : <FileText size={13}/>} {pdfTextOpen ? "查看原 PDF" : "提取文本"}</button>
+            {pdfTextOpen && structuredPreview?.kind === "pdf" && structuredPreview.text ? <button type="button" aria-label={t("复制 PDF 文本")} onClick={() => void copyText(structuredPreview.text, t("已复制 PDF 文本"))} className={toolButton}><Copy size={14}/></button> : null}
+            {pdfTextOpen && structuredPreview?.kind === "pdf" ? <button type="button" disabled={loading} onClick={() => void recognizePdf()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#625bc5] px-3 text-[0.6875rem] font-bold text-white hover:bg-[#554fb4] disabled:opacity-40">{ocrProgress ? <LoaderCircle size={13} className="animate-spin"/> : <ScanText size={13}/>} {ocrProgress ? `${ocrProgress.phase === "rendering" ? t("渲染") : t("识别")} ${ocrProgress.currentPage}/${ocrProgress.totalPages}` : structuredPreview.source === "deepseek-ocr" ? t("重新 OCR") : "DeepSeek OCR"}</button> : null}
+            <button type="button" disabled={loading} onClick={() => void togglePdfText()} className="flex h-9 items-center gap-1.5 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff] disabled:opacity-40">{loading ? <LoaderCircle size={13} className="animate-spin"/> : <FileText size={13}/>} {pdfTextOpen ? t("查看原 PDF") : t("提取文本")}</button>
           </> : null}
           {kind === "text" ? <>
-            {!editingText && ["md", "markdown", "html", "htm", "json"].includes(extension) ? <button type="button" onClick={() => setRenderedTextPreview((value) => !value)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff]">{renderedTextPreview ? "查看源码" : "渲染预览"}</button> : null}
-            {(extension === "csv" || extension === "tsv") ? <button type="button" onClick={() => setTableMode((value) => !value)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff]">{tableMode ? "文本模式" : "表格模式"}</button> : null}
+            {!editingText && ["md", "markdown", "html", "htm", "json"].includes(extension) ? <button type="button" onClick={() => setRenderedTextPreview((value) => !value)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff]">{renderedTextPreview ? t("查看源码") : t("渲染预览")}</button> : null}
+            {(extension === "csv" || extension === "tsv") ? <button type="button" onClick={() => setTableMode((value) => !value)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] hover:bg-[#f1f0ff]">{tableMode ? t("文本模式") : t("表格模式")}</button> : null}
             {!editingText ? <>
-              <button type="button" aria-label="编辑" title="编辑" onClick={() => { setEditingText(true); setRenderedTextPreview(false); setNotice(""); }} className={toolButton}><Pencil size={14}/></button>
-              <button type="button" aria-label="复制文本" onClick={() => void copyText(textContent, "已复制文本")} className={toolButton}><Copy size={14}/></button>
+              <button type="button" aria-label={t("编辑")} title={t("编辑")} onClick={() => { setEditingText(true); setRenderedTextPreview(false); setNotice(""); }} className={toolButton}><Pencil size={14}/></button>
+              <button type="button" aria-label={t("复制文本")} onClick={() => void copyText(textContent, t("已复制文本"))} className={toolButton}><Copy size={14}/></button>
             </> : <>
-              <button type="button" aria-label="撤销助手编辑" title="撤销助手编辑" disabled={saving || !textHistory.undo.length} onClick={() => textHistoryStep('undo')} className={toolButton}>↶</button>
-              <button type="button" aria-label="重做助手编辑" title="重做助手编辑" disabled={saving || !textHistory.redo.length} onClick={() => textHistoryStep('redo')} className={toolButton}>↷</button>
-              <button type="button" disabled={saving} onClick={() => void requestEditorExit("cancel")} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">取消</button>
-              <button type="button" disabled={!dirty || saving} onClick={() => void saveText()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}保存</button>
+              <button type="button" aria-label={t("撤销助手编辑")} title={t("撤销助手编辑")} disabled={saving || !textHistory.undo.length} onClick={() => textHistoryStep('undo')} className={toolButton}>↶</button>
+              <button type="button" aria-label={t("重做助手编辑")} title={t("重做助手编辑")} disabled={saving || !textHistory.redo.length} onClick={() => textHistoryStep('redo')} className={toolButton}>↷</button>
+              <button type="button" disabled={saving} onClick={() => void requestEditorExit("cancel")} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">{t("取消")}</button>
+              <button type="button" disabled={!dirty || saving} onClick={() => void saveText()} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}{t("保存")}</button>
             </>}
           </> : null}
-          {!editingOffice && !editingText ? <button type="button" onClick={() => void onOpen(item)} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#242a40] px-3 text-[0.6875rem] font-bold text-white"><ExternalLink size={13}/>系统打开</button> : null}
-          <button type="button" aria-label="关闭预览" onClick={() => void requestEditorExit("close")} className="grid size-9 place-items-center rounded-xl bg-[#f4f5f8] transition hover:bg-[#ecebfa] hover:text-[#5f58bd]"><X size={15}/></button>
+          {!editingOffice && !editingText ? <button type="button" onClick={() => void onOpen(item)} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#242a40] px-3 text-[0.6875rem] font-bold text-white"><ExternalLink size={13}/>{t("系统打开")}</button> : null}
+          <button type="button" aria-label={t("关闭预览")} onClick={() => void requestEditorExit("close")} className="grid size-9 place-items-center rounded-xl bg-[#f4f5f8] transition hover:bg-[#ecebfa] hover:text-[#5f58bd]"><X size={15}/></button>
         </div>
       </header>
       {exitIntent ? <div className="absolute inset-0 z-[70] grid place-items-center bg-[#242a40]/35 p-4 backdrop-blur-[2px]">
-        <div role="dialog" aria-modal="true" aria-label="保存编辑提醒" className="w-full max-w-sm rounded-2xl border border-white/80 bg-white p-5 shadow-[0_24px_70px_rgba(35,40,61,.28)]">
-          <header className="moki-dialog-header moki-dialog-header-inset-5"><h3 className="text-sm font-black text-[#30364b]">保存对“{item.name}”的修改？</h3></header>
-          <p className="mt-2 text-[0.6875rem] leading-5 text-[#777d91]">当前编辑尚未写入原文件。保存后再退出，或放弃本次修改。</p>
+        <div role="dialog" aria-modal="true" aria-label={t("保存编辑提醒")} className="w-full max-w-sm rounded-2xl border border-white/80 bg-white p-5 shadow-[0_24px_70px_rgba(35,40,61,.28)]">
+          <header className="moki-dialog-header moki-dialog-header-inset-5"><h3 className="text-sm font-black text-[#30364b]">{t("保存对“")}{item.name}{t("”的修改？")}</h3></header>
+          <p className="mt-2 text-[0.6875rem] leading-5 text-[#777d91]">{t("当前编辑尚未写入原文件。保存后再退出，或放弃本次修改。")}</p>
           <div className="mt-5 flex flex-wrap justify-end gap-2">
-            <button type="button" autoFocus disabled={saving} onClick={() => setExitIntent(undefined)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">继续编辑</button>
-            <button type="button" disabled={saving} onClick={() => void completeEditorExit("discard")} className="h-9 rounded-xl border border-[#f0ccd7] bg-white px-3 text-[0.6875rem] font-bold text-[#b64a68] disabled:opacity-40">放弃修改</button>
-            <button type="button" disabled={saving} onClick={() => void completeEditorExit("save")} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}保存并退出</button>
+            <button type="button" autoFocus disabled={saving} onClick={() => setExitIntent(undefined)} className="h-9 rounded-xl border border-[#dedfea] bg-white px-3 text-[0.6875rem] font-bold text-[#5f6579] disabled:opacity-40">{t("继续编辑")}</button>
+            <button type="button" disabled={saving} onClick={() => void completeEditorExit("discard")} className="h-9 rounded-xl border border-[#f0ccd7] bg-white px-3 text-[0.6875rem] font-bold text-[#b64a68] disabled:opacity-40">{t("放弃修改")}</button>
+            <button type="button" disabled={saving} onClick={() => void completeEditorExit("save")} className="flex h-9 items-center gap-1.5 rounded-xl bg-[#292f47] px-3 text-[0.6875rem] font-bold text-white disabled:opacity-40">{saving ? <LoaderCircle size={13} className="animate-spin"/> : <Save size={13}/>}{t("保存并退出")}</button>
           </div>
         </div>
       </div> : null}
-      {editingText ? <p className="mb-2 text-[0.625rem] font-semibold text-[#7c8294]">在编辑光标处按 <kbd className="rounded-md border border-[#d9daea] bg-[#f7f7fb] px-1.5 py-0.5 font-mono text-[#625bc5]">Alt+M</kbd> 唤醒 MOKI</p> : null}
+      {editingText ? <p className="mb-2 text-[0.625rem] font-semibold text-[#7c8294]">{t("在编辑光标处按")}<kbd className="rounded-md border border-[#d9daea] bg-[#f7f7fb] px-1.5 py-0.5 font-mono text-[#625bc5]">Alt+M</kbd> {t("唤醒 MOKI")}</p> : null}
       {autosaveStatus ? <p role="status" className="px-4 py-1 text-[0.625rem] text-[#7b8197]">{autosaveStatus}</p> : null}
         {notice ? <p role="status" className="mb-2 rounded-xl bg-[#eef9f5] px-3 py-2 text-[0.6875rem] font-semibold text-[#357d65]">{notice}</p> : null}
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-[#e4e6ef] bg-[#f5f6fa]">
@@ -1680,13 +1683,13 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
           <iframe
             ref={officeEditorFrameRef}
             src={univerSession.viewerUrl}
-            title={`${item.name} Univer Office 编辑器`}
+            title={t("{0} Univer Office 编辑器", item.name)}
             allow="clipboard-read; clipboard-write"
             className="size-full border-0 bg-white"
-            onLoad={() => setNotice("编辑中 · 按 Alt+M 唤醒 MOKI，完成后可选择保存或取消")}
+            onLoad={() => setNotice(t("编辑中 · 按 Alt+M 唤醒 MOKI，完成后可选择保存或取消"))}
           />
         </div> : null}
-        {previewUrl && kind === "image" ? <div className={`size-full overflow-hidden ${imageScale > 1 ? "cursor-grab active:cursor-grabbing" : ""}`} onPointerDown={startImagePan} onPointerMove={moveImage} onPointerUp={() => { imageDragRef.current = undefined; }} onPointerCancel={() => { imageDragRef.current = undefined; }} onWheel={(event: WheelEvent<HTMLDivElement>) => { event.preventDefault(); changeImageScale(imageScale + (event.deltaY < 0 ? 0.2 : -0.2)); }}><img ref={imageRef} src={previewUrl} alt={item.name} draggable={false} loading="lazy" decoding="async" crossOrigin={item.kind === "url" ? "anonymous" : undefined} onLoad={(event) => void onThumbnail?.(item, event.currentTarget)} className="size-full select-none object-contain transition-transform duration-100" style={{ transform: `translate(${imageOffset.x}px, ${imageOffset.y}px) scale(${imageScale})` }}/><span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-[#242a40]/75 px-2 py-1 text-[0.5625rem] font-bold text-white"><Move size={11}/>滚轮缩放，放大后拖动</span><div role="toolbar" aria-label="图片预览操作" onPointerDown={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()} className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-2xl border border-white/75 bg-white/92 p-2 shadow-[0_14px_38px_rgba(34,39,61,.2)] backdrop-blur-md"><button type="button" aria-label="缩小图片" onClick={() => changeImageScale(imageScale - 0.25)} className={toolButton}><Minus size={14}/></button><span className="min-w-12 text-center text-[0.625rem] font-bold text-[#73798c]">{Math.round(imageScale * 100)}%</span><button type="button" aria-label="放大图片" onClick={() => changeImageScale(imageScale + 0.25)} className={toolButton}><span className="text-lg leading-none">+</span></button><button type="button" aria-label="重置图片视图" onClick={() => { setImageScale(1); setImageOffset({ x: 0, y: 0 }); }} className={toolButton}><RotateCcw size={14}/></button><button type="button" aria-label="复制图片" onClick={() => void copyImageOrFrame(imageRef.current)} className={toolButton}><Copy size={14}/></button></div></div> : null}
+        {previewUrl && kind === "image" ? <div className={`size-full overflow-hidden ${imageScale > 1 ? "cursor-grab active:cursor-grabbing" : ""}`} onPointerDown={startImagePan} onPointerMove={moveImage} onPointerUp={() => { imageDragRef.current = undefined; }} onPointerCancel={() => { imageDragRef.current = undefined; }} onWheel={(event: WheelEvent<HTMLDivElement>) => { event.preventDefault(); changeImageScale(imageScale + (event.deltaY < 0 ? 0.2 : -0.2)); }}><img ref={imageRef} src={previewUrl} alt={item.name} draggable={false} loading="lazy" decoding="async" crossOrigin={item.kind === "url" ? "anonymous" : undefined} onLoad={(event) => void onThumbnail?.(item, event.currentTarget)} className="size-full select-none object-contain transition-transform duration-100" style={{ transform: `translate(${imageOffset.x}px, ${imageOffset.y}px) scale(${imageScale})` }}/><span className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-1 rounded-lg bg-[#242a40]/75 px-2 py-1 text-[0.5625rem] font-bold text-white"><Move size={11}/>{t("滚轮缩放，放大后拖动")}</span><div role="toolbar" aria-label={t("图片预览操作")} onPointerDown={(event) => event.stopPropagation()} onWheel={(event) => event.stopPropagation()} className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 rounded-2xl border border-white/75 bg-white/92 p-2 shadow-[0_14px_38px_rgba(34,39,61,.2)] backdrop-blur-md"><button type="button" aria-label={t("缩小图片")} onClick={() => changeImageScale(imageScale - 0.25)} className={toolButton}><Minus size={14}/></button><span className="min-w-12 text-center text-[0.625rem] font-bold text-[#73798c]">{Math.round(imageScale * 100)}%</span><button type="button" aria-label={t("放大图片")} onClick={() => changeImageScale(imageScale + 0.25)} className={toolButton}><span className="text-lg leading-none">+</span></button><button type="button" aria-label={t("重置图片视图")} onClick={() => { setImageScale(1); setImageOffset({ x: 0, y: 0 }); }} className={toolButton}><RotateCcw size={14}/></button><button type="button" aria-label={t("复制图片")} onClick={() => void copyImageOrFrame(imageRef.current)} className={toolButton}><Copy size={14}/></button></div></div> : null}
         {previewUrl && kind === "video" ? <div className="relative size-full overflow-hidden bg-[#10131d]">
           <video
             ref={videoRef}
@@ -1695,7 +1698,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
             crossOrigin={item.kind === "url" ? "anonymous" : undefined}
             onClick={toggleVideoPlayback}
             onContextMenu={(event) => void openVideoContextMenu(event)}
-            title="右键打开视频菜单"
+            title={t("右键打开视频菜单")}
             onPlay={() => setVideoPlaying(true)}
             onPause={() => setVideoPlaying(false)}
             onEnded={() => setVideoPlaying(false)}
@@ -1714,18 +1717,18 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
           />
       <div
             role="group"
-            aria-label="视频播放控制"
+            aria-label={t("视频播放控制")}
             className="absolute bottom-3 left-1/2 flex w-fit max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-nowrap items-center justify-center gap-1.5 rounded-2xl border border-white/15 bg-[#171b2c]/90 p-2 text-white shadow-xl backdrop-blur-md"
           >
-            <button type="button" aria-label="视频上一帧" aria-keyshortcuts="ArrowLeft" title="上一帧（←）" onClick={() => stepVideo(-1)} className="grid size-8 shrink-0 place-items-center rounded-xl hover:bg-white/15"><SkipBack size={14}/></button>
-            <button type="button" aria-label={videoPlaying ? "暂停视频" : "播放视频"} aria-keyshortcuts="Space" title={`${videoPlaying ? "暂停" : "播放"}（空格）`} onClick={toggleVideoPlayback} className="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-[#242a40] hover:bg-[#eeedff]">{videoPlaying ? <Pause size={14}/> : <Play size={14}/>}</button>
-            <button type="button" aria-label="视频下一帧" aria-keyshortcuts="ArrowRight" title="下一帧（→）" onClick={() => stepVideo(1)} className="grid size-8 shrink-0 place-items-center rounded-xl hover:bg-white/15"><SkipForward size={14}/></button>
+            <button type="button" aria-label={t("视频上一帧")} aria-keyshortcuts="ArrowLeft" title={t("上一帧（←）")} onClick={() => stepVideo(-1)} className="grid size-8 shrink-0 place-items-center rounded-xl hover:bg-white/15"><SkipBack size={14}/></button>
+            <button type="button" aria-label={videoPlaying ? t("暂停视频") : t("播放视频")} aria-keyshortcuts="Space" title={t("{0}（空格）", videoPlaying ? t("暂停") : t("播放"))} onClick={toggleVideoPlayback} className="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-[#242a40] hover:bg-[#eeedff]">{videoPlaying ? <Pause size={14}/> : <Play size={14}/>}</button>
+            <button type="button" aria-label={t("视频下一帧")} aria-keyshortcuts="ArrowRight" title={t("下一帧（→）")} onClick={() => stepVideo(1)} className="grid size-8 shrink-0 place-items-center rounded-xl hover:bg-white/15"><SkipForward size={14}/></button>
             <span className="grid min-w-[6.5rem] gap-0.5 text-center font-bold tabular-nums">
               <span className="text-[0.625rem]">{formatVideoPreviewTime(videoCurrentTime)} / {formatVideoPreviewTime(videoDuration)}</span>
-              <span className="text-[0.5625rem] text-white/65" title="按 30 fps 估算帧数">帧 {videoPreviewFramePosition(videoCurrentTime, videoDuration).current} / {videoPreviewFramePosition(videoCurrentTime, videoDuration).total}</span>
+              <span className="text-[0.5625rem] text-white/65" title={t("按 30 fps 估算帧数")}>{t("帧")}{videoPreviewFramePosition(videoCurrentTime, videoDuration).current} / {videoPreviewFramePosition(videoCurrentTime, videoDuration).total}</span>
             </span>
             <input
-              aria-label="视频时间轴"
+              aria-label={t("视频时间轴")}
               type="range"
               min="0"
               max={Math.max(0, videoDuration)}
@@ -1737,7 +1740,7 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
             <div className="relative shrink-0">
               <button
                 type="button"
-                aria-label={volumeControlOpen ? "关闭视频音量调节" : "打开视频音量调节"}
+                aria-label={volumeControlOpen ? t("关闭视频音量调节") : t("打开视频音量调节")}
                 aria-expanded={volumeControlOpen}
                 aria-controls="resource-video-volume-control"
                 onClick={() => setVolumeControlOpen((open) => !open)}
@@ -1749,11 +1752,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
                 <div
                   id="resource-video-volume-control"
                   role="group"
-                  aria-label="视频音量调节"
+                  aria-label={t("视频音量调节")}
                   className="absolute bottom-full right-0 mb-2 flex items-center gap-2 rounded-xl border border-white/15 bg-[#171b2c]/95 p-2 shadow-xl backdrop-blur-md"
                 >
-                  <button type="button" aria-label={videoMuted ? "取消视频静音" : "视频静音"} onClick={toggleVideoMuted} className="grid size-7 shrink-0 place-items-center rounded-lg hover:bg-white/15">{videoMuted || videoVolume === 0 ? <VolumeX size={13}/> : <Volume2 size={13}/>}</button>
-                  <input aria-label="视频音量" type="range" min="0" max="1" step="0.01" value={videoMuted ? 0 : videoVolume} onChange={(event) => changeVideoVolume(Number(event.target.value))} className="h-1 w-24 accent-[#8c84e8]"/>
+                  <button type="button" aria-label={videoMuted ? t("取消视频静音") : t("视频静音")} onClick={toggleVideoMuted} className="grid size-7 shrink-0 place-items-center rounded-lg hover:bg-white/15">{videoMuted || videoVolume === 0 ? <VolumeX size={13}/> : <Volume2 size={13}/>}</button>
+                  <input aria-label={t("视频音量")} type="range" min="0" max="1" step="0.01" value={videoMuted ? 0 : videoVolume} onChange={(event) => changeVideoVolume(Number(event.target.value))} className="h-1 w-24 accent-[#8c84e8]"/>
                   <span className="w-8 text-right text-[0.5625rem] font-bold tabular-nums text-white/75">{Math.round((videoMuted ? 0 : videoVolume) * 100)}%</span>
                 </div>
               ) : null}
@@ -1762,11 +1765,11 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         </div> : null}
         {previewUrl && kind === "audio" ? <div className="grid size-full place-items-center"><audio src={previewUrl} controls preload="metadata" className="w-[min(38rem,80%)]"/></div> : null}
         {previewUrl && kind === "embedded" && !pdfTextOpen ? <iframe src={previewUrl} title={item.name} loading="lazy" className="size-full border-0"/> : null}
-        {kind === "embedded" && extension === "pdf" && pdfTextOpen ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{ocrProgress ? `正在${ocrProgress.phase === "rendering" ? "渲染" : "识别"}第 ${ocrProgress.currentPage}/${ocrProgress.totalPages} 页` : "正在提取 PDF 文本"}</span></div> : structuredPreview?.kind === "pdf" ? <div className="size-full overflow-auto bg-[#eef0f5] p-5"><div className="mx-auto grid max-w-4xl gap-4"><div className="flex items-center justify-between rounded-xl border border-[#e2e4ed] bg-white px-4 py-3"><span className="text-xs font-bold text-[#697083]">文本来源</span><span className={`rounded-full px-2.5 py-1 text-[0.625rem] font-extrabold ${structuredPreview.source === "deepseek-ocr" ? "bg-[#e9e7ff] text-[#625bc5]" : "bg-[#edf9f4] text-[#357d65]"}`}>{structuredPreview.source === "deepseek-ocr" ? "DeepSeek OCR" : "PDF 文字层"}</span></div>{structuredPreview.pages.map((page) => <article key={page.number} data-moki-page-number={page.number} className="rounded-xl bg-white px-8 py-7 shadow-sm"><div className="mb-4 flex items-center justify-between border-b border-[#eceef3] pb-3"><b className="text-[0.75rem] text-[#464c61]">第 {page.number} 页</b><span className="text-[0.625rem] font-semibold text-[#999fb0]">{page.text.length} 字符</span></div>{page.text ? structuredPreview.source === "deepseek-ocr" ? <MarkdownRenderer content={page.text} className="text-sm leading-7"/> : <p className="whitespace-pre-wrap text-sm leading-7 text-[#30364b]">{page.text}</p> : <p className="text-sm font-semibold text-[#9a7a3b]">本页没有可提取的文本层，可点击 DeepSeek OCR 识别</p>}</article>)}</div></div> : <div className="grid size-full place-items-center text-sm font-bold text-[#7c8294]">无法提取此 PDF 的文本</div> : null}
-        {previewUrl && kind === "web" ? <div className="flex size-full flex-col bg-white"><div className="flex shrink-0 items-center gap-2 border-b border-[#e3e5ed] bg-[#f7f8fb] px-3 py-2 text-[0.6875rem] font-semibold text-[#697083]"><span className="size-2 rounded-full bg-[#4aa681]"/><span className="min-w-0 flex-1 truncate">网页预览会复用当前 MOKI 客户端的网页会话；工作台平台授权不会暴露令牌，若飞书等站点尚无网页登录状态，可直接在预览中完成一次登录。</span></div><iframe src={previewUrl} title={`${item.name} 在线页面`} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" sandbox={onlinePreviewSandbox(previewUrl)} className="min-h-0 flex-1 border-0"/></div> : null}
-        {kind === "text" ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>正在读取文本</span></div> : !editingText && renderedTextPreview && ["html", "htm"].includes(extension) ? <iframe title={`${item.name} HTML 预览`} srcDoc={textContent} sandbox="allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" referrerPolicy="no-referrer" className="size-full border-0 bg-white"/> : !editingText && renderedTextPreview && ["md", "markdown"].includes(extension) ? <div className="size-full overflow-auto bg-white p-6"><MarkdownRenderer content={textContent} className="mx-auto max-w-4xl text-sm leading-7"/></div> : !editingText && renderedTextPreview && extension === "json" ? <pre className="size-full overflow-auto bg-[#171b2c] p-5 font-mono text-xs leading-6 text-[#d9dcf0]">{(() => { try { return JSON.stringify(JSON.parse(textContent), null, 2); } catch { return textContent; } })()}</pre> : renderReadOnlyTable ? <div className="size-full overflow-auto bg-white p-3"><table className="min-w-full border-collapse text-[0.6875rem]"><tbody>{tableRows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex} className="min-w-32 border border-[#e1e3ec] px-2 py-1.5 text-[#34394e]">{cell}</td>)}</tr>)}</tbody></table></div> : renderEditableTable ? <div className="size-full overflow-auto bg-white p-3"><table className="min-w-full border-collapse text-[0.6875rem]"><tbody>{tableRows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex} className="min-w-32 border border-[#e1e3ec] p-0"><input aria-label={`第 ${rowIndex + 1} 行第 ${columnIndex + 1} 列`} value={cell} onChange={(event) => updateTableCell(rowIndex, columnIndex, event.target.value)} className="h-8 w-full min-w-32 bg-white px-2 outline-none focus:bg-[#f1f0ff]"/></td>)}</tr>)}</tbody></table></div> : editingText ? <div className="flex size-full flex-col"><textarea aria-label="资料文本编辑器" autoFocus value={textContent} onChange={(event) => { setTextContent(event.target.value); setTextHistory(history=>({...history,redo:[]})); setDirty(true); }} spellCheck={false} className="min-h-0 flex-1 resize-none bg-white p-4 font-mono text-[0.75rem] leading-6 text-[#30364b] outline-none"/>{tableMode && tableCellCount > 12_000 ? <p className="shrink-0 border-t border-[#e2e4ed] bg-[#fff8e8] px-3 py-2 text-[0.625rem] font-semibold text-[#9a6d24]">表格数据量较大，已切换为高性能文本编辑模式，保存时不会截断内容。</p> : null}</div> : <pre className="size-full overflow-auto whitespace-pre-wrap bg-white p-5 font-mono text-[0.75rem] leading-6 text-[#30364b]">{textContent}</pre> : null}
-        {["document", "spreadsheet"].includes(kind) && !editingOffice ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>正在解析 Office 文件</span></div> : structuredPreview?.kind === "document" ? <article className="size-full overflow-auto bg-[#eef0f5] p-6"><div data-testid="office-document-preview" className="mx-auto min-h-full max-w-3xl rounded-sm bg-white px-12 py-10 text-sm leading-7 text-[#30364b] shadow-sm [&_p]:mb-3 [&_p]:whitespace-pre-wrap [&_table]:my-5 [&_table]:w-full [&_table]:border-collapse [&_td]:min-w-20 [&_td]:border [&_td]:border-[#d9dce6] [&_td]:px-3 [&_td]:py-2 [&_td]:align-top">{structuredPreview.html ? <div className="contents" dangerouslySetInnerHTML={{ __html: structuredPreview.html }}/> : structuredPreview.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div></article> : structuredPreview?.kind === "spreadsheet" ? <SpreadsheetPreview sheets={structuredPreview.sheets} activeSheetIndex={activeSheetIndex} onActiveSheetIndex={setActiveSheetIndex}/> : <div className="grid size-full place-items-center text-sm font-bold text-[#7c8294]">无法解析此 Office 文件</div> : null}
-        {active && kind === "presentation" && !editingOffice ? <div ref={presentationPreviewRef} data-moki-page-number={presentationSlideIndex + 1} className="size-full min-h-0 overflow-hidden"><Suspense fallback={<div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>正在加载 PowerPoint 预览器</span></div>}>
+        {kind === "embedded" && extension === "pdf" && pdfTextOpen ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{ocrProgress ? t("正在{0}第 {1}/{2} 页", ocrProgress.phase === "rendering" ? t("渲染") : t("识别"), ocrProgress.currentPage, ocrProgress.totalPages) : t("正在提取 PDF 文本")}</span></div> : structuredPreview?.kind === "pdf" ? <div className="size-full overflow-auto bg-[#eef0f5] p-5"><div className="mx-auto grid max-w-4xl gap-4"><div className="flex items-center justify-between rounded-xl border border-[#e2e4ed] bg-white px-4 py-3"><span className="text-xs font-bold text-[#697083]">{t("文本来源")}</span><span className={`rounded-full px-2.5 py-1 text-[0.625rem] font-extrabold ${structuredPreview.source === "deepseek-ocr" ? "bg-[#e9e7ff] text-[#625bc5]" : "bg-[#edf9f4] text-[#357d65]"}`}>{structuredPreview.source === "deepseek-ocr" ? "DeepSeek OCR" : t("PDF 文字层")}</span></div>{structuredPreview.pages.map((page) => <article key={page.number} data-moki-page-number={page.number} className="rounded-xl bg-white px-8 py-7 shadow-sm"><div className="mb-4 flex items-center justify-between border-b border-[#eceef3] pb-3"><b className="text-[0.75rem] text-[#464c61]">{t("第")}{page.number} {t("页")}</b><span className="text-[0.625rem] font-semibold text-[#999fb0]">{page.text.length} {t("字符")}</span></div>{page.text ? structuredPreview.source === "deepseek-ocr" ? <MarkdownRenderer content={page.text} className="text-sm leading-7"/> : <p className="whitespace-pre-wrap text-sm leading-7 text-[#30364b]">{page.text}</p> : <p className="text-sm font-semibold text-[#9a7a3b]">{t("本页没有可提取的文本层，可点击 DeepSeek OCR 识别")}</p>}</article>)}</div></div> : <div className="grid size-full place-items-center text-sm font-bold text-[#7c8294]">{t("无法提取此 PDF 的文本")}</div> : null}
+        {previewUrl && kind === "web" ? <div className="flex size-full flex-col bg-white"><div className="flex shrink-0 items-center gap-2 border-b border-[#e3e5ed] bg-[#f7f8fb] px-3 py-2 text-[0.6875rem] font-semibold text-[#697083]"><span className="size-2 rounded-full bg-[#4aa681]"/><span className="min-w-0 flex-1 truncate">{t("网页预览会复用当前 MOKI 客户端的网页会话；工作台平台授权不会暴露令牌，若飞书等站点尚无网页登录状态，可直接在预览中完成一次登录。")}</span></div><iframe src={previewUrl} title={t("{0} 在线页面", item.name)} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" sandbox={onlinePreviewSandbox(previewUrl)} className="min-h-0 flex-1 border-0"/></div> : null}
+        {kind === "text" ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{t("正在读取文本")}</span></div> : !editingText && renderedTextPreview && ["html", "htm"].includes(extension) ? <iframe title={t("{0} HTML 预览", item.name)} srcDoc={textContent} sandbox="allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" referrerPolicy="no-referrer" className="size-full border-0 bg-white"/> : !editingText && renderedTextPreview && ["md", "markdown"].includes(extension) ? <div className="size-full overflow-auto bg-white p-6"><MarkdownRenderer content={textContent} className="mx-auto max-w-4xl text-sm leading-7"/></div> : !editingText && renderedTextPreview && extension === "json" ? <pre className="size-full overflow-auto bg-[#171b2c] p-5 font-mono text-xs leading-6 text-[#d9dcf0]">{(() => { try { return JSON.stringify(JSON.parse(textContent), null, 2); } catch { return textContent; } })()}</pre> : renderReadOnlyTable ? <div className="size-full overflow-auto bg-white p-3"><table className="min-w-full border-collapse text-[0.6875rem]"><tbody>{tableRows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex} className="min-w-32 border border-[#e1e3ec] px-2 py-1.5 text-[#34394e]">{cell}</td>)}</tr>)}</tbody></table></div> : renderEditableTable ? <div className="size-full overflow-auto bg-white p-3"><table className="min-w-full border-collapse text-[0.6875rem]"><tbody>{tableRows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex} className="min-w-32 border border-[#e1e3ec] p-0"><input aria-label={t("第 {0} 行第 {1} 列", rowIndex + 1, columnIndex + 1)} value={cell} onChange={(event) => updateTableCell(rowIndex, columnIndex, event.target.value)} className="h-8 w-full min-w-32 bg-white px-2 outline-none focus:bg-[#f1f0ff]"/></td>)}</tr>)}</tbody></table></div> : editingText ? <div className="flex size-full flex-col"><textarea aria-label={t("资料文本编辑器")} autoFocus value={textContent} onChange={(event) => { setTextContent(event.target.value); setTextHistory(history=>({...history,redo:[]})); setDirty(true); }} spellCheck={false} className="min-h-0 flex-1 resize-none bg-white p-4 font-mono text-[0.75rem] leading-6 text-[#30364b] outline-none"/>{tableMode && tableCellCount > 12_000 ? <p className="shrink-0 border-t border-[#e2e4ed] bg-[#fff8e8] px-3 py-2 text-[0.625rem] font-semibold text-[#9a6d24]">{t("表格数据量较大，已切换为高性能文本编辑模式，保存时不会截断内容。")}</p> : null}</div> : <pre className="size-full overflow-auto whitespace-pre-wrap bg-white p-5 font-mono text-[0.75rem] leading-6 text-[#30364b]">{textContent}</pre> : null}
+        {["document", "spreadsheet"].includes(kind) && !editingOffice ? loading ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{t("正在解析 Office 文件")}</span></div> : structuredPreview?.kind === "document" ? <article className="size-full overflow-auto bg-[#eef0f5] p-6"><div data-testid="office-document-preview" className="mx-auto min-h-full max-w-3xl rounded-sm bg-white px-12 py-10 text-sm leading-7 text-[#30364b] shadow-sm [&_p]:mb-3 [&_p]:whitespace-pre-wrap [&_table]:my-5 [&_table]:w-full [&_table]:border-collapse [&_td]:min-w-20 [&_td]:border [&_td]:border-[#d9dce6] [&_td]:px-3 [&_td]:py-2 [&_td]:align-top">{structuredPreview.html ? <div className="contents" dangerouslySetInnerHTML={{ __html: structuredPreview.html }}/> : structuredPreview.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}</div></article> : structuredPreview?.kind === "spreadsheet" ? <SpreadsheetPreview sheets={structuredPreview.sheets} activeSheetIndex={activeSheetIndex} onActiveSheetIndex={setActiveSheetIndex}/> : <div className="grid size-full place-items-center text-sm font-bold text-[#7c8294]">{t("无法解析此 Office 文件")}</div> : null}
+        {active && kind === "presentation" && !editingOffice ? <div ref={presentationPreviewRef} data-moki-page-number={presentationSlideIndex + 1} className="size-full min-h-0 overflow-hidden"><Suspense fallback={<div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{t("正在加载 PowerPoint 预览器")}</span></div>}>
           <PowerPointViewer
             key={`${item.id}:${item.updatedAt}:${officeRevision}`}
             source={presentationSourceUrl(item, officeRevision)}
@@ -1786,23 +1789,23 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
                 synchronizePowerPointThumbnailRail(root, presentationSlideIndex);
               }
             }}
-            renderLoading={() => <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>正在解析 PowerPoint 文件</span></div>}
+            renderLoading={() => <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{t("正在解析 PowerPoint 文件")}</span></div>}
             onError={loadPresentationFallback}
             renderError={(error) => structuredPreview?.kind === "presentation"
               ? <StructuredPresentationSlides preview={structuredPreview}/>
               : loading && presentationFallbackRequestedRef.current
-                ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>正在准备 PowerPoint 文字兜底预览</span></div>
-              : <div className="grid size-full place-items-center px-6 text-center"><div><p className="text-sm font-black text-[#3e4356]">PowerPoint 预览失败</p><p className="mt-2 max-w-xl text-[0.6875rem] leading-5 text-[#858b9d]">{error.message}</p><button type="button" onClick={() => void onOpen(item)} className="mt-4 rounded-xl bg-[#242a40] px-4 py-2 text-[0.6875rem] font-bold text-white">调用系统应用打开</button></div></div>}
+                ? <div role="status" className="grid size-full place-items-center"><span className="flex items-center gap-2 text-[0.75rem] font-bold text-[#6860c2]"><LoaderCircle size={16} className="animate-spin"/>{t("正在准备 PowerPoint 文字兜底预览")}</span></div>
+              : <div className="grid size-full place-items-center px-6 text-center"><div><p className="text-sm font-black text-[#3e4356]">{t("PowerPoint 预览失败")}</p><p className="mt-2 max-w-xl text-[0.6875rem] leading-5 text-[#858b9d]">{error.message}</p><button type="button" onClick={() => void onOpen(item)} className="mt-4 rounded-xl bg-[#242a40] px-4 py-2 text-[0.6875rem] font-bold text-white">{t("调用系统应用打开")}</button></div></div>}
           />
         </Suspense></div> : null}
-        {kind === "workspace" && !editingOffice ? <div className="grid size-full place-items-center text-center"><div><p className="text-sm font-black text-[#30364b]">原生 Univer 多 Unit 工作区</p><p className="mt-2 max-w-md text-[0.6875rem] leading-5 text-[#7c8294]">可在同一文件中管理文档、表格、幻灯片、Base 与白板；进入编辑后使用官方完整功能区和文件侧栏。</p><button type="button" disabled={loading} onClick={() => void startOfficeEditing()} className="mt-4 rounded-xl bg-[#625bc5] px-4 py-2 text-[0.6875rem] font-bold text-white disabled:opacity-40">打开完整编辑器</button></div></div> : null}
-        {kind === "unsupported" ? <div className="grid size-full place-items-center text-center"><div><p className="text-[0.75rem] font-bold text-[#676d80]">当前格式暂不支持内嵌预览</p><button type="button" onClick={() => void onOpen(item)} className="mt-3 rounded-xl bg-[#242a40] px-4 py-2 text-[0.6875rem] font-bold text-white">调用系统默认应用打开</button></div></div> : null}
+        {kind === "workspace" && !editingOffice ? <div className="grid size-full place-items-center text-center"><div><p className="text-sm font-black text-[#30364b]">{t("原生 Univer 多 Unit 工作区")}</p><p className="mt-2 max-w-md text-[0.6875rem] leading-5 text-[#7c8294]">{t("可在同一文件中管理文档、表格、幻灯片、Base 与白板；进入编辑后使用官方完整功能区和文件侧栏。")}</p><button type="button" disabled={loading} onClick={() => void startOfficeEditing()} className="mt-4 rounded-xl bg-[#625bc5] px-4 py-2 text-[0.6875rem] font-bold text-white disabled:opacity-40">{t("打开完整编辑器")}</button></div></div> : null}
+        {kind === "unsupported" ? <div className="grid size-full place-items-center text-center"><div><p className="text-[0.75rem] font-bold text-[#676d80]">{t("当前格式暂不支持内嵌预览")}</p><button type="button" onClick={() => void onOpen(item)} className="mt-3 rounded-xl bg-[#242a40] px-4 py-2 text-[0.6875rem] font-bold text-white">{t("调用系统默认应用打开")}</button></div></div> : null}
       </div>
       {!embedded ? <div
         role="separator"
-        aria-label="调整文件预览窗口大小"
+        aria-label={t("调整文件预览窗口大小")}
         aria-orientation="horizontal"
-        title="拖动调整预览窗口大小"
+        title={t("拖动调整预览窗口大小")}
         onPointerDown={startPreviewResize}
         onPointerMove={movePreviewResize}
         onPointerUp={endPreviewResize}
@@ -1813,16 +1816,16 @@ export function ResourceLibraryPreviewer({ item, onClose, onOpen, onThumbnail, l
         <span aria-hidden="true" className="pointer-events-none absolute bottom-1 right-1 size-3 border-b-2 border-r-2 border-[#777d91] opacity-80" />
       </div> : null}
       {libraryImagePickerOpen ? <ResourceLibraryPickerDialog
-        ariaLabel="选择要插入编辑器的资料库图片"
-        title="从资料库插入图片"
-        description="支持 PNG、JPEG/JFIF、GIF、WebP、SVG、BMP、AVIF 和 TIFF；插入前会自动转换为编辑器可保存的格式。"
+        ariaLabel={t("选择要插入编辑器的资料库图片")}
+        title={t("从资料库插入图片")}
+        description={t("支持 PNG、JPEG/JFIF、GIF、WebP、SVG、BMP、AVIF 和 TIFF；插入前会自动转换为编辑器可保存的格式。")}
         items={libraryImageItems}
         loading={libraryImageLoading}
         error={libraryImageError}
         selectableKinds={new Set<ResourceLibraryItem["kind"]>(["local_file"])}
         itemFilter={isUniverInsertableLibraryImage}
         maxSelected={1}
-        confirmLabel="插入当前位置"
+        confirmLabel={t("插入当前位置")}
         onClose={() => { setLibraryImagePickerOpen(false); libraryImageSelectionRef.current = undefined; }}
         onConfirm={insertLibraryImage}
       /> : null}

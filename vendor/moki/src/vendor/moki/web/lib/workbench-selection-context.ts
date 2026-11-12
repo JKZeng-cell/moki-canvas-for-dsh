@@ -1,3 +1,4 @@
+import {t} from '../../../../web/i18n.js';
 // Desktop whiteboard windows keep Agent selection and compose state independent.
 declare global {interface Window {mokiDshEmbed?:boolean;}}
 const contextStorage=()=>window.mokiDesktop?.windows||window.mokiDshEmbed?window.sessionStorage:window.localStorage;
@@ -159,8 +160,8 @@ export function visualAnnotationLocation(
 ): VisualAnnotationLocation {
   const centerX = (rect.x + rect.width / 2) / Math.max(1, surface.width);
   const centerY = (rect.y + rect.height / 2) / Math.max(1, surface.height);
-  const horizontal = centerX < 1 / 3 ? "左侧" : centerX > 2 / 3 ? "右侧" : "中央";
-  const vertical = centerY < 1 / 3 ? "上方" : centerY > 2 / 3 ? "下方" : "中部";
+  const horizontal = centerX < 1 / 3 ? t("左侧") : centerX > 2 / 3 ? t("右侧") : t("中央");
+  const vertical = centerY < 1 / 3 ? t("上方") : centerY > 2 / 3 ? t("下方") : t("中部");
   const percentRect = (value: VisualAnnotationItem["rect"]) => ({
     left: roundedPercent(value.x, surface.width),
     top: roundedPercent(value.y, surface.height),
@@ -169,7 +170,7 @@ export function visualAnnotationLocation(
   });
   return {
     coordinateSpace: "visible_surface",
-    positionLabel: `当前可见画面${vertical}${horizontal}`,
+    positionLabel: t("当前可见画面{0}{1}", vertical, horizontal),
     selectedPercent: percentRect(rect),
     contextPercent: percentRect(contextRect),
     ...(editor ? { editor } : {}),
@@ -246,13 +247,13 @@ export function visualAnnotationSelection(
   const latest = normalized.at(-1)!;
   return {
     source: latest.source,
-    label: `框选注释 ${normalized.length} 项`,
+    label: t("框选注释 {0} 项", normalized.length),
     itemCount: normalized.length,
     capturedAt: new Date().toISOString(),
     content: JSON.stringify({
       kind: "visual_annotation_collection",
       items: normalized,
-      guidance: "每个 visualAttachment 是包含周边内容的上下文截图，紫色框标出用户精确选区。rect 是原始选区，contextRect 是截图范围，location 提供可见画面百分比及文件页码、工作表或编辑器 session/unit 定位。whiteboard 提供白板 pageId、pageName、camera 和画布坐标 bounds。先定位对应文件或白板页面，再结合周边上下文处理紫色框内与注释相关的内容。",
+      guidance: t("每个 visualAttachment 是包含周边内容的上下文截图，紫色框标出用户精确选区。rect 是原始选区，contextRect 是截图范围，location 提供可见画面百分比及文件页码、工作表或编辑器 session/unit 定位。whiteboard 提供白板 pageId、pageName、camera 和画布坐标 bounds。先定位对应文件或白板页面，再结合周边上下文处理紫色框内与注释相关的内容。"),
     }),
   };
 }

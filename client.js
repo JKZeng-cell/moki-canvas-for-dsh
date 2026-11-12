@@ -9,6 +9,12 @@ window.__ModuleLoader__.load({
     }
     Object.assign(COPY.zh, {sidebarTitle:'MOKI白板',selectionHint:'白板选区',choose:'在白板中选择内容后，可点击此处加入对话',add:'加入对话',adding:'正在加入…',added:'已加入草稿',attached:'选区已加入草稿，发送消息时一起提交',textOnly:'文字与元素信息已加入；截图未完整加入',changed:'选区已变化，请重新点击加入对话',sendFailed:'加入失败，请重试',timedOut:'读取选区超时，请重试',plainOnly:'请先退出当前指令，或等待消息提交完成',selected:'已选 {count} 项',clickHint:'点击加入当前对话草稿',preview:'查看选区内容'})
     Object.assign(COPY.en, {sidebarTitle:COPY.en.title,selectionHint:'Whiteboard selection',choose:'Select canvas content, then click here to add it to the chat',add:'Add to chat',adding:'Adding…',added:'Added to draft',attached:'Selection added to the draft; it will accompany your message',textOnly:'Text and element details added; some selection images are unavailable',changed:'Selection changed. Click again to add the new selection.',sendFailed:'Could not add selection. Try again.',timedOut:'Selection request timed out. Try again.',plainOnly:'Exit the current command or wait for the message to finish submitting',selected:'{count} selected',clickHint:'Click to add to this chat draft',preview:'Preview selection'})
+    let canvasLanguage=null
+    const languageListeners=new Set()
+    const subscribeLanguage=fn=>{languageListeners.add(fn);return()=>languageListeners.delete(fn)}
+    const readLanguage=()=>canvasLanguage
+    function setCanvasLanguage(value){if(!['zh-CN','en'].includes(value)||value===canvasLanguage)return;canvasLanguage=value;for(const listener of languageListeners)listener()}
+    function useCanvasTranslation(fallback){React.useSyncExternalStore(subscribeLanguage,readLanguage,readLanguage);return key=>COPY[canvasLanguage==='zh-CN'?'zh':canvasLanguage]?.[key]??fallback(key)}
     const STYLE = `
       .moki-dsh-panel{position:relative;height:100%;min-height:0;display:flex;flex-direction:column;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}
       .moki-dsh-bar{position:absolute;z-index:10;top:0;right:4px;display:flex;align-items:center;gap:2px;height:36px;font-size:12px}
@@ -59,7 +65,8 @@ window.__ModuleLoader__.load({
     function selectionPreview(selection){
       try{const data=JSON.parse(selection.content),items=data.selectedShapes??data.annotations??[];return items.map(item=>item.text??item.annotation??item.name??item.title??item.type??'').filter(Boolean).join(' · ')||selection.label}catch{return selection?.label??''}
     }
-    function composerSelection(t){return function SelectionHint({sessionId,useInput}){
+    function composerSelection(fallback){return function SelectionHint({sessionId,useInput}){
+      const t=useCanvasTranslation(fallback)
       const view=useSelectionView(sessionId),input=useInput(state=>state),[expanded,setExpanded]=React.useState(false)
       const key=selectionKey(view?.boardId,view?.selection)
       React.useEffect(()=>setExpanded(false),[sessionId,key])
@@ -76,7 +83,8 @@ window.__ModuleLoader__.load({
         expanded&&selected?h('div',{className:'moki-composer-selection-details'},selectionPreview(view.selection).slice(0,2000)):null)
     }}
 
-    function panel(t,conversation){return function BoardPanel({sessionId,inputActions,useTabInfo,useSession,useInput}){
+    function panel(fallback,conversation){return function BoardPanel({sessionId,inputActions,useTabInfo,useSession,useInput}){
+      const t=useCanvasTranslation(fallback)
       const {tab}=useTabInfo()
       const canUploadImages=useSession(snapshot=>snapshot.subagent===null)
       const input=useInput(state=>state)
@@ -123,6 +131,7 @@ window.__ModuleLoader__.load({
         const receive=(event)=>{
           if(event.source!==frame.current?.contentWindow||event.origin!==new URL(url).origin||event.data?.bridgeId!==bridge.current)return
           const data=event.data
+          if(data.type==='moki:language')setCanvasLanguage(data.language)
           if(data.type==='moki:ready'){setPhase('ready');send('dsh:theme',{theme:theme()});send('dsh:active',{active:latest.current.tab.visible})}
           if(data.type==='moki:state'){
             const nextKey=selectionKey(data.boardId,data.selection),oldKey=selectionKey(latest.current.boardId,latest.current.selection)

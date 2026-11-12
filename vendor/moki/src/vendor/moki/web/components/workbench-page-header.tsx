@@ -1,3 +1,4 @@
+import {t, useI18n} from '../../../../web/i18n.js';
 import type { ReactNode } from "react";
 import { ArrowLeft, Settings, Share2, ExternalLink } from 'lucide-react';
 import { useNativeControls } from '../../../../web/native-context.js';
@@ -21,13 +22,14 @@ export function WorkbenchPageHeader({
   headingClassName = "",
   actionsClassName = "",
 }: WorkbenchPageHeaderProps) {
+  useI18n();
   const controls = useNativeControls();
   return (
     <header
       className={`workbench-page-header mb-3 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 ${className}`}
     >
       <div className="flex min-w-0 items-center gap-3">
-      {controls ? <button className="native-app-control" title="返回白板管理页" aria-label="返回白板管理页" onClick={controls.back}><ArrowLeft size={18}/></button> : null}
+      {controls ? <button className="native-app-control" title={t("返回白板管理页")} aria-label={t("返回白板管理页")} onClick={controls.back}><ArrowLeft size={18}/></button> : null}
       <div className={`min-w-0 ${headingClassName}`}>
         {eyebrow ? (
           <p className="text-[0.625rem] font-black uppercase leading-none tracking-[0.2em] text-[#625bc5]">
@@ -47,9 +49,9 @@ export function WorkbenchPageHeader({
       {actions || controls ? (
         <div className={`workbench-page-header-actions flex min-w-0 items-center ${actionsClassName}`}>
           {actions}
-          {controls?.newWindow ? <button className="native-app-control" title="在新窗口打开当前白板" aria-label="在新窗口打开白板" disabled={controls.openingWindow} onClick={controls.newWindow}><ExternalLink size={17}/></button> : null}
-          {controls?.share ? <button className="native-app-control" title="共享白板" aria-label="共享白板" onClick={controls.share}><Share2 size={17}/></button> : null}
-          {controls ? <button className="native-app-control" title="设置" aria-label="设置" onClick={controls.settings}><Settings size={17}/></button> : null}
+          {controls?.newWindow ? <button className="native-app-control" title={t("在新窗口打开当前白板")} aria-label={t("在新窗口打开白板")} disabled={controls.openingWindow} onClick={controls.newWindow}><ExternalLink size={17}/></button> : null}
+          {controls?.share ? <button className="native-app-control" title={t("共享白板")} aria-label={t("共享白板")} onClick={controls.share}><Share2 size={17}/></button> : null}
+          {controls ? <button className="native-app-control" title={t("设置")} aria-label={t("设置")} onClick={controls.settings}><Settings size={17}/></button> : null}
         </div>
       ) : null}
     </header>

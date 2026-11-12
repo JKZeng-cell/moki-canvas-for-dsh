@@ -1,3 +1,4 @@
+import {t} from './i18n.js';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {DesktopWhiteboardDocumentInfo} from '../vendor/moki/shared/desktop-whiteboard-transfer-contract.js';
 
@@ -26,6 +27,6 @@ export function useFileDocument(id:string|undefined,checkpoint:()=>Promise<void>
   })();
   flights.current.set(boardId,operation);void operation.finally(()=>{if(flights.current.get(boardId)===operation)flights.current.delete(boardId);}).catch(()=>{});return operation;
  },[bridge]);
- const status=info?{path:info.path,state:problem?'error' as const:saving?'saving' as const:info.dirty?'pending' as const:'saved' as const,label:problem?'原文件保存失败':saving?'正在写入原文件':info.dirty?'有更改 · 待写入原文件':'已保存到原文件'}:undefined;
+ const status=info?{path:info.path,state:problem?'error' as const:saving?'saving' as const:info.dirty?'pending' as const:'saved' as const,label:problem?t("原文件保存失败"):saving?t("正在写入原文件"):info.dirty?t("有更改 · 待写入原文件"):t("已保存到原文件")}:undefined;
  return {save,saveAs:bridge?.saveDocumentAs?()=>save(true):undefined,status};
 }

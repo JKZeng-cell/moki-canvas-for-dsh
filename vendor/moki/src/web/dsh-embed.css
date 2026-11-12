@@ -44,18 +44,18 @@ html[data-dsh-embed] #root :is([data-whiteboard-control-surface], .moki-menu-sur
   border-radius: 6px; box-shadow: var(--dsh-shadow) !important; backdrop-filter: none;
 }
 html[data-dsh-embed] #root :is([data-whiteboard-control-surface], .moki-menu-surface) button { border-radius: 4px; font-weight: 500; }
-html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button) { background: transparent !important; color: var(--dsh-label) !important; box-shadow: none !important; }
-html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button):hover { background: var(--dsh-hover) !important; }
-html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [aria-label="白板缩放工具"] > button):is([aria-pressed=true], [aria-expanded=true], [aria-checked=true]) { background: var(--dsh-selected) !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [data-moki-ui="canvas-zoom"] > button) { background: transparent !important; color: var(--dsh-label) !important; box-shadow: none !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [data-moki-ui="canvas-zoom"] > button):hover { background: var(--dsh-hover) !important; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button, [data-whiteboard-page-toolbar] > button, [data-moki-ui="canvas-zoom"] > button):is([aria-pressed=true], [aria-expanded=true], [aria-checked=true]) { background: var(--dsh-selected) !important; }
 html[data-dsh-embed] #root [data-whiteboard-toolbox] { bottom: 10px; padding: 4px; gap: 2px; max-width: calc(100% - 16px); }
 html[data-dsh-embed] #root [data-whiteboard-toolbox] > div { position: static; gap: 2px; }
 html[data-dsh-embed] #root :is([data-whiteboard-toolbox] > button, [data-whiteboard-toolbox] > div > button) { width: 28px; height: 28px; min-height: 28px; flex-shrink: 0; }
 html[data-dsh-embed] #root [data-whiteboard-toolbox] > span { display: none; }
 html[data-dsh-embed] #root [data-whiteboard-toolbox] .moki-menu-surface { max-width: calc(100vw - 24px); max-height: calc(100dvh - 130px); overflow-y: auto; }
 html[data-dsh-embed] #root [data-whiteboard-toolbox][data-dsh-tools-expanded=false] > :is(
-  button[aria-label="橡皮"], div:has(> button[aria-label="插入思维导图"]),
-  div:has(> button[aria-label="添加文件"]), button[aria-label="链接"], button[aria-label="对齐工具"]
-), html[data-dsh-embed] #root [data-whiteboard-toolbox][data-dsh-tools-expanded=false] > div > button[aria-label="钢笔"] { display: none; }
+  button[data-moki-ui="eraser"], div:has(> button[data-moki-ui="insert-mind-map"]),
+  div:has(> button[data-moki-ui="add-file"]), button[data-moki-ui="link"], button[data-moki-ui="alignment"]
+), html[data-dsh-embed] #root [data-whiteboard-toolbox][data-dsh-tools-expanded=false] > div > button[data-moki-ui="pen"] { display: none; }
 html[data-dsh-embed] #root [data-whiteboard-page-toolbar] { top: 8px; left: 8px; gap: 1px; padding: 2px; }
 html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > button { width: 24px; height: 24px; min-width: 24px; min-height: 24px; }
 html[data-dsh-embed] #root [data-whiteboard-page-toolbar] > button:first-child { min-width: 60px; width: 100px; max-width: 100px; font-size: 11px; padding: 0 5px; }
@@ -64,24 +64,24 @@ html[data-dsh-embed] #root [data-whiteboard-navigation] { top: 8px; right: 8px; 
 html[data-dsh-embed] #root [data-whiteboard-navigation][data-has-navigation-actions=true] { width: 232px; }
 html[data-dsh-embed] #root [data-whiteboard-navigation] > canvas { order: 1; height: 94px; }
 html[data-dsh-embed] #root [data-dsh-navigation-open=false] > canvas { display: none; }
-html[data-dsh-embed] #root [aria-label="白板缩放工具"] { padding: 2px; height: 30px; }
-html[data-dsh-embed] #root [aria-label="白板缩放工具"] > button { width: 24px; height: 24px; min-height: 24px; flex-shrink: 0; }
-html[data-dsh-embed] #root [aria-label="白板缩放工具"] > button:focus-visible { outline: 2px solid var(--dsh-focus); outline-offset: -1px; }
+html[data-dsh-embed] #root [data-moki-ui="canvas-zoom"] { padding: 2px; height: 30px; }
+html[data-dsh-embed] #root [data-moki-ui="canvas-zoom"] > button { width: 24px; height: 24px; min-height: 24px; flex-shrink: 0; }
+html[data-dsh-embed] #root [data-moki-ui="canvas-zoom"] > button:focus-visible { outline: 2px solid var(--dsh-focus); outline-offset: -1px; }
 html[data-dsh-embed] #root :is([data-dsh-export], [data-dsh-shortcuts]) > button,
-html[data-dsh-embed] #root button[data-whiteboard-control-button][aria-label="画布全屏"] { display: none; }
+html[data-dsh-embed] #root button[data-whiteboard-control-button][data-moki-ui="canvas-fullscreen"] { display: none; }
 html[data-dsh-embed] #root [data-dsh-export] { top: 42px; right: 8px; }
 html[data-dsh-embed] #root [data-dsh-export] > .moki-menu-surface { top: 0; }
 html[data-dsh-embed] #root [data-dsh-shortcuts] { bottom: 50px; right: 8px; }
 html[data-dsh-embed] #root [data-dsh-shortcuts] > .moki-menu-surface { bottom: 0; }
 html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] [data-whiteboard-navigation] { right: 42px; }
-html[data-dsh-embed] #root button[aria-label="退出画布全屏"] { top: 8px; right: 8px; width: 28px; height: 30px; min-height: 30px; }
-html[data-dsh-embed] #root :is([aria-label="当前页面素材列表"], [aria-label="白板版本记录"]) { top: 44px; right: 8px; bottom: 52px; max-width: calc(100% - 16px); }
+html[data-dsh-embed] #root button[data-moki-ui="exit-fullscreen"] { top: 8px; right: 8px; width: 28px; height: 30px; min-height: 30px; }
+html[data-dsh-embed] #root :is([data-moki-ui="page-materials"], [data-moki-ui="version-history"]) { top: 44px; right: 8px; bottom: 52px; max-width: calc(100% - 16px); }
 html[data-dsh-embed] #root .native-whiteboard-text-toolbar { gap: 1px; }
-html[data-dsh-embed] #root [aria-label="思维导图节点操作"] { gap: 2px; padding: 3px; }
-html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas [aria-label="思维导图节点操作"] button { height: 28px; min-height: 28px; background: transparent !important; color: var(--dsh-label) !important; }
-html[data-dsh-embed] #root [aria-label="思维导图节点操作"] label { height: 28px; color: var(--dsh-label); border-color: var(--dsh-line); }
-html[data-dsh-embed] #root [aria-label="思维导图节点宽度"] { color: var(--dsh-label); border-color: var(--dsh-line); }
-html[data-dsh-embed] #root :is([aria-label="选中文字工具"], [aria-label="编辑文字字号"]) { width: max-content; max-width: calc(100% - 16px); padding: 3px; }
+html[data-dsh-embed] #root [data-moki-ui="mind-map-actions"] { gap: 2px; padding: 3px; }
+html[data-dsh-embed][data-color-scheme] #root .whiteboard-canvas [data-moki-ui="mind-map-actions"] button { height: 28px; min-height: 28px; background: transparent !important; color: var(--dsh-label) !important; }
+html[data-dsh-embed] #root [data-moki-ui="mind-map-actions"] label { height: 28px; color: var(--dsh-label); border-color: var(--dsh-line); }
+html[data-dsh-embed] #root [data-moki-ui="mind-map-width"] { color: var(--dsh-label); border-color: var(--dsh-line); }
+html[data-dsh-embed] #root :is([data-moki-ui="selected-text-tools"], [data-moki-ui="text-font-size"]) { width: max-content; max-width: calc(100% - 16px); padding: 3px; }
 html[data-dsh-embed] #root .native-whiteboard-text-toolbar { flex-wrap: wrap; justify-content: center; }
 html[data-dsh-embed] #root .native-whiteboard-text-sizes { padding: 2px; gap: 0; background: transparent !important; }
 html[data-dsh-embed] #root .native-whiteboard-text-toolbar-group { gap: 0; border-color: var(--dsh-line) !important; }
@@ -124,6 +124,6 @@ html[data-dsh-embed] #root .manager-footer { display: none; }
 @media (max-width: 500px) {
   html[data-dsh-embed] #root [data-whiteboard-navigation][data-has-navigation-actions=true] { width: 180px; }
   html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] [data-whiteboard-navigation] { top: 42px; right: 8px; }
-  html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] :is([aria-label="当前页面素材列表"], [aria-label="白板版本记录"]) { top: 80px; }
-  html[data-dsh-embed] #root :is([aria-label="选中文字工具"], [aria-label="编辑文字字号"]) { left: 50% !important; }
+  html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] :is([data-moki-ui="page-materials"], [data-moki-ui="version-history"]) { top: 80px; }
+  html[data-dsh-embed] #root :is([data-moki-ui="selected-text-tools"], [data-moki-ui="text-font-size"]) { left: 50% !important; }
 }

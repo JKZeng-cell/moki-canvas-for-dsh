@@ -8,6 +8,9 @@ const CLOSE_BUTTON_SELECTOR = [
   'button[aria-label*="关闭"]',
   'button[aria-label*="取消"]',
   'button[aria-label*="稍后"]',
+  'button[aria-label^="Close"]',
+  'button[aria-label="Cancel"]',
+  'button[aria-label="Later"]',
 ].join(",");
 const TRANSIENT_SELECTOR = [
   '[role="menu"]',
@@ -28,7 +31,7 @@ function findCloseButton(dialog: HTMLElement): HTMLButtonElement | undefined {
   if (labelledButton && !labelledButton.disabled) return labelledButton;
 
   return Array.from(dialog.querySelectorAll<HTMLButtonElement>("button"))
-    .find((button) => !button.disabled && ["取消", "稍后", "稍后设置"].includes(button.textContent?.trim() ?? ""));
+    .find((button) => !button.disabled && ["取消", "稍后", "稍后设置", "Cancel", "Later", "Set up later"].includes(button.textContent?.trim() ?? ""));
 }
 
 function shouldPreserveFormPointer(target: Element): boolean {

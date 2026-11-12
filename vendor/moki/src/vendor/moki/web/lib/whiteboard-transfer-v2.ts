@@ -1,3 +1,4 @@
+import {t} from '../../../../web/i18n.js';
 import { strFromU8, unzipSync, zip, type Zippable } from "fflate";
 import {WHITEBOARD_ARCHIVE_MAX_FILES,readBoundedWhiteboardResponse} from '../../shared/whiteboard-transfer-limits.js';
 import { z } from "zod";
@@ -101,14 +102,14 @@ function isPortableAsset(value: unknown): value is WhiteboardAssetRecord {
 }
 
 function safeFileStem(value: string): string {
-  return value.replace(/[\\/:*?"<>|]+/gu, "-").trim() || "MOKI-白板";
+  return value.replace(/[\\/:*?"<>|]+/gu, "-").trim() || t("MOKI-白板");
 }
 
 function safeArchiveRelativePath(value: string): string {
   const segments = value.replace(/\\/gu, "/").split("/")
     .filter((segment) => segment && segment !== ".")
-    .map((segment) => segment === ".." ? "上级目录" : segment.replace(/[\u0000-\u001f]/gu, "-").slice(0, 240));
-  return segments.join("/") || "未命名文件";
+    .map((segment) => segment === ".." ? t("上级目录") : segment.replace(/[\u0000-\u001f]/gu, "-").slice(0, 240));
+  return segments.join("/") || t("未命名文件");
 }
 
 function joinedArchiveRelativePath(prefix: string | undefined, value: string): string {
@@ -117,7 +118,7 @@ function joinedArchiveRelativePath(prefix: string | undefined, value: string): s
 
 function dataUrlBytes(dataUrl: string): { mimeType: string; bytes: Uint8Array } {
   const match = /^data:([^;,]+);base64,(.+)$/isu.exec(dataUrl);
-  if (!match) throw new Error("白板内嵌资源格式无效");
+  if (!match) throw new Error(t("白板内嵌资源格式无效"));
   const binary = atob(match[2]!);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
@@ -212,7 +213,7 @@ export async function createWhiteboardTransferFile(
   } = {},
 ): Promise<{ blob: Blob; fileName: string; assetCount: number; resourceCount: number; fileCount: number }> {
   const parsed = WhiteboardSnapshotSchema.safeParse(snapshot);
-  if (!parsed.success) throw new Error("当前白板数据格式无效，无法导出。");
+  if (!parsed.success) throw new Error(t("当前白板数据格式无效，无法导出。"));
   const fetcher = options.fetcher ?? fetch;
   const archive: Zippable = {};
   const archivedContent = new Map<string, Array<{ archivePath: string; bytes: Uint8Array }>>();
@@ -223,7 +224,7 @@ export async function createWhiteboardTransferFile(
     const duplicate = archivedContent.get(fingerprint)?.find((entry) => equalBytes(entry.bytes, bytes));
     if (duplicate) return duplicate.archivePath;
     if (archiveFileCount + 1 >= MAX_WHITEBOARD_TRANSFER_FILES) {
-      throw new Error("白板便携文件数量超过 20000 个，无法导出。");
+      throw new Error(t("白板便携文件数量超过 20000 个，无法导出。"));
     }
     archive[archivePath] = storeOnly?[bytes,{level:0}]:bytes;
     archiveFileCount += 1;
@@ -240,7 +241,7 @@ export async function createWhiteboardTransferFile(
     try {
       content = await sourceBytes(String(props.src ?? ""), fetcher);
     } catch (error) {
-      throw new Error(`白板资源打包失败：${String(props.name ?? record.id)}（${error instanceof Error?error.message:'无法读取资源'}）`);
+      throw new Error(t("白板资源打包失败：{0}（{1}）", String(props.name ?? record.id), error instanceof Error?error.message:t("无法读取资源")));
     }
     const archivePath = addArchiveContent(
       `assets/${String(assets.length + 1).padStart(5, "0")}.bin`,
@@ -260,7 +261,7 @@ export async function createWhiteboardTransferFile(
   const resources: Array<z.infer<typeof ArchiveResourceSchema>> = [];
   let resourceFileCount = 0;
   for (const resource of options.resources ?? []) {
-    if (!options.readResource) throw new Error("请在 MOKI 客户端中导出包含本地映射资料的白板页面。");
+    if (!options.readResource) throw new Error(t("请在 MOKI 客户端中导出包含本地映射资料的白板页面。"));
     const occupied = new Set<string>();
     const files: Array<{ archivePath: string; relativePath: string }> = [];
     for (const source of resource.sources) {
@@ -268,11 +269,11 @@ export async function createWhiteboardTransferFile(
       try {
         result = await options.readResource({ source: source.source, ...(source.name ? { name: source.name } : {}) });
       } catch (error) {
-        throw new Error(`映射资料打包失败：${resource.name}（${error instanceof Error ? error.message : "无法读取"}）`);
+        throw new Error(t("映射资料打包失败：{0}（{1}）", resource.name, error instanceof Error ? error.message : t("无法读取")));
       }
       for (const file of result.files) {
         if (resourceFileCount >= MAX_WHITEBOARD_TRANSFER_FILES) {
-          throw new Error("白板映射文件数量超过 20000 个，无法导出。");
+          throw new Error(t("白板映射文件数量超过 20000 个，无法导出。"));
         }
         const relativePath = uniqueResourcePath(joinedArchiveRelativePath(source.pathPrefix, file.relativePath), occupied);
         const archivePath = addArchiveContent(
@@ -305,7 +306,7 @@ export async function createWhiteboardTransferFile(
   const bytes = await new Promise<Uint8Array>((resolve,reject)=>{zip(archive,{level:6},(error,result)=>error?reject(error):resolve(result));});
   return {
     blob: new Blob([bytes as Uint8Array<ArrayBuffer>], { type: WHITEBOARD_TRANSFER_MIME }),
-    fileName: `${safeFileStem(options.fileName ?? "MOKI-白板")}${WHITEBOARD_TRANSFER_EXTENSION}`,
+    fileName: `${safeFileStem(options.fileName ?? t("MOKI-白板"))}${WHITEBOARD_TRANSFER_EXTENSION}`,
     assetCount: assets.length,
     resourceCount: resources.length,
     fileCount: assets.length + resourceFileCount,
@@ -339,7 +340,7 @@ async function uploadAsset(
   });
   const result = await response.json() as Record<string, unknown>;
   if (!response.ok || typeof result.src !== "string") {
-    throw new Error(typeof result.error === "string" ? result.error : "白板内嵌资源导入失败。");
+    throw new Error(typeof result.error === "string" ? result.error : t("白板内嵌资源导入失败。"));
   }
   return result;
 }
@@ -378,7 +379,7 @@ function unzipWhiteboard(bytes: Uint8Array): Record<string, Uint8Array> {
     filter(entry) {
       files += 1;
       if (files > MAX_WHITEBOARD_TRANSFER_FILES) {
-        throw new Error("白板便携文件展开后超过安全限制。");
+        throw new Error(t("白板便携文件展开后超过安全限制。"));
       }
       return true;
     },
@@ -400,7 +401,7 @@ export async function importWhiteboardTransferFile(
   pageName?: string;
   boardTitle?: string;
 }> {
-  if (!isWhiteboardTransferFile(file)) throw new Error(`请选择 ${WHITEBOARD_TRANSFER_EXTENSION} 白板文件。`);
+  if (!isWhiteboardTransferFile(file)) throw new Error(t("请选择 {0} 白板文件。", WHITEBOARD_TRANSFER_EXTENSION));
   const bytes = new Uint8Array(await file.arrayBuffer());
   const fetcher = options.fetcher ?? apiFetch;
 
@@ -409,22 +410,22 @@ export async function importWhiteboardTransferFile(
     try {
       archive = unzipWhiteboard(bytes);
     } catch (error) {
-      throw new Error(error instanceof Error ? `白板便携文件无法展开：${error.message}` : "白板便携文件无法展开。");
+      throw new Error(error instanceof Error ? t("白板便携文件无法展开：{0}", error.message) : t("白板便携文件无法展开。"));
     }
     const manifestBytes = archive[WHITEBOARD_TRANSFER_MANIFEST];
-    if (!manifestBytes) throw new Error("白板便携文件缺少清单。");
+    if (!manifestBytes) throw new Error(t("白板便携文件缺少清单。"));
     let raw: unknown;
     try {
       raw = JSON.parse(strFromU8(manifestBytes));
     } catch {
-      throw new Error("白板便携文件清单无法解析，文件可能已损坏。");
+      throw new Error(t("白板便携文件清单无法解析，文件可能已损坏。"));
     }
     const parsed = WhiteboardArchiveManifestSchema.safeParse(raw);
-    if (!parsed.success) throw new Error("白板文件格式或版本不受支持。");
+    if (!parsed.success) throw new Error(t("白板文件格式或版本不受支持。"));
     const snapshot = structuredClone(parsed.data.snapshot);
     for (const asset of parsed.data.assets) {
       const content = archive[asset.archivePath];
-      if (!content) throw new Error(`白板便携文件缺少内嵌资源：${asset.name ?? asset.assetId}`);
+      if (!content) throw new Error(t("白板便携文件缺少内嵌资源：{0}", asset.name ?? asset.assetId));
       const result = await uploadAsset(fetcher, {
         bytes: content,
         mimeType: asset.mimeType,
@@ -440,12 +441,12 @@ export async function importWhiteboardTransferFile(
       kind: resource.kind,
       files: resource.files.map((entry) => {
         const content = archive[entry.archivePath];
-        if (!content) throw new Error(`白板便携文件缺少映射资料：${resource.name}`);
+        if (!content) throw new Error(t("白板便携文件缺少映射资料：{0}", resource.name));
         return { relativePath: entry.relativePath, bytes: content };
       }),
     }));
     if (portableResources.length) {
-      if (!options.restoreResources) throw new Error("该白板包含映射资料，请使用 MOKI 客户端导入。");
+      if (!options.restoreResources) throw new Error(t("该白板包含映射资料，请使用 MOKI 客户端导入。"));
       rewriteRestoredResources(snapshot, await options.restoreResources(portableResources));
     }
     return {
@@ -463,10 +464,10 @@ export async function importWhiteboardTransferFile(
   try {
     raw = JSON.parse(new TextDecoder().decode(bytes));
   } catch {
-    throw new Error("白板文件无法解析，文件可能已损坏。");
+    throw new Error(t("白板文件无法解析，文件可能已损坏。"));
   }
   const parsed = LegacyWhiteboardTransferSchema.safeParse(raw);
-  if (!parsed.success) throw new Error("白板文件格式或版本不受支持。");
+  if (!parsed.success) throw new Error(t("白板文件格式或版本不受支持。"));
   const snapshot = structuredClone(parsed.data.snapshot);
   for (const asset of parsed.data.assets) {
     const content = dataUrlBytes(asset.dataUrl);

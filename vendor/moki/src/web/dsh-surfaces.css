@@ -25,7 +25,7 @@ html[data-dsh-embed][data-color-scheme=dark] {
   --dsh-primary-text: #202020;
 }
 
-html[data-dsh-embed] #root [aria-label="白板缩放工具"] > .dsh-whiteboard-materials {
+html[data-dsh-embed] #root [data-moki-ui="canvas-zoom"] > .dsh-whiteboard-materials {
   display: flex; align-items: center; justify-content: center; flex: 0 0 auto; width: auto; gap: 4px; padding: 0 5px; font-size: 11px;
 }
 .dsh-material-count { color: var(--dsh-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
@@ -113,31 +113,31 @@ html[data-dsh-embed][data-color-scheme] :is(#root, body) {
   & .moki-menu-surface { border-radius: 6px; max-width: calc(100vw - 16px); }
   & [data-whiteboard-toolbox][data-dsh-tools-expanded=true] { flex-wrap: wrap; width: max-content; }
   & .moki-menu-surface :is([role=menuitem], [role=menuitemradio]) { min-height: 30px; height: auto; padding: 6px 8px; font-size: 12px; }
-  & [aria-label="形状选择"] [role=menuitemradio] { padding-inline: 5px; gap: 5px; }
-  & [aria-label="思维导图模板"] h4 { color: var(--dsh-muted) !important; font-size: 11px; }
+  & [data-moki-ui="shape-picker"] [role=menuitemradio] { padding-inline: 5px; gap: 5px; }
+  & [data-moki-ui="mind-map-templates"] h4 { color: var(--dsh-muted) !important; font-size: 11px; }
   & .board-more-menu { padding: 4px; }
   & .board-more-menu button { min-height: 30px; padding: 6px 8px; }
   & .moki-menu-surface [data-whiteboard-color-menu] { box-shadow: var(--dsh-shadow); }
-  & [data-whiteboard-page-toolbar] [aria-label="白板页面管理"] { width: 288px; }
-  & [aria-label="白板页面列表"] :is(li, [data-page-group-header]) { border-radius: 4px; }
-  & [aria-label="白板页面列表"] li:has(> button[aria-current=page]) { background: var(--dsh-selected) !important; border-color: var(--dsh-line) !important; }
-  & [aria-label="白板快捷键列表"] { padding: 10px; }
-  & [aria-label="白板快捷键列表"] > div:last-child { gap: 2px; }
-  & [aria-label="白板快捷键列表"] > div:last-child > div { background: transparent !important; border-radius: 3px; padding: 5px 6px; }
+  & [data-whiteboard-page-toolbar] [data-moki-ui="page-manager"] { width: 288px; }
+  & [data-moki-ui="page-list"] :is(li, [data-page-group-header]) { border-radius: 4px; }
+  & [data-moki-ui="page-list"] li:has(> button[aria-current=page]) { background: var(--dsh-selected) !important; border-color: var(--dsh-line) !important; }
+  & [data-moki-ui="keyboard-shortcuts"] { padding: 10px; }
+  & [data-moki-ui="keyboard-shortcuts"] > div:last-child { gap: 2px; }
+  & [data-moki-ui="keyboard-shortcuts"] > div:last-child > div { background: transparent !important; border-radius: 3px; padding: 5px 6px; }
 
   & [data-dsh-ui=panel] { width: min(288px, calc(100% - 16px)); border-radius: 6px; }
-  & [aria-label="当前页面素材列表"] > header { height: 38px; padding-inline: 10px; }
-  & [aria-label="当前页面素材列表"] > header span { border-radius: 4px; padding: 1px 5px; font-weight: 400; background: var(--dsh-hover) !important; color: var(--dsh-muted) !important; }
-  & [aria-label="当前页面素材列表"] > div:nth-child(2) { padding-inline: 8px; }
-  & [aria-label="当前页面素材列表"] > div:last-child { padding: 4px; }
-  & [aria-label="当前页面素材列表"] article[role=button] { padding: 7px 6px; margin: 0; border: 0; border-radius: 4px; }
-  & [aria-label="当前页面素材列表"] article[role=button] img { width: 32px; height: 32px; border-radius: 4px; }
-  & [aria-label="当前页面素材列表"] article[role=button] > div > span:first-child { color: var(--dsh-muted) !important; background: var(--dsh-hover) !important; border-radius: 4px; }
-  & [aria-label="当前页面素材列表"] article[role=button] span[title] { font-weight: 400; font-size: 12px; }
-  & [aria-label="白板版本记录"] { padding: 10px; }
-  & [aria-label="白板版本记录"] > div > button { border-bottom: 1px solid var(--dsh-line); padding: 8px 6px; }
-  & [aria-label="白板版本记录"] > div { display: grid; gap: 2px; }
-  & [data-dsh-canvas-fullscreen=true] button[aria-label="展开素材列表"] { top: 44px; right: 8px; width: 28px; height: 28px; }
+  & [data-moki-ui="page-materials"] > header { height: 38px; padding-inline: 10px; }
+  & [data-moki-ui="page-materials"] > header span { border-radius: 4px; padding: 1px 5px; font-weight: 400; background: var(--dsh-hover) !important; color: var(--dsh-muted) !important; }
+  & [data-moki-ui="page-materials"] > div:nth-child(2) { padding-inline: 8px; }
+  & [data-moki-ui="page-materials"] > div:last-child { padding: 4px; }
+  & [data-moki-ui="page-materials"] article[role=button] { padding: 7px 6px; margin: 0; border: 0; border-radius: 4px; }
+  & [data-moki-ui="page-materials"] article[role=button] img { width: 32px; height: 32px; border-radius: 4px; }
+  & [data-moki-ui="page-materials"] article[role=button] > div > span:first-child { color: var(--dsh-muted) !important; background: var(--dsh-hover) !important; border-radius: 4px; }
+  & [data-moki-ui="page-materials"] article[role=button] span[title] { font-weight: 400; font-size: 12px; }
+  & [data-moki-ui="version-history"] { padding: 10px; }
+  & [data-moki-ui="version-history"] > div > button { border-bottom: 1px solid var(--dsh-line); padding: 8px 6px; }
+  & [data-moki-ui="version-history"] > div { display: grid; gap: 2px; }
+  & [data-dsh-canvas-fullscreen=true] button[data-moki-ui="show-materials"] { top: 44px; right: 8px; width: 28px; height: 28px; }
 
   & :is(.native-modal-backdrop, [data-dsh-ui=backdrop]) {
     position: fixed; inset: 0; padding: 8px; backdrop-filter: none; background: #0005;
@@ -151,8 +151,8 @@ html[data-dsh-embed][data-color-scheme] :is(#root, body) {
     box-shadow: 0 10px 40px #0003 !important;
   }
   & [data-dsh-ui=dialog] { width: min(440px, calc(100vw - 16px)); scrollbar-gutter: stable; }
-  & [data-dsh-ui=dialog][aria-label^="预览 "] { padding: 10px; overflow: hidden; scrollbar-gutter: auto; }
-  & [data-dsh-ui=dialog][aria-label^="预览 "] > header { flex-shrink: 0; }
+  & [data-dsh-ui=dialog][data-moki-ui="material-preview"] { padding: 10px; overflow: hidden; scrollbar-gutter: auto; }
+  & [data-dsh-ui=dialog][data-moki-ui="material-preview"] > header { flex-shrink: 0; }
   & :is([data-dsh-ui=dialog], .native-mcp-modal) :is(h2, h3) { font-size: 14px; font-weight: 500; }
   & [data-dsh-ui=dialog] p { font-size: 12px; font-weight: 400 !important; line-height: 1.65; }
   & .native-mcp-modal { width: min(520px, calc(100vw - 16px)); }
@@ -175,8 +175,8 @@ html[data-dsh-embed][data-color-scheme] :is(#root, body) {
   & .settings-dialog-header > svg { display: none; }
   & .settings-dialog-header h2 { font-size: 14px; margin: 0 32px 12px 0; }
   & .settings-dialog-scroll { min-height: 0; overflow-y: auto; padding: 10px 14px 14px; scrollbar-width: thin; }
-  & .settings-tabs { padding: 0; margin: 0; gap: 4px; border-radius: 0; background: transparent !important; flex-wrap: nowrap; }
-  & .settings-tabs button { flex: 1 1 0; padding: 8px 6px; font-size: 12px; border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent; }
+  & .settings-tabs { padding: 0; margin: 0; gap: 4px; border-radius: 0; background: transparent !important; flex-wrap: nowrap; overflow-x: auto; }
+  & .settings-tabs button { flex: 1 0 auto; height: 34px; min-height: 34px; padding: 7px 6px; font-size: 12px; line-height: 16px; white-space: nowrap; border-radius: 4px 4px 0 0; border-bottom: 2px solid transparent; }
   & .settings-tabs button[aria-selected=true] { background: transparent !important; border-bottom-color: var(--dsh-label); }
   & .settings-theme-options, & .mcp-transport-switch { border-radius: 5px; padding: 3px; margin: 12px 0; background: var(--dsh-canvas) !important; border-color: var(--dsh-line); }
   & .settings-theme-options button, & .mcp-transport-switch button { padding: 6px 8px; min-height: 30px; }
@@ -206,12 +206,12 @@ html[data-dsh-embed][data-color-scheme] :is(#root, body) {
 }
 
 @media (max-width: 500px) {
-  html[data-dsh-embed] #root [aria-label="白板缩放工具"] > .dsh-whiteboard-materials { width: 24px; padding: 0; }
+  html[data-dsh-embed] #root [data-moki-ui="canvas-zoom"] > .dsh-whiteboard-materials { width: 24px; padding: 0; }
   html[data-dsh-embed] .dsh-whiteboard-materials > span { display: none; }
   html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog] { padding: 12px; }
-  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] { padding: 8px; }
-  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] > header { flex-wrap: wrap; gap: 8px; }
-  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][aria-label^="预览 "] > header > div:first-child { flex: 1; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][data-moki-ui="material-preview"] { padding: 8px; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][data-moki-ui="material-preview"] > header { flex-wrap: wrap; gap: 8px; }
+  html[data-dsh-embed] :is(#root, body) [data-dsh-ui=dialog][data-moki-ui="material-preview"] > header > div:first-child { flex: 1; }
   html[data-dsh-embed] :is(#root, body) .manager-section-title { gap: 10px; }
   html[data-dsh-embed] :is(#root, body) .manager-search { width: 100%; padding: 7px 9px; }
   html[data-dsh-embed] :is(#root, body) .manager-search input { width: 100%; max-width: none; }

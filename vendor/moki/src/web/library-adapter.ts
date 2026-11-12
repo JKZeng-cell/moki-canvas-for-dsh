@@ -1,3 +1,4 @@
+import {t} from './i18n.js';
 import {apiFetch} from '../vendor/moki/web/lib/api-fetch.js';
 import type {DesktopWhiteboardTransferResource,DesktopWhiteboardRestoredResource,DesktopWhiteboardReadResourceResult} from '../vendor/moki/shared/desktop-whiteboard-transfer-contract.js';
 import type {ResourceLibraryItem} from '../vendor/moki/shared/resource-library-contract.js';
@@ -20,7 +21,7 @@ export function installBrowserResourceBridge(){
   readResource:async input=>{
    const response=await apiFetch('/api/library/resources/read',{method:'POST',headers:{'content-type':'application/json',accept:RESOURCE_TRANSFER_MIME},body:JSON.stringify(input)});
    if(!response.ok)throw new Error((await response.json()).error);
-   const result=readResourceTransfer(new Uint8Array(await response.arrayBuffer()))[0];if(!result)throw new Error('附件传输为空');return result as DesktopWhiteboardReadResourceResult;
+   const result=readResourceTransfer(new Uint8Array(await response.arrayBuffer()))[0];if(!result)throw new Error(t("附件传输为空"));return result as DesktopWhiteboardReadResourceResult;
   },
   restoreResources:async(resources:DesktopWhiteboardTransferResource[])=>{
    const response=await apiFetch('/api/library/resources/restore',{method:'POST',headers:{'content-type':RESOURCE_TRANSFER_MIME},body:new Blob(resourceTransferParts(resources) as Uint8Array<ArrayBuffer>[])});
@@ -32,7 +33,7 @@ export function installBrowserResourceBridge(){
    const response=await apiFetch('/api/library/items');const items=await response.json() as ResourceLibraryItem[];
    const item=items.find(item=>item.target===source);
    if(item?.kind==='local_file'){window.open('/api/library/items/'+encodeURIComponent(item.id)+'/preview','_blank','noopener');return true;}
-   const read=await window.mokiDesktop!.whiteboardFiles!.readResource!({source,name:item?.name??'白板附件'});
+   const read=await window.mokiDesktop!.whiteboardFiles!.readResource!({source,name:item?.name??t("白板附件")});
    if(read.kind!=='file'||!read.files[0])return false;
    const file=read.files[0],blob=new Blob([file.bytes.slice().buffer as ArrayBuffer]),url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=read.name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);return true;
  };

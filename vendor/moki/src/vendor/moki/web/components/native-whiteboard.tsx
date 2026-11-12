@@ -1,3 +1,4 @@
+import {t, useI18n, getLanguage} from '../../../../web/i18n.js';
 import {
   useCallback,
   useEffect,
@@ -232,18 +233,18 @@ export type NativeDroppedLocalItem = {
 export type NativeNoteShapeUtil = { options: { resizeMode: string } };
 export const NativeGeoShapeStyle = "geo";
 export const NATIVE_COLOR_OPTIONS = [
-  { value: "black", label: "黑色", hex: "#242838" },
-  { value: "grey", label: "灰色", hex: "#9297a7" },
-  { value: "violet", label: "紫色", hex: "#7c63d9" },
-  { value: "light-violet", label: "浅紫", hex: "#b79cff" },
-  { value: "blue", label: "蓝色", hex: "#4771e8" },
-  { value: "light-blue", label: "浅蓝", hex: "#65a8ee" },
-  { value: "yellow", label: "黄色", hex: "#f5bb4d" },
-  { value: "orange", label: "橙色", hex: "#ed8d3b" },
-  { value: "green", label: "绿色", hex: "#2c9c72" },
-  { value: "light-green", label: "浅绿", hex: "#65bb78" },
-  { value: "red", label: "红色", hex: "#df4e4e" },
-  { value: "light-red", label: "浅红", hex: "#f47b7b" },
+  { value: "black", get label() { return t("黑色"); }, hex: "#242838" },
+  { value: "grey", get label() { return t("灰色"); }, hex: "#9297a7" },
+  { value: "violet", get label() { return t("紫色"); }, hex: "#7c63d9" },
+  { value: "light-violet", get label() { return t("浅紫"); }, hex: "#b79cff" },
+  { value: "blue", get label() { return t("蓝色"); }, hex: "#4771e8" },
+  { value: "light-blue", get label() { return t("浅蓝"); }, hex: "#65a8ee" },
+  { value: "yellow", get label() { return t("黄色"); }, hex: "#f5bb4d" },
+  { value: "orange", get label() { return t("橙色"); }, hex: "#ed8d3b" },
+  { value: "green", get label() { return t("绿色"); }, hex: "#2c9c72" },
+  { value: "light-green", get label() { return t("浅绿"); }, hex: "#65bb78" },
+  { value: "red", get label() { return t("红色"); }, hex: "#df4e4e" },
+  { value: "light-red", get label() { return t("浅红"); }, hex: "#f47b7b" },
 ] as const;
 export type NativeCanvasColor = (typeof NATIVE_COLOR_OPTIONS)[number]["value"];
 export type NativeGeoPaintStyle = {
@@ -420,9 +421,9 @@ export function normalizePastedWhiteboardImageUrl(
 
 function whiteboardLinkTitle(url: string): string {
   try {
-    return new URL(url).hostname || "网页链接";
+    return new URL(url).hostname || t("网页链接");
   } catch {
-    return "网页链接";
+    return t("网页链接");
   }
 }
 
@@ -530,7 +531,7 @@ export function nativeAutoTextBoxSize(
   const horizontalPadding = 32;
   const minimumWidth = 80;
   const maximumWidth = 640;
-  const content = text || "输入文字…";
+  const content = text || t("输入文字…");
   const paragraphs = content.split(/\r?\n/u);
   const longestLine = Math.max(...paragraphs.map((line) => measureText(line || " ")), 1);
   const width = Math.max(minimumWidth, Math.min(maximumWidth, longestLine + horizontalPadding));
@@ -725,7 +726,7 @@ function pageGroupId(page: NativeWhiteboardRecord | undefined): string | undefin
 
 function pageGroupName(page: NativeWhiteboardRecord | undefined): string {
   const value = recordMeta(page).mokiPageGroupName;
-  return typeof value === "string" && value.trim() ? value.trim() : "未命名分组";
+  return typeof value === "string" && value.trim() ? value.trim() : t("未命名分组");
 }
 
 function isPageGroupRecord(record: NativeWhiteboardRecord): boolean {
@@ -734,7 +735,7 @@ function isPageGroupRecord(record: NativeWhiteboardRecord): boolean {
 
 function pageGroupRecordName(record: NativeWhiteboardRecord): string {
   const value = record.name;
-  return typeof value === "string" && value.trim() ? value.trim() : "未命名分组";
+  return typeof value === "string" && value.trim() ? value.trim() : t("未命名分组");
 }
 
 function whiteboardPageGroups(snapshot: WhiteboardSnapshot): NativeWhiteboardPageGroup[] {
@@ -827,8 +828,8 @@ export function createNativeGroupFolderExportRequest(
     .map((asset) => structuredClone(asset));
   return {
     folderId,
-    name: String(folder.props.groupLabel ?? "新空间"),
-    description: String(folder.props.groupDescription ?? "把相关想法放在一起"),
+    name: String(folder.props.groupLabel ?? t("新空间")),
+    description: String(folder.props.groupDescription ?? t("把相关想法放在一起")),
     payload: { version: 1, shapes: members, assets },
   };
 }
@@ -849,7 +850,7 @@ export function isAnimatedNativeImageAsset(
 
 function pageName(snapshot: WhiteboardSnapshot, id: string): string {
   const page = snapshot.document.store[id];
-  return page && typeof page.name === "string" && page.name.trim() ? page.name : "未命名页面";
+  return page && typeof page.name === "string" && page.name.trim() ? page.name : t("未命名页面");
 }
 
 function touchPageEdited(snapshot: WhiteboardSnapshot, id: string): void {
@@ -864,22 +865,22 @@ function formatPageEditedAt(page: NativeWhiteboardRecord): string {
     : typeof page.createdAt === "string"
       ? page.createdAt
       : "";
-  if (!raw) return "较早编辑";
+  if (!raw) return t("较早编辑");
   const editedAt = new Date(raw);
-  if (Number.isNaN(editedAt.getTime())) return "较早编辑";
+  if (Number.isNaN(editedAt.getTime())) return t("较早编辑");
   const elapsedMinutes = Math.max(0, Math.floor((Date.now() - editedAt.getTime()) / 60_000));
-  if (elapsedMinutes < 1) return "刚刚编辑";
-  if (elapsedMinutes < 60) return `${elapsedMinutes} 分钟前编辑`;
+  if (elapsedMinutes < 1) return t("刚刚编辑");
+  if (elapsedMinutes < 60) return t("{0} 分钟前编辑", elapsedMinutes);
   const now = new Date();
   const sameDay = now.getFullYear() === editedAt.getFullYear() &&
     now.getMonth() === editedAt.getMonth() && now.getDate() === editedAt.getDate();
-  const time = editedAt.toLocaleTimeString("zh-CN", {
+  const time = editedAt.toLocaleTimeString(getLanguage(), {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
-  if (sameDay) return `今天 ${time} 编辑`;
-  return `${editedAt.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })} ${time} 编辑`;
+  if (sameDay) return t("今天 {0} 编辑", time);
+  return t("{0} {1} 编辑", editedAt.toLocaleDateString(getLanguage(), { month: "2-digit", day: "2-digit" }), time);
 }
 
 function preloadImage(source: string): Promise<HTMLImageElement | undefined> {
@@ -907,11 +908,11 @@ async function imageDimensions(file: Blob): Promise<{ width: number; height: num
     image.decoding = "async";
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
-      image.onerror = () => reject(new WhiteboardImageDecodeError("图片无法解码，请检查图片格式或重新复制"));
+      image.onerror = () => reject(new WhiteboardImageDecodeError(t("图片无法解码，请检查图片格式或重新复制")));
       image.src = url;
     });
     if (image.naturalWidth <= 0 || image.naturalHeight <= 0) {
-      throw new WhiteboardImageDecodeError("图片无法解码，请检查图片格式或重新复制");
+      throw new WhiteboardImageDecodeError(t("图片无法解码，请检查图片格式或重新复制"));
     }
     return { width: image.naturalWidth, height: image.naturalHeight, image };
   } finally {
@@ -944,7 +945,7 @@ export async function optimizeImage(file: File): Promise<{
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext("2d", { alpha: true });
-  if (!context) throw new Error("当前设备无法处理大图片");
+  if (!context) throw new Error(t("当前设备无法处理大图片"));
   if (decoded.bitmap) {
     try { context.drawImage(decoded.bitmap, 0, 0, width, height); }
     finally { decoded.bitmap.close(); }
@@ -954,7 +955,7 @@ export async function optimizeImage(file: File): Promise<{
   const mime = file.type === "image/png" ? "image/webp" : "image/jpeg";
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (value) => value ? resolve(value) : reject(new Error("图片压缩失败")),
+      (value) => value ? resolve(value) : reject(new Error(t("图片压缩失败"))),
       mime,
       mime === "image/webp" ? 0.88 : 0.86,
     ),
@@ -988,7 +989,7 @@ async function uploadImageAsset(file: File): Promise<{
   });
   const result = await response.json() as Record<string, unknown>;
   if (!response.ok || typeof result.src !== "string") {
-    throw new Error(typeof result.error === "string" ? result.error : "图片资源保存失败");
+    throw new Error(typeof result.error === "string" ? result.error : t("图片资源保存失败"));
   }
   const previewImage = await preloadImage(result.src);
   return {
@@ -1043,7 +1044,7 @@ async function uploadMediaAsset(file: File): Promise<{
   });
   const result = await response.json() as Record<string, unknown>;
   if (!response.ok || typeof result.src !== "string") {
-    throw new Error(typeof result.error === "string" ? result.error : "媒体资源保存失败");
+    throw new Error(typeof result.error === "string" ? result.error : t("媒体资源保存失败"));
   }
   return {
     src: result.src,
@@ -1101,7 +1102,7 @@ export function drawNativeImagePlaceholder(
     context.textAlign = "center";
     context.textBaseline = "top";
     context.fillText(
-      status === "error" ? "图片加载失败" : "图片加载中…",
+      status === "error" ? t("图片加载失败") : t("图片加载中…"),
       centerX,
       centerY + radius + 10,
     );
@@ -1127,7 +1128,7 @@ function nativeLinkDetails(shape: NativeWhiteboardShape): {
   return {
     url,
     hostname,
-    title: String(shape.props.title ?? "").trim() || hostname || "网页链接",
+    title: String(shape.props.title ?? "").trim() || hostname || t("网页链接"),
     mode: shape.props.mode === "preview" ? "preview" : "link",
     thumbnailUrl:
       typeof shape.props.thumbnailUrl === "string"
@@ -1257,14 +1258,14 @@ function drawNativeLinkCard(
       context.font = "600 12px system-ui, sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillText("网页交互式预览", bounds.center.x, previewY + previewHeight / 2);
+      context.fillText(t("网页交互式预览"), bounds.center.x, previewY + previewHeight / 2);
     }
     if (details.thumbnailUpdatedAt) {
       context.fillStyle = "rgba(36,42,64,.72)";
       context.font = "700 10px system-ui, sans-serif";
       context.textAlign = "right";
       context.textBaseline = "bottom";
-      context.fillText("已缓存预览", bounds.x + bounds.w - 18, bounds.y + bounds.h - 16);
+      context.fillText(t("已缓存预览"), bounds.x + bounds.w - 18, bounds.y + bounds.h - 16);
     }
   }
   context.restore();
@@ -1275,7 +1276,7 @@ function drawNativeResourceCard(
   bounds: NativeBounds,
   shape: NativeWhiteboardShape,
 ): void {
-  const name = String(shape.props.name ?? "资料");
+  const name = String(shape.props.name ?? t("资料"));
   const kind = String(shape.props.kind ?? "local_file");
   const folder = kind === "folder" || kind === "local_folder";
   const radius = Math.min(16, bounds.w / 8, bounds.h / 8);
@@ -1316,7 +1317,7 @@ function drawNativeResourceCard(
   context.fillText(name, bounds.x + 78, bounds.y + 18, Math.max(30, bounds.w - 94));
   context.fillStyle = "#8a90a2";
   context.font = "12px system-ui, sans-serif";
-  context.fillText(folder ? "资料文件夹 · 双击打开" : "资料文件 · 双击打开", bounds.x + 78, bounds.y + 43, Math.max(30, bounds.w - 94));
+  context.fillText(folder ? t("资料文件夹 · 双击打开") : t("资料文件 · 双击打开"), bounds.x + 78, bounds.y + 43, Math.max(30, bounds.w - 94));
   context.restore();
 }
 
@@ -1326,7 +1327,7 @@ function drawNativeMediaCard(
   shape: NativeWhiteboardShape,
 ): void {
   const video = shape.props.mediaKind === "video";
-  const name = String(shape.props.name ?? (video ? "视频" : "音频"));
+  const name = String(shape.props.name ?? (video ? t("视频") : t("音频")));
   context.save();
   context.fillStyle = video ? "#171b2a" : "#ffffff";
   context.strokeStyle = video ? "#30364d" : "#dfe2ec";
@@ -1372,17 +1373,17 @@ function nativeGroupFolderPreviewLabel(shape: NativeWhiteboardShape): string {
     if (typeof value === "string" && value.trim()) return value.trim();
   }
   return ({
-    arrow: "箭头",
-    bezier: "钢笔路径",
-    draw: "绘图",
-    geo: "图形",
-    image: "图片",
-    link: "网页链接",
-    media: "媒体",
-    note: "便签",
-    resource: "资料",
-    text: "文本",
-  } as Record<string, string>)[shape.type] ?? "白板内容";
+    arrow: t("箭头"),
+    bezier: t("钢笔路径"),
+    draw: t("绘图"),
+    geo: t("图形"),
+    image: t("图片"),
+    link: t("网页链接"),
+    media: t("媒体"),
+    note: t("便签"),
+    resource: t("资料"),
+    text: t("文本"),
+  } as Record<string, string>)[shape.type] ?? t("白板内容");
 }
 
 export function nativeGroupFolderVisualScale(bounds: NativeBounds): number {
@@ -1498,8 +1499,8 @@ function drawNativeGroupFolder(
   const previewGap = Math.max(6 * visualScale, bounds.w * .025);
   const previewWidth = Math.max(54 * visualScale, (bounds.w - inset * 2 - previewGap) / 2);
   const previewHeight = Math.max(36 * visualScale, Math.min(62 * visualScale, bounds.h * .32));
-  const title = String(shape.props.groupLabel ?? "新空间");
-  const description = String(shape.props.groupDescription ?? "把相关想法放在一起");
+  const title = String(shape.props.groupLabel ?? t("新空间"));
+  const description = String(shape.props.groupDescription ?? t("把相关想法放在一起"));
   const folderColor = typeof shape.props.groupColor === "string" && /^#[0-9a-f]{6}$/iu.test(shape.props.groupColor)
     ? shape.props.groupColor : "#776bd8";
 
@@ -1590,7 +1591,7 @@ function drawNativeGroupFolder(
   context.textBaseline = "top";
   context.fillStyle = "#747988";
   context.font = `500 ${13 * visualScale}px system-ui, sans-serif`;
-  context.fillText(`${memberCount} 项内容`, bounds.x + inset, frontY + 18 * visualScale);
+  context.fillText(t("{0} 项内容", memberCount), bounds.x + inset, frontY + 18 * visualScale);
 
   const titleY = bounds.y + bounds.h - 58 * visualScale;
   context.fillStyle = "#20232d";
@@ -1981,10 +1982,10 @@ export class NativeWhiteboardEditor {
           w: 240,
           h: 180,
           mokiGroupId: groupId,
-          groupLabel: typeof storedLabel === "string" ? storedLabel : "新空间",
+          groupLabel: typeof storedLabel === "string" ? storedLabel : t("新空间"),
           groupDescription: typeof storedDescription === "string"
             ? storedDescription
-            : "把相关想法放在一起",
+            : t("把相关想法放在一起"),
           groupColor: typeof storedColor === "string" ? storedColor : "#776bd8",
           groupOriginX: bounds.center.x - 120,
           groupOriginY: bounds.center.y - 90,
@@ -2008,8 +2009,8 @@ export class NativeWhiteboardEditor {
     const originY = Number(folder.props.groupOriginY);
     const dx = Number.isFinite(originX) ? folder.x - originX : 0;
     const dy = Number.isFinite(originY) ? folder.y - originY : 0;
-    const groupLabel = String(folder.props.groupLabel ?? "新空间");
-    const groupDescription = String(folder.props.groupDescription ?? "把相关想法放在一起");
+    const groupLabel = String(folder.props.groupLabel ?? t("新空间"));
+    const groupDescription = String(folder.props.groupDescription ?? t("把相关想法放在一起"));
     const groupColor = String(folder.props.groupColor ?? "#776bd8");
     this.store.mutate((snapshot) => {
       delete snapshot.document.store[folderId];
@@ -2079,7 +2080,7 @@ export class NativeWhiteboardEditor {
   addMindMapChild(parentId: string, center?: NativePoint, options: MindMapChildOptions = {}): string | undefined {
     const result: { created?: NonNullable<ReturnType<typeof addMindMapChild>> } = {};
     this.store.mutate((snapshot) => {
-      const created = addMindMapChild(snapshot, parentId, { ...options, ...(center ? { center } : {}) });
+      const created = addMindMapChild(snapshot, parentId, { text: t('新节点 {0}', mindMapChildren(snapshot, parentId).length + 1), ...options, ...(center ? { center } : {}) });
       if (created) {
         result.created = created;
         touchPageEdited(snapshot, this.getCurrentPageId());
@@ -2472,7 +2473,7 @@ export class NativeWhiteboardEditor {
       snapshot.document.store[id] = {
         id,
         typeName: "page",
-        name: `页面 ${pageCount + 1}`,
+        name: t("页面 {0}", pageCount + 1),
         index: `a${String(pageCount + 1).padStart(8, "0")}`,
         updatedAt: new Date().toISOString(),
         meta: {},
@@ -2497,7 +2498,7 @@ export class NativeWhiteboardEditor {
     return true;
   }
 
-  createPageGroup(pageId = this.getCurrentPageId(), name = "新分组"): string | undefined {
+  createPageGroup(pageId = this.getCurrentPageId(), name = t("新分组")): string | undefined {
     const page = this.store.snapshot.document.store[pageId];
     if (page?.typeName !== "page") return undefined;
     const random = globalThis.crypto?.randomUUID?.() ??
@@ -2506,7 +2507,7 @@ export class NativeWhiteboardEditor {
     this.store.mutate((snapshot) => {
       const current = snapshot.document.store[pageId];
       if (!current) return;
-      const groupName = name.trim() || "新分组";
+      const groupName = name.trim() || t("新分组");
       const groupCount = records(snapshot).filter(isPageGroupRecord).length;
       snapshot.document.store[id] = {
         id,
@@ -2789,6 +2790,7 @@ export function NativeTextFormattingControls({
   onColorChange: (color: NativeCanvasColor) => void;
   onColorMenuToggle: () => void;
 }) {
+  useI18n();
   return (
     <div className="native-whiteboard-text-toolbar flex items-center gap-1">
       <div className="native-whiteboard-text-sizes flex items-center gap-1 rounded-xl bg-[#f4f5f8] p-1">
@@ -2796,7 +2798,7 @@ export function NativeTextFormattingControls({
           <button
             type="button"
             key={size}
-            aria-label={`${sizeLabelPrefix}字号 ${size.toUpperCase()}`}
+            aria-label={t("{0}字号 {1}", sizeLabelPrefix, size.toUpperCase())}
             aria-pressed={style.size === size}
             onClick={() => onStyleChange({ size })}
             className={`native-whiteboard-text-control h-7 min-w-8 rounded-lg px-2 text-[0.6875rem] font-black transition ${style.size === size ? "bg-white text-[#625bc5] shadow-sm" : "text-[#73798b] hover:text-[#30364d]"}`}
@@ -2806,13 +2808,13 @@ export function NativeTextFormattingControls({
         ))}
       </div>
       <div className="native-whiteboard-text-toolbar-group flex items-center gap-0.5 border-l border-[#e2e4ed] pl-1">
-        <button type="button" aria-label={`${labelPrefix}加粗`} aria-pressed={style.bold} onClick={() => onStyleChange({ bold: !style.bold })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.bold ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Bold size={14} /></button>
-        <button type="button" aria-label={`${labelPrefix}倾斜`} aria-pressed={style.italic} onClick={() => onStyleChange({ italic: !style.italic })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.italic ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Italic size={14} /></button>
-        <button type="button" aria-label={`${labelPrefix}下划线`} aria-pressed={style.underline} onClick={() => onStyleChange({ underline: !style.underline })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.underline ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Underline size={14} /></button>
+        <button type="button" aria-label={t("{0}加粗", labelPrefix)} aria-pressed={style.bold} onClick={() => onStyleChange({ bold: !style.bold })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.bold ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Bold size={14} /></button>
+        <button type="button" aria-label={t("{0}倾斜", labelPrefix)} aria-pressed={style.italic} onClick={() => onStyleChange({ italic: !style.italic })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.italic ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Italic size={14} /></button>
+        <button type="button" aria-label={t("{0}下划线", labelPrefix)} aria-pressed={style.underline} onClick={() => onStyleChange({ underline: !style.underline })} className={`native-whiteboard-text-control grid size-8 place-items-center rounded-lg ${style.underline ? "bg-[#ebeafd] text-[#625bc5]" : "hover:bg-[#f4f5f8]"}`}><Underline size={14} /></button>
         {([
-          { value: "start", label: `${labelPrefix}左对齐`, icon: AlignLeft },
-          { value: "middle", label: `${labelPrefix}居中`, icon: AlignCenter },
-          { value: "end", label: `${labelPrefix}右对齐`, icon: AlignRight },
+          { value: "start", label: t("{0}左对齐", labelPrefix), icon: AlignLeft },
+          { value: "middle", label: t("{0}居中", labelPrefix), icon: AlignCenter },
+          { value: "end", label: t("{0}右对齐", labelPrefix), icon: AlignRight },
         ] as const).map(({ value, label, icon: Icon }) => (
           <button
             type="button"
@@ -2829,7 +2831,7 @@ export function NativeTextFormattingControls({
       <div className="native-whiteboard-text-toolbar-group relative border-l border-[#e2e4ed] pl-1">
         <button
           type="button"
-          aria-label={`${labelPrefix}颜色`}
+          aria-label={t("{0}颜色", labelPrefix)}
           aria-expanded={colorMenuOpen}
           onClick={onColorMenuToggle}
           className="native-whiteboard-text-color-trigger relative grid size-8 place-items-center rounded-lg text-[#5f6679] hover:bg-[#f4f5f8]"
@@ -2847,7 +2849,7 @@ export function NativeTextFormattingControls({
               <button
                 type="button"
                 key={option.value}
-                aria-label={`${labelPrefix}颜色 ${option.label}`}
+                aria-label={t("{0}颜色 {1}", labelPrefix, option.label)}
                 aria-pressed={color === option.value}
                 onClick={() => onColorChange(option.value)}
                 className={`native-whiteboard-color-swatch h-5 w-5 min-w-5 shrink-0 rounded-full border border-black/5 p-0 ${color === option.value ? "ring-2 ring-[#625bc5] ring-offset-1" : ""}`}
@@ -2963,7 +2965,7 @@ export async function exportNativeWhiteboardImage(
     ? available.filter((shape) => requestedIds.has(shape.id))
     : available;
   if (!exported.length) {
-    throw new Error(options.scope === "selection" ? "请先选择要导出的白板内容。" : "当前页面没有可导出的内容。");
+    throw new Error(options.scope === "selection" ? t("请先选择要导出的白板内容。") : t("当前页面没有可导出的内容。"));
   }
   const boxes = exported.map(shape => { const curve=mindMapEdgeCurve(snapshot,shape);return curve?mindMapCurveBounds(curve):nativeShapeVisualBounds(shape); });
   const left = Math.min(...boxes.map((box) => box.x));
@@ -2990,7 +2992,7 @@ export async function exportNativeWhiteboardImage(
   canvas.height = height;
   const transparent = options.background === "transparent";
   const context = canvas.getContext("2d", { alpha: transparent });
-  if (!context) throw new Error("当前设备无法生成白板图片。");
+  if (!context) throw new Error(t("当前设备无法生成白板图片。"));
   if (!transparent) {
     context.fillStyle = "#fafbfe";
     context.fillRect(0, 0, width, height);
@@ -3162,12 +3164,12 @@ export async function exportNativeWhiteboardImage(
   context.restore();
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
-      (value) => value ? resolve(value) : reject(new Error("白板图片生成失败。")),
+      (value) => value ? resolve(value) : reject(new Error(t("白板图片生成失败。"))),
       "image/png",
     );
   });
-  const rawName = options.fileName?.trim() || `${pageName(snapshot, pageId)}-${options.scope === "selection" ? "选中内容" : "整个画布"}`;
-  const safeName = rawName.replace(/[\\/:*?"<>|]+/gu, "-").replace(/\.png$/iu, "").trim() || "白板导出";
+  const rawName = options.fileName?.trim() || `${pageName(snapshot, pageId)}-${options.scope === "selection" ? t("选中内容") : t("整个画布")}`;
+  const safeName = rawName.replace(/[\\/:*?"<>|]+/gu, "-").replace(/\.png$/iu, "").trim() || t("白板导出");
   return { blob, fileName: `${safeName}.png`, width, height, shapeCount: exported.length };
 }
 
@@ -3200,7 +3202,7 @@ export async function writeNativeWhiteboardSelectionToClipboard(
     padding: 0,
     background: "transparent",
     requireImages: true,
-    fileName: "MOKI-白板选中图片",
+    fileName: t("MOKI-白板选中图片"),
   }).then((result) => result.blob);
   const marker = `${NATIVE_WHITEBOARD_CLIPBOARD_TEXT_PREFIX}${serializedElements}`;
   const writing = navigator.clipboard.write([
@@ -3726,6 +3728,7 @@ function LinkPreviewFrame({
   details: ReturnType<typeof nativeLinkDetails>;
   editor: NativeWhiteboardEditor;
 }) {
+  useI18n();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const loadedRef = useRef(false);
   const captureInFlightRef = useRef(false);
@@ -3749,7 +3752,7 @@ function LinkPreviewFrame({
   const refreshThumbnail = useCallback(async () => {
     if (captureInFlightRef.current) return;
     captureInFlightRef.current = true;
-    const capturedAt = new Date().toLocaleString("zh-CN", {
+    const capturedAt = new Date().toLocaleString(getLanguage(), {
       timeZone: "Asia/Shanghai",
       month: "numeric",
       day: "numeric",
@@ -3813,7 +3816,7 @@ function LinkPreviewFrame({
   return (
     <iframe
       ref={iframeRef}
-      title={`${details.title} 网页预览`}
+      title={t("{0} 网页预览", details.title)}
       src={details.url}
       sandbox="allow-forms allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox"
       referrerPolicy="strict-origin-when-cross-origin"
@@ -3876,6 +3879,7 @@ function edgeResizeCursor(edge: ResizeEdge, rotation = 0): "ew-resize" | "ns-res
 }
 
 function NativeGifPlayer({ src, selected }: { src: string; selected: boolean }) {
+  useI18n();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const decoderRef = useRef<ImageDecoder | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -3912,7 +3916,7 @@ function NativeGifPlayer({ src, selected }: { src: string; selected: boolean }) 
       try {
         if (typeof ImageDecoder === "undefined") throw new Error("ImageDecoder unavailable");
         const response = await apiFetch(src);
-        if (!response.ok) throw new Error(`GIF 读取失败：HTTP ${response.status}`);
+        if (!response.ok) throw new Error(t("GIF 读取失败：HTTP {0}", response.status));
         const data = await response.arrayBuffer();
         if (cancelled) return;
         const decoder = new ImageDecoder({
@@ -4019,19 +4023,19 @@ function NativeGifPlayer({ src, selected }: { src: string; selected: boolean }) 
       )}
       <canvas
         ref={canvasRef}
-        aria-label="GIF 播放画面"
+        aria-label={t("GIF 播放画面")}
         className={`h-full w-full object-fill ${decoderReady && !decoderFailed ? "block" : "invisible"}`}
       />
       <div
         role="group"
-        aria-label="GIF 播放控制"
+        aria-label={t("GIF 播放控制")}
         className="pointer-events-auto absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-white/80 bg-[#242a40]/90 p-1 text-white shadow-lg backdrop-blur"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <button type="button" aria-label="上一帧" title="上一帧" disabled={!decoderReady || decoderFailed || frameCount <= 1} onClick={() => step(-1)} className="grid size-7 place-items-center rounded-lg transition hover:bg-white/15 active:scale-90 disabled:opacity-35"><StepBack size={14} /></button>
-        <button type="button" aria-label={playing ? "暂停 GIF" : "播放 GIF"} title={playing ? "暂停" : "播放"} disabled={decoderFailed} onClick={playing ? pause : play} className="grid size-7 place-items-center rounded-lg bg-white text-[#242a40] transition hover:bg-[#eeedff] active:scale-90 disabled:opacity-50">{playing ? <Pause size={14} /> : <Play size={14} />}</button>
-        <button type="button" aria-label="下一帧" title="下一帧" disabled={!decoderReady || decoderFailed || frameCount <= 1} onClick={() => step(1)} className="grid size-7 place-items-center rounded-lg transition hover:bg-white/15 active:scale-90 disabled:opacity-35"><StepForward size={14} /></button>
-        <span className="min-w-14 px-1 text-center text-[0.625rem] font-bold tabular-nums">{decoderFailed ? "自动播放" : decoderReady ? `${frameIndex + 1}/${frameCount}` : "加载中"}</span>
+        <button type="button" aria-label={t("上一帧")} title={t("上一帧")} disabled={!decoderReady || decoderFailed || frameCount <= 1} onClick={() => step(-1)} className="grid size-7 place-items-center rounded-lg transition hover:bg-white/15 active:scale-90 disabled:opacity-35"><StepBack size={14} /></button>
+        <button type="button" aria-label={playing ? t("暂停 GIF") : t("播放 GIF")} title={playing ? t("暂停") : t("播放")} disabled={decoderFailed} onClick={playing ? pause : play} className="grid size-7 place-items-center rounded-lg bg-white text-[#242a40] transition hover:bg-[#eeedff] active:scale-90 disabled:opacity-50">{playing ? <Pause size={14} /> : <Play size={14} />}</button>
+        <button type="button" aria-label={t("下一帧")} title={t("下一帧")} disabled={!decoderReady || decoderFailed || frameCount <= 1} onClick={() => step(1)} className="grid size-7 place-items-center rounded-lg transition hover:bg-white/15 active:scale-90 disabled:opacity-35"><StepForward size={14} /></button>
+        <span className="min-w-14 px-1 text-center text-[0.625rem] font-bold tabular-nums">{decoderFailed ? t("自动播放") : decoderReady ? `${frameIndex + 1}/${frameCount}` : t("加载中")}</span>
       </div>
     </>
   );
@@ -4094,6 +4098,7 @@ export function NativeWhiteboard({
   navigationActions?: ReactNode;
   textStyle?: NativeTextStyle;
 }) {
+  useI18n();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const minimapRef = useRef<HTMLCanvasElement | null>(null);
@@ -4343,11 +4348,11 @@ export function NativeWhiteboard({
           ...(typeof assetProps?.src === "string" && shape.type === "media" ? { mediaSource: assetProps.src } : {}),
         };
       }),
-      guidance: "选中内容的图片保留了涂鸦、文字、形状、图片和相对布局，请结合结构化元素信息进行识别处理。",
+      guidance: t("选中内容的图片保留了涂鸦、文字、形状、图片和相对布局，请结合结构化元素信息进行识别处理。"),
     };
     const baseSelection = {
       source: "whiteboard" as const,
-      label: `白板已选 ${selected.length} 项`,
+      label: t("白板已选 {0} 项", selected.length),
       itemCount: Math.min(selected.length, 200),
       content: JSON.stringify(selectionPayload),
     };
@@ -4372,7 +4377,7 @@ export function NativeWhiteboard({
           padding: 24,
           background: "canvas",
           requireImages: true,
-          fileName: `${selectionPayload.pageName}-选中内容`,
+          fileName: t("{0}-选中内容", selectionPayload.pageName),
           maxDimension: 2_048,
           maxPixels: 4_000_000,
         }).then((result) => storeVisualSelectionImage(result.blob, {
@@ -4501,7 +4506,7 @@ export function NativeWhiteboard({
         }
       }
       const count = selectedShapeIds.length;
-      announceClipboard(`已复制 ${count} 个元素，可按 Ctrl/⌘+V 粘贴`);
+      announceClipboard(t("已复制 {0} 个元素，可按 Ctrl/⌘+V 粘贴", count));
       const includesImage = selectedShapeIds.some(
         (id) => editor.getShape(id)?.type === "image",
       );
@@ -4512,10 +4517,10 @@ export function NativeWhiteboard({
           serialized,
         ).then((written) => {
           announceClipboard(written
-            ? `已复制 ${count} 个元素及 PNG 图片`
-            : `已复制 ${count} 个元素；当前环境不支持系统图片剪贴板`);
+            ? t("已复制 {0} 个元素及 PNG 图片", count)
+            : t("已复制 {0} 个元素；当前环境不支持系统图片剪贴板", count));
         }).catch(() => {
-          announceClipboard(`已复制 ${count} 个元素；系统图片复制失败`);
+          announceClipboard(t("已复制 {0} 个元素；系统图片复制失败", count));
         });
       }
     };
@@ -4558,7 +4563,7 @@ export function NativeWhiteboard({
       const inlineImage=inlineClipboardImageFromHtml(readClipboardData('text/html'));
       if(inlineImage&&onImageFiles&&!customSerialized&&!textSerialized){
         event.preventDefault();
-        void fetch(inlineImage).then(response=>response.blob()).then(blob=>onImageFiles([new File([blob],'白板图片',{type:blob.type})],editor.getViewportPageBounds().center)).catch(()=>announceClipboard('图片粘贴失败，请重新复制图片'));
+        void fetch(inlineImage).then(response=>response.blob()).then(blob=>onImageFiles([new File([blob],t("白板图片"),{type:blob.type})],editor.getViewportPageBounds().center)).catch(()=>announceClipboard(t("图片粘贴失败，请重新复制图片")));
         return;
       }
       const pastedImageUrl = customSerialized || textSerialized
@@ -4575,7 +4580,7 @@ export function NativeWhiteboard({
       if (pastedLinkUrl) {
         const pastedId = editor.pasteLink(pastedLinkUrl);
         if (pastedId) {
-          announceClipboard("已粘贴为超链接");
+          announceClipboard(t("已粘贴为超链接"));
           event.preventDefault();
           return;
         }
@@ -4596,7 +4601,7 @@ export function NativeWhiteboard({
       }
       if (invalidNativeClipboard) {
         event.preventDefault();
-        announceClipboard("白板剪贴板内容不可用，也没有可粘贴的图片");
+        announceClipboard(t("白板剪贴板内容不可用，也没有可粘贴的图片"));
       }
     };
     window.addEventListener("copy", handleCopy);
@@ -5250,7 +5255,7 @@ export function NativeWhiteboard({
     };
   }, [editor, onMount, refresh, scheduleDraw, store]);
 
-  useEffect(() => { scheduleDraw(); }, [revision, scheduleDraw]);
+  useEffect(() => { scheduleDraw(); }, [revision, scheduleDraw, getLanguage()]);
 
   useEffect(() => {
     if (!textDraft) return;
@@ -6402,7 +6407,7 @@ export function NativeWhiteboard({
     const name = pageName(store.snapshot, page.id);
     const editedAt = formatPageEditedAt(page);
     const isCurrent = page.id === currentPageId;
-    if(readOnly)return <li key={page.id} className={`relative flex min-h-10 items-center gap-1 rounded-[16px] border px-2.5 transition ${isCurrent?'border-[#cbc7ef] bg-[#f0efff]':'border-[#e8e9f0] bg-white'}`}><button type="button" aria-label={`切换到页面 ${name}`} aria-current={isCurrent ? "page" : undefined} onClick={()=>{editor.setCurrentPage(page.id);setPageMenuOpen(false);setPageQuery('');}} className="min-w-0 flex-1 px-1 py-1.5 text-left outline-none"><span className="block truncate text-xs font-bold text-[#30364d]">{name}</span><span className="mt-0.5 block truncate text-[0.625rem] font-semibold text-[#989dae]">{editedAt}</span></button></li>;
+    if(readOnly)return <li key={page.id} className={`relative flex min-h-10 items-center gap-1 rounded-[16px] border px-2.5 transition ${isCurrent?'border-[#cbc7ef] bg-[#f0efff]':'border-[#e8e9f0] bg-white'}`}><button type="button" aria-label={t("切换到页面 {0}", name)} aria-current={isCurrent ? "page" : undefined} onClick={()=>{editor.setCurrentPage(page.id);setPageMenuOpen(false);setPageQuery('');}} className="min-w-0 flex-1 px-1 py-1.5 text-left outline-none"><span className="block truncate text-xs font-bold text-[#30364d]">{name}</span><span className="mt-0.5 block truncate text-[0.625rem] font-semibold text-[#989dae]">{editedAt}</span></button></li>;
     const isRenaming = page.id === renamingPageId;
     const isDropTarget = pageDropTarget?.type === "page" &&
       pageDropTarget.id === page.id && draggedPageId !== page.id;
@@ -6449,10 +6454,10 @@ export function NativeWhiteboard({
         {isRenaming ? (
           <input
             autoFocus
-            aria-label={`重命名白板页面 ${name}`}
+            aria-label={t("重命名白板页面 {0}", name)}
             value={pageNameDraft}
             maxLength={120}
-            placeholder="请输入页面名称"
+            placeholder={t("请输入页面名称")}
             onFocus={(event) => event.currentTarget.select()}
             onChange={(event) => setPageNameDraft(event.target.value)}
             onBlur={() => commitPageRename(page.id)}
@@ -6473,7 +6478,7 @@ export function NativeWhiteboard({
             <button
               type="button"
               draggable={false}
-              aria-label={`切换到页面 ${name}`}
+              aria-label={t("切换到页面 {0}", name)}
               aria-current={isCurrent ? 'page' : undefined}
               onClick={(event) => {
                 editor.setCurrentPage(page.id);
@@ -6502,15 +6507,15 @@ export function NativeWhiteboard({
               }}
               className="min-w-0 flex-1 px-1 py-1.5 text-left outline-none"
             >
-              <span title="双击重命名页面" className="block cursor-text truncate text-xs font-bold text-[#30364d]">{name}</span>
+              <span title={t("双击重命名页面")} className="block cursor-text truncate text-xs font-bold text-[#30364d]">{name}</span>
               <span className="mt-0.5 block truncate text-[0.625rem] font-semibold text-[#989dae]">{editedAt}</span>
             </button>
             <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
               <button
                 type="button"
                 draggable={false}
-                aria-label={`重命名页面 ${name}`}
-                title="重命名"
+                aria-label={t("重命名页面 {0}", name)}
+                title={t("重命名")}
                 onClick={() => startPageRename(page.id)}
                 className="grid size-7 place-items-center rounded-lg text-[#73798c] transition hover:bg-white hover:text-[#625bc5] hover:shadow-sm"
               >
@@ -6519,8 +6524,8 @@ export function NativeWhiteboard({
               <button
                 type="button"
                 draggable={false}
-                aria-label={`删除页面 ${name}`}
-                title="删除"
+                aria-label={t("删除页面 {0}", name)}
+                title={t("删除")}
                 disabled={pages.length <= 1}
                 onClick={() => {
                   setPendingPageDelete({ id: page.id, name });
@@ -7020,7 +7025,7 @@ export function NativeWhiteboard({
         onDragLeave={() => setDraggingFile(false)}
         onDrop={dropFiles}
       />
-      <input ref={menuMediaInputRef} type="file" accept="image/*,video/*,.mkv,.avi" multiple className="hidden" aria-label="添加图片或视频" onChange={event => {const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; if (files.length) void onImageFiles?.(files, menuMediaPointRef.current);}} />
+      <input ref={menuMediaInputRef} type="file" accept="image/*,video/*,.mkv,.avi" multiple className="hidden" aria-label={t("添加图片或视频")} onChange={event => {const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; if (files.length) void onImageFiles?.(files, menuMediaPointRef.current);}} />
       {mindMapConnectionDraft && connectionPath ? (
         <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-[42] h-full w-full overflow-visible">
           <path d={connectionPath} fill="none" stroke="#625bc5" strokeWidth="3" strokeLinecap="round" strokeDasharray="7 5" />
@@ -7044,8 +7049,8 @@ export function NativeWhiteboard({
           type="button"
           data-mind-map-connector="parent"
           data-mind-map-source={selectedMindMapNode.id}
-          aria-label="拖拽连接新的父节点"
-          title="拖到节点上，将其设为父节点"
+          aria-label={t("拖拽连接新的父节点")}
+          title={t("拖到节点上，将其设为父节点")}
           className="absolute z-[45] cursor-crosshair border-[3px] border-white bg-[#625bc5] shadow-[0_2px_10px_rgba(56,51,128,.35)] ring-1 ring-[#625bc5] transition hover:scale-125"
           style={{
             left: selectedMindMapInputPoint.x,
@@ -7069,8 +7074,8 @@ export function NativeWhiteboard({
           type="button"
           data-mind-map-connector="child"
           data-mind-map-source={selectedMindMapNode.id}
-          aria-label="拖拽连接子节点"
-          title="拖到节点上，将其接到当前节点下"
+          aria-label={t("拖拽连接子节点")}
+          title={t("拖到节点上，将其接到当前节点下")}
           className="absolute z-[45] cursor-crosshair border-[3px] border-white bg-[#625bc5] shadow-[0_2px_10px_rgba(56,51,128,.35)] ring-1 ring-[#625bc5] transition hover:scale-125"
           style={{
             left: selectedMindMapOutputPoint.x,
@@ -7091,7 +7096,7 @@ export function NativeWhiteboard({
       ) : null}
       {!readOnly && !textDraft && selectedMindMapNode && selectedMindMapToolbarPosition ? (
         <div
-          aria-label="思维导图节点操作"
+          aria-label={t("思维导图节点操作")} data-moki-ui="mind-map-actions"
           data-whiteboard-control-surface
           className="absolute z-40 flex w-max max-w-[calc(100%-16px)] flex-wrap items-center justify-center gap-1 rounded-xl border border-[#dedcf0] bg-white/96 p-1 shadow-[0_8px_24px_rgba(35,39,61,.16)] backdrop-blur"
           style={{
@@ -7108,20 +7113,19 @@ export function NativeWhiteboard({
         >
           <button
             type="button"
-            aria-label="添加子节点"
-            title="添加子节点"
+            aria-label={t("添加子节点")}
+            title={t("添加子节点")}
             onClick={() => {
               editor.addMindMapChild(selectedMindMapNode.id);
               scheduleDraw();
             }}
             className="native-whiteboard-edit-control flex h-8 items-center gap-1 rounded-lg px-2 text-[0.6875rem] font-bold text-[#5650ae] hover:bg-[#efedff]"
           >
-            <Plus size={13} />子节点
-          </button>
+            <Plus size={13} />{t("子节点")}</button>
           <button
             type="button"
-            aria-label="添加同级节点"
-            title="添加同级节点"
+            aria-label={t("添加同级节点")}
+            title={t("添加同级节点")}
             disabled={selectedMindMapNode.props.mokiMindMapRoot === true}
             onClick={() => {
               editor.addMindMapSibling(selectedMindMapNode.id);
@@ -7129,8 +7133,7 @@ export function NativeWhiteboard({
             }}
             className="native-whiteboard-edit-control flex h-8 items-center gap-1 rounded-lg px-2 text-[0.6875rem] font-bold text-[#5650ae] hover:bg-[#efedff] disabled:cursor-not-allowed disabled:opacity-35"
           >
-            <GitBranch size={13} />同级
-          </button>
+            <GitBranch size={13} />{t("同级")}</button>
           <MindMapWidthControl key={selectedMindMapNode.id} width={Number(selectedMindMapNode.props.w) || 184}
             onChange={width => {
               editor.updateShapes([{ id: selectedMindMapNode.id, props: { w: width } }]);
@@ -7139,8 +7142,8 @@ export function NativeWhiteboard({
           {selectedMindMapHasChildren ? (
             <button
               type="button"
-              aria-label={selectedMindMapNode.props.mokiMindMapCollapsed === true ? "展开分支" : "收起分支"}
-              title={selectedMindMapNode.props.mokiMindMapCollapsed === true ? "展开分支" : "收起分支"}
+              aria-label={selectedMindMapNode.props.mokiMindMapCollapsed === true ? t("展开分支") : t("收起分支")}
+              title={selectedMindMapNode.props.mokiMindMapCollapsed === true ? t("展开分支") : t("收起分支")}
               onClick={() => {
                 editor.toggleMindMapBranch(selectedMindMapNode.id);
                 scheduleDraw();
@@ -7150,7 +7153,7 @@ export function NativeWhiteboard({
               {selectedMindMapNode.props.mokiMindMapCollapsed === true
                 ? <ChevronRight size={13} />
                 : <ChevronDown size={13} />}
-              {selectedMindMapNode.props.mokiMindMapCollapsed === true ? "展开" : "收起"}
+              {selectedMindMapNode.props.mokiMindMapCollapsed === true ? t("展开") : t("收起")}
             </button>
           ) : null}
         </div>
@@ -7159,7 +7162,7 @@ export function NativeWhiteboard({
         <div
           ref={shapeContextMenuRef}
           role="menu"
-          aria-label="白板右键菜单"
+          aria-label={t("白板右键菜单")}
           className="moki-menu-surface absolute z-[60] min-w-44 max-h-[calc(100%-16px)] overflow-y-auto p-1.5"
           style={{ left: Math.max(8, Math.min(shapeContextMenu.x, (rootRef.current?.clientWidth ?? 800) - 220)), top: Math.max(8, Math.min(shapeContextMenu.y, (rootRef.current?.clientHeight ?? 600) - 320)) }}
           onPointerDown={(event) => event.stopPropagation()}
@@ -7177,7 +7180,7 @@ export function NativeWhiteboard({
               pastedClipboardRef.current = { serialized, count: 0 };
               try { await navigator.clipboard.writeText(`${NATIVE_WHITEBOARD_CLIPBOARD_TEXT_PREFIX}${serialized}`); }
               catch { /* The in-memory clipboard remains available in this window. */ }
-              setClipboardNotice(`已复制 ${selected.length} 个元素`);
+              setClipboardNotice(t("已复制 {0} 个元素", selected.length));
               setShapeContextMenu(undefined);
             };
             const pasteAtMenu = async () => {
@@ -7203,7 +7206,7 @@ export function NativeWhiteboard({
                   const files: File[] = [];
                   for (const entry of entries) for (const mime of entry.types) {
                     if (!/^(?:image|video)\//u.test(mime)) continue;
-                    files.push(new File([await entry.getType(mime)], `剪贴板媒体.${mime.split("/")[1] ?? "png"}`, {type: mime}));
+                    files.push(new File([await entry.getType(mime)], t("剪贴板媒体.{0}", mime.split("/")[1] ?? "png"), {type: mime}));
                   }
                   if (files.length && onImageFiles) { await onImageFiles(files, point); return; }
                 } catch { /* Clipboard read may require browser permission. */ }
@@ -7232,7 +7235,7 @@ export function NativeWhiteboard({
             };
             if (folder && editingFolderDescriptionId === folder.id) return (
               <form
-                aria-label="编辑资料夹描述"
+                aria-label={t("编辑资料夹描述")}
                 className="grid min-w-64 gap-2 p-1.5"
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -7242,11 +7245,11 @@ export function NativeWhiteboard({
                   scheduleDraw();
                 }}
               >
-                <label htmlFor={`folder-description-${folder.id}`} className="text-[0.6875rem] font-bold text-[#6d7386]">资料夹描述</label>
+                <label htmlFor={`folder-description-${folder.id}`} className="text-[0.6875rem] font-bold text-[#6d7386]">{t("资料夹描述")}</label>
                 <textarea
                   id={`folder-description-${folder.id}`}
                   autoFocus
-                  aria-label="资料夹描述"
+                  aria-label={t("资料夹描述")}
                   maxLength={120}
                   rows={3}
                   value={folderDescriptionDraft}
@@ -7256,15 +7259,15 @@ export function NativeWhiteboard({
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[0.625rem] font-semibold text-[#9aa0b1]">{folderDescriptionDraft.length}/120</span>
                   <span className="flex gap-2">
-                    <button type="button" className="h-8 rounded-lg px-3 text-xs font-bold text-[#6d7386] hover:bg-[#f4f5f8]" onClick={() => setEditingFolderDescriptionId(undefined)}>取消</button>
-                    <button type="submit" className="h-8 rounded-lg bg-[#242838] px-3 text-xs font-bold text-white">保存</button>
+                    <button type="button" className="h-8 rounded-lg px-3 text-xs font-bold text-[#6d7386] hover:bg-[#f4f5f8]" onClick={() => setEditingFolderDescriptionId(undefined)}>{t("取消")}</button>
+                    <button type="submit" className="h-8 rounded-lg bg-[#242838] px-3 text-xs font-bold text-white">{t("保存")}</button>
                   </span>
                 </div>
               </form>
             );
             if (folder && renamingFolderId === folder.id) return (
               <form
-                aria-label="重命名资料夹"
+                aria-label={t("重命名资料夹")}
                 className="grid min-w-56 gap-2 p-1.5"
                 onSubmit={(event) => {
                   event.preventDefault();
@@ -7274,64 +7277,64 @@ export function NativeWhiteboard({
                   scheduleDraw();
                 }}
               >
-                <label htmlFor={`folder-name-${folder.id}`} className="text-[0.6875rem] font-bold text-[#6d7386]">资料夹名称</label>
+                <label htmlFor={`folder-name-${folder.id}`} className="text-[0.6875rem] font-bold text-[#6d7386]">{t("资料夹名称")}</label>
                 <input
                   id={`folder-name-${folder.id}`}
                   autoFocus
-                  aria-label="资料夹名称"
+                  aria-label={t("资料夹名称")}
                   maxLength={60}
                   value={folderNameDraft}
                   onChange={(event) => setFolderNameDraft(event.target.value)}
                   className="h-9 w-full rounded-lg border border-[#dfe2ec] bg-white px-3 text-xs font-semibold text-[#242838] outline-none focus:border-[#756bd6] focus:ring-2 focus:ring-[#756bd6]/15"
                 />
                 <div className="flex justify-end gap-2">
-                  <button type="button" className="h-8 rounded-lg px-3 text-xs font-bold text-[#6d7386] hover:bg-[#f4f5f8]" onClick={() => setRenamingFolderId(undefined)}>取消</button>
-                  <button type="submit" disabled={!folderNameDraft.trim()} className="h-8 rounded-lg bg-[#242838] px-3 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-35">保存</button>
+                  <button type="button" className="h-8 rounded-lg px-3 text-xs font-bold text-[#6d7386] hover:bg-[#f4f5f8]" onClick={() => setRenamingFolderId(undefined)}>{t("取消")}</button>
+                  <button type="submit" disabled={!folderNameDraft.trim()} className="h-8 rounded-lg bg-[#242838] px-3 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-35">{t("保存")}</button>
                 </div>
               </form>
             );
             if (folder) return <>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {void copySelection();}}><Copy size={14}/>复制</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => { setEditingFolderDescriptionId(undefined); setFolderNameDraft(String(folder.props.groupLabel ?? "新空间")); setRenamingFolderId(folder.id); }}><Pencil size={14}/>重命名资料夹</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => { setRenamingFolderId(undefined); setFolderDescriptionDraft(String(folder.props.groupDescription ?? "把相关想法放在一起")); setEditingFolderDescriptionId(folder.id); }}><FileText size={14}/>编辑资料夹描述</button>
-              <button ref={folderColorTriggerRef} type="button" role="menuitem" aria-haspopup="menu" aria-expanded={Boolean(folderColorMenu)} aria-controls={folderColorMenu ? folderColorMenuId : undefined} className={itemClass} onPointerEnter={event => openFolderColorMenu(event.currentTarget)} onClick={event => openFolderColorMenu(event.currentTarget)}><Palette size={14}/>资料夹颜色<ChevronRight size={13} className="ml-auto"/></button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => { editor.expandGroupFolder(folder.id); setShapeContextMenu(undefined); }}><FolderOpen size={14}/>展开资料夹</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {void copySelection();}}><Copy size={14}/>{t("复制")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => { setEditingFolderDescriptionId(undefined); setFolderNameDraft(String(folder.props.groupLabel ?? t("新空间"))); setRenamingFolderId(folder.id); }}><Pencil size={14}/>{t("重命名资料夹")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => { setRenamingFolderId(undefined); setFolderDescriptionDraft(String(folder.props.groupDescription ?? t("把相关想法放在一起"))); setEditingFolderDescriptionId(folder.id); }}><FileText size={14}/>{t("编辑资料夹描述")}</button>
+              <button ref={folderColorTriggerRef} type="button" role="menuitem" aria-haspopup="menu" aria-expanded={Boolean(folderColorMenu)} aria-controls={folderColorMenu ? folderColorMenuId : undefined} className={itemClass} onPointerEnter={event => openFolderColorMenu(event.currentTarget)} onClick={event => openFolderColorMenu(event.currentTarget)}><Palette size={14}/>{t("资料夹颜色")}<ChevronRight size={13} className="ml-auto"/></button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => { editor.expandGroupFolder(folder.id); setShapeContextMenu(undefined); }}><FolderOpen size={14}/>{t("展开资料夹")}</button>
               <button type="button" role="menuitem" disabled={!onGroupFolderExport} className={itemClass} onClick={() => {
                 const request = createNativeGroupFolderExportRequest(store.snapshot, folder.id);
                 setShapeContextMenu(undefined);
-                if (request) void Promise.resolve(onGroupFolderExport?.(request, "local")).catch((error) => setClipboardNotice(error instanceof Error ? error.message : "资料夹另存为失败"));
-              }}><Download size={14}/>另存为本地文件夹</button>
+                if (request) void Promise.resolve(onGroupFolderExport?.(request, "local")).catch((error) => setClipboardNotice(error instanceof Error ? error.message : t("资料夹另存为失败")));
+              }}><Download size={14}/>{t("另存为本地文件夹")}</button>
               <button type="button" role="menuitem" disabled={!onGroupFolderExport} className={itemClass} onClick={() => {
                 const request = createNativeGroupFolderExportRequest(store.snapshot, folder.id);
                 setShapeContextMenu(undefined);
-                if (request) void Promise.resolve(onGroupFolderExport?.(request, "library")).catch((error) => setClipboardNotice(error instanceof Error ? error.message : "保存到资料库失败"));
-              }}><LibraryBig size={14}/>保存到资料库</button>
+                if (request) void Promise.resolve(onGroupFolderExport?.(request, "library")).catch((error) => setClipboardNotice(error instanceof Error ? error.message : t("保存到资料库失败")));
+              }}><LibraryBig size={14}/>{t("保存到资料库")}</button>
             </>;
             if (!selected.length) return <>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; setShapeContextMenu(undefined); beginTextDraft({point, value: "", autoSize: true});}}><Pencil size={14}/>添加文字</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; editor.createShapes([{type: "note", x: point.x, y: point.y, props: {w: 220, h: 180, richText: nativeRichText(""), color: "yellow", labelColor: "black"}}]); setShapeContextMenu(undefined);}}><FileText size={14}/>添加便签</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; editor.createShapes([{type: "geo", x: point.x - 90, y: point.y - 60, props: {geo: "rectangle", w: 180, h: 120, color, strokeColor: color, scale: 1}}]); setShapeContextMenu(undefined);}}><Plus size={14}/>添加矩形</button>
-              {onMindMapCreate && <button type="button" role="menuitem" className={itemClass} onClick={() => {onMindMapCreate(shapeContextMenu.point); setShapeContextMenu(undefined);}}><GitBranch size={14}/>添加思维导图</button>}
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {menuMediaPointRef.current = shapeContextMenu.point; setShapeContextMenu(undefined); menuMediaInputRef.current?.click();}}><ImageIcon size={14}/>添加图片或视频</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; const url = window.prompt("输入网页链接"); if (url) editor.pasteLink(url, point); setShapeContextMenu(undefined);}}><Link2 size={14}/>添加网页链接</button>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {void pasteAtMenu().catch(error => setClipboardNotice(error instanceof Error ? error.message : "粘贴失败"));}}><ClipboardPaste size={14}/>粘贴</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; setShapeContextMenu(undefined); beginTextDraft({point, value: "", autoSize: true});}}><Pencil size={14}/>{t("添加文字")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; editor.createShapes([{type: "note", x: point.x, y: point.y, props: {w: 220, h: 180, richText: nativeRichText(""), color: "yellow", labelColor: "black"}}]); setShapeContextMenu(undefined);}}><FileText size={14}/>{t("添加便签")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; editor.createShapes([{type: "geo", x: point.x - 90, y: point.y - 60, props: {geo: "rectangle", w: 180, h: 120, color, strokeColor: color, scale: 1}}]); setShapeContextMenu(undefined);}}><Plus size={14}/>{t("添加矩形")}</button>
+              {onMindMapCreate && <button type="button" role="menuitem" className={itemClass} onClick={() => {onMindMapCreate(shapeContextMenu.point); setShapeContextMenu(undefined);}}><GitBranch size={14}/>{t("添加思维导图")}</button>}
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {menuMediaPointRef.current = shapeContextMenu.point; setShapeContextMenu(undefined); menuMediaInputRef.current?.click();}}><ImageIcon size={14}/>{t("添加图片或视频")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {const point = shapeContextMenu.point; const url = window.prompt(t("输入网页链接")); if (url) editor.pasteLink(url, point); setShapeContextMenu(undefined);}}><Link2 size={14}/>{t("添加网页链接")}</button>
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {void pasteAtMenu().catch(error => setClipboardNotice(error instanceof Error ? error.message : t("粘贴失败")));}}><ClipboardPaste size={14}/>{t("粘贴")}</button>
             </>;
             return <>
-              <button type="button" role="menuitem" className={itemClass} onClick={() => {void copySelection();}}><Copy size={14}/>复制</button>
-              <button type="button" role="menuitem" disabled={selected.length < 2 || sameGroup} className={itemClass} onClick={() => { editor.groupSelectedShapes(); setShapeContextMenu(undefined); }}><Group size={14}/>编组</button>
-              <button type="button" role="menuitem" disabled={!sameGroup} className={itemClass} onClick={() => { editor.ungroupSelectedShapes(); setShapeContextMenu(undefined); }}><Ungroup size={14}/>取消编组</button>
-              <button type="button" role="menuitem" disabled={!sameGroup} className={itemClass} onClick={() => { editor.collapseSelectedGroup(); setShapeContextMenu(undefined); }}><Folder size={14}/>收起为资料夹</button>
-              {selected.filter((shape) => ["image", "media", "link", "resource"].includes(shape.type)).length >= 2 && <><button type="button" role="menuitem" className={itemClass} onClick={() => equalize("w")}>等宽缩放</button><button type="button" role="menuitem" className={itemClass} onClick={() => equalize("h")}>等高缩放</button></>}
+              <button type="button" role="menuitem" className={itemClass} onClick={() => {void copySelection();}}><Copy size={14}/>{t("复制")}</button>
+              <button type="button" role="menuitem" disabled={selected.length < 2 || sameGroup} className={itemClass} onClick={() => { editor.groupSelectedShapes(); setShapeContextMenu(undefined); }}><Group size={14}/>{t("编组")}</button>
+              <button type="button" role="menuitem" disabled={!sameGroup} className={itemClass} onClick={() => { editor.ungroupSelectedShapes(); setShapeContextMenu(undefined); }}><Ungroup size={14}/>{t("取消编组")}</button>
+              <button type="button" role="menuitem" disabled={!sameGroup} className={itemClass} onClick={() => { editor.collapseSelectedGroup(); setShapeContextMenu(undefined); }}><Folder size={14}/>{t("收起为资料夹")}</button>
+              {selected.filter((shape) => ["image", "media", "link", "resource"].includes(shape.type)).length >= 2 && <><button type="button" role="menuitem" className={itemClass} onClick={() => equalize("w")}>{t("等宽缩放")}</button><button type="button" role="menuitem" className={itemClass} onClick={() => equalize("h")}>{t("等高缩放")}</button></>}
             </>;
           })()}
         </div>
       ) : null}
       {!readOnly && shapeContextMenu && folderColorMenu && !renamingFolderId && !editingFolderDescriptionId && editor.getSelectedShapeIds().length === 1 && editor.getShape(editor.getSelectedShapeIds()[0]!)?.type === "group-folder" ? createPortal(
-        <div ref={folderColorMenuRef} id={folderColorMenuId} role="menu" aria-label="资料夹颜色" data-whiteboard-control-surface className="moki-menu-surface fixed z-[100] flex items-center justify-between gap-2 p-2" style={{left: folderColorMenu.left, top: folderColorMenu.top, width: 224}} onPointerDown={event => event.stopPropagation()}>
+        <div ref={folderColorMenuRef} id={folderColorMenuId} role="menu" aria-label={t("资料夹颜色")} data-whiteboard-control-surface className="moki-menu-surface fixed z-[100] flex items-center justify-between gap-2 p-2" style={{left: folderColorMenu.left, top: folderColorMenu.top, width: 224}} onPointerDown={event => event.stopPropagation()}>
           {["#776bd8", "#5086d7", "#36a391", "#e79d45", "#ce668a", "#7d8799"].map(value => {
             const folder = editor.getShape(editor.getSelectedShapeIds()[0]!);
             const checked = (folder?.props.groupColor ?? "#776bd8") === value;
-            return <button key={value} type="button" role="menuitemradio" aria-label={`资料夹颜色 ${value}`} aria-checked={checked} title={value} onClick={() => {if (folder) editor.setGroupFolderColor(folder.id, value); setFolderColorMenu(undefined); setShapeContextMenu(undefined); scheduleDraw();}} className="grid shrink-0 place-items-center rounded-full border-2 border-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#625bc5]" style={{width: 26, height: 26, minWidth: 26, minHeight: 26, flex: "0 0 26px", aspectRatio: "1 / 1", borderRadius: "50%", backgroundColor: value, outline: checked ? "2px solid #776bd8" : undefined, outlineOffset: 2}} />;
+            return <button key={value} type="button" role="menuitemradio" aria-label={t("资料夹颜色 {0}", value)} aria-checked={checked} title={value} onClick={() => {if (folder) editor.setGroupFolderColor(folder.id, value); setFolderColorMenu(undefined); setShapeContextMenu(undefined); scheduleDraw();}} className="grid shrink-0 place-items-center rounded-full border-2 border-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#625bc5]" style={{width: 26, height: 26, minWidth: 26, minHeight: 26, flex: "0 0 26px", aspectRatio: "1 / 1", borderRadius: "50%", backgroundColor: value, outline: checked ? "2px solid #776bd8" : undefined, outlineOffset: 2}} />;
           })}
         </div>, document.body) : null}
       {animatedImageShapes.map(({ shape, src }) => {
@@ -7342,7 +7345,7 @@ export function NativeWhiteboard({
         return (
           <div
             key={`animated-${shape.id}`}
-            aria-label={selected ? "GIF 动画播放器" : undefined}
+            aria-label={selected ? t("GIF 动画播放器") : undefined}
             aria-hidden={selected ? undefined : true}
             className="pointer-events-none absolute z-[1] overflow-hidden"
             style={{
@@ -7379,7 +7382,7 @@ export function NativeWhiteboard({
         return (
           <div
             key={`media-${shape.id}`}
-            aria-label={`${video ? "视频" : "音频"}预览 ${String(shape.props.name ?? "")}`}
+            aria-label={t("{0}预览 {1}", video ? t("视频") : t("音频"), String(shape.props.name ?? ""))}
             className={`absolute z-[2] overflow-hidden ${video ? "rounded-none" : "rounded-2xl"} ${readOnly?'pointer-events-auto':selected && selectedShapeIds.size === 1 ? "pointer-events-auto ring-2 ring-[#625bc5]" : "pointer-events-none"}`}
             onContextMenu={event => {
               if (!selected) return;
@@ -7396,8 +7399,8 @@ export function NativeWhiteboard({
             }}
           >
             {video
-              ? <video {...common} aria-label="白板视频播放器" className="size-full bg-[#171b2a] object-contain" />
-              : <audio {...common} aria-label="白板音频播放器" className="h-full w-full px-4" />}
+              ? <video {...common} aria-label={t("白板视频播放器")} className="size-full bg-[#171b2a] object-contain" />
+              : <audio {...common} aria-label={t("白板音频播放器")} className="h-full w-full px-4" />}
           </div>
         );
       })}
@@ -7431,7 +7434,7 @@ export function NativeWhiteboard({
               <div data-whiteboard-link-actions data-whiteboard-control-surface className="pointer-events-auto absolute right-2 top-2 z-20 flex items-center gap-1 rounded-lg border border-[#dfe2ec] bg-white/95 p-1 shadow-sm">
                 <button
                   type="button"
-                  aria-label="切换为链接模式"
+                  aria-label={t("切换为链接模式")}
                   aria-pressed={details.mode === "link"}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => editor.updateShapes([{
@@ -7440,11 +7443,10 @@ export function NativeWhiteboard({
                   }])}
                   className={`native-whiteboard-edit-control rounded-md px-2 py-1 text-[0.625rem] font-bold ${details.mode === "link" ? "bg-[#ebeafd] text-[#625bc5]" : "text-[#73798b] hover:bg-[#f4f5f8]"}`}
                 >
-                  链接
-                </button>
+                  {t("链接")}</button>
                 <button
                   type="button"
-                  aria-label="切换为预览卡片模式"
+                  aria-label={t("切换为预览卡片模式")}
                   aria-pressed={details.mode === "preview"}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => editor.updateShapes([{
@@ -7453,17 +7455,15 @@ export function NativeWhiteboard({
                   }])}
                   className={`native-whiteboard-edit-control rounded-md px-2 py-1 text-[0.625rem] font-bold ${details.mode === "preview" ? "bg-[#ebeafd] text-[#625bc5]" : "text-[#73798b] hover:bg-[#f4f5f8]"}`}
                 >
-                  预览
-                </button>
+                  {t("预览")}</button>
                 <button
                   type="button"
-                  aria-label="在系统浏览器中打开网页"
+                  aria-label={t("在系统浏览器中打开网页")}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => void openWhiteboardExternalUrl(details.url)}
                   className="rounded-md px-2 py-1 text-[0.625rem] font-bold text-[#625bc5] hover:bg-[#f0efff]"
                 >
-                  浏览
-                </button>
+                  {t("浏览")}</button>
               </div>
               {details.mode === "preview" && details.url && (
                 <LinkPreviewFrame
@@ -7487,14 +7487,13 @@ export function NativeWhiteboard({
       )}
       {draggingFile && (
         <div className="pointer-events-none absolute inset-3 z-30 grid place-items-center rounded-2xl border-2 border-dashed border-[#625bc5] bg-[#f0efff]/75 text-sm font-black text-[#625bc5] backdrop-blur-sm">
-          松开鼠标，添加本地文件或文件夹
-        </div>
+          {t("松开鼠标，添加本地文件或文件夹")}</div>
       )}
       {textDraft && draftPosition && (
         <>
           <div
             ref={textToolbarRef}
-            aria-label="编辑文字字号"
+            aria-label={t("编辑文字字号")} data-moki-ui="text-font-size"
             data-whiteboard-control-surface
             className="absolute z-30 flex items-center gap-1 rounded-xl border border-[#e2e4ed] bg-white/95 p-1 shadow-[0_8px_24px_rgba(35,39,61,.16)] backdrop-blur"
             style={{
@@ -7512,8 +7511,8 @@ export function NativeWhiteboard({
             }}
           >
             <NativeTextFormattingControls
-              labelPrefix="编辑文字"
-              sizeLabelPrefix="编辑"
+              labelPrefix={t("编辑文字")}
+              sizeLabelPrefix={t("编辑")}
               style={activeDraftStyle}
               color={activeDraftColor}
               colorMenuOpen={textColorMenu === "draft"}
@@ -7525,13 +7524,13 @@ export function NativeWhiteboard({
           </div>
           <textarea
             ref={textInputRef}
-            aria-label="输入白板文字"
+            aria-label={t("输入白板文字")}
             data-whiteboard-inline-text-editor={textDraft.shapeId ?? "new"}
             rows={1}
             wrap={textDraft.autoSize ? "off" : "soft"}
             value={textDraft.value}
             data-auto-size={textDraft.autoSize ? "true" : "false"}
-            placeholder="输入文字…"
+            placeholder={t("输入文字…")}
             onPointerDown={(event) => event.stopPropagation()}
             onChange={(event) => {
               const current = textDraftRef.current;
@@ -7583,12 +7582,12 @@ export function NativeWhiteboard({
               ref={textWidthHandleRef}
               type="button"
               role="slider"
-              aria-label="调整思维导图输入框宽度"
+              aria-label={t("调整思维导图输入框宽度")}
               aria-orientation="horizontal"
               aria-valuemin={64}
               aria-valuemax={4096}
               aria-valuenow={Math.round((textDraft.width ?? 184) / (textDraft.shapeScale ?? 1) / (textDraft.shapeScaleX ?? 1))}
-              title="拖动调整宽度；方向键微调"
+              title={t("拖动调整宽度；方向键微调")}
               data-whiteboard-control-surface
               className="absolute z-30 flex touch-none select-none items-center justify-center rounded-full border bg-white shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#625bc5]"
               style={{
@@ -7633,7 +7632,7 @@ export function NativeWhiteboard({
       )}
       {!readOnly && !textDraft && selectedTextToolbarPosition && (
         <div
-          aria-label="选中文字工具"
+          aria-label={t("选中文字工具")} data-moki-ui="selected-text-tools"
           data-whiteboard-control-surface
           className="absolute z-30 flex items-center gap-1 rounded-xl border border-[#e2e4ed] bg-white/95 p-1 shadow-[0_8px_24px_rgba(35,39,61,.16)] backdrop-blur"
           style={{
@@ -7649,8 +7648,8 @@ export function NativeWhiteboard({
           }}
         >
           <NativeTextFormattingControls
-            labelPrefix="选中文字"
-            sizeLabelPrefix="选中"
+            labelPrefix={t("选中文字")}
+            sizeLabelPrefix={t("选中")}
             style={selectedTextStyle}
             color={selectedTextColor ?? "black"}
             colorMenuOpen={textColorMenu === "selection"}
@@ -7663,7 +7662,7 @@ export function NativeWhiteboard({
       )}
       {!readOnly && !textDraft && selectedPaintToolbarPosition && (
         <div
-          aria-label="选中内容样式"
+          aria-label={t("选中内容样式")}
           data-whiteboard-control-surface
           className="absolute z-30 flex items-center gap-1 rounded-xl border border-[#e2e4ed] bg-white/95 p-1 shadow-[0_8px_24px_rgba(35,39,61,.16)] backdrop-blur"
           style={{
@@ -7688,7 +7687,7 @@ export function NativeWhiteboard({
             <button
               type="button"
               key={size}
-              aria-label={`选中内容粗细 ${size.toUpperCase()}`}
+              aria-label={t("选中内容粗细 {0}", size.toUpperCase())}
               aria-pressed={selectedPaintSize === size}
               onClick={() => updateSelectedPaintSize(size)}
               className={`native-whiteboard-edit-control grid size-8 place-items-center rounded-lg transition ${selectedPaintSize === size ? "bg-[#ebeafd] text-[#625bc5]" : "text-[#73798b] hover:bg-[#f4f5f8]"}`}
@@ -7700,7 +7699,7 @@ export function NativeWhiteboard({
             <button
               ref={selectedPaintMenuTriggerRef}
               type="button"
-              aria-label="选中内容颜色"
+              aria-label={t("选中内容颜色")}
               aria-controls={selectedPaintMenuId}
               aria-expanded={selectedPaintMenuOpen}
               onClick={() => setSelectedPaintMenuOpen((open) => !open)}
@@ -7717,26 +7716,26 @@ export function NativeWhiteboard({
               <div
                 id={selectedPaintMenuId}
                 role="dialog"
-                aria-label="选中内容调色盘"
+                aria-label={t("选中内容调色盘")}
                 data-whiteboard-color-menu
                 data-whiteboard-color-menu-side={selectedPaintMenuPosition.side}
                 className={`moki-menu-surface absolute z-50 p-2 ${selectedGeoPaint ? "w-72" : "grid w-40 grid-cols-6 gap-1"}`}
                 style={{ left: selectedPaintMenuPosition.left, top: selectedPaintMenuPosition.top }}
               >
                 {selectedGeoPaint ? (
-                  <div className="space-y-2" aria-label="选中图形描边和填充">
+                  <div className="space-y-2" aria-label={t("选中图形描边和填充")}>
                     {(["stroke", "fill"] as const).map((kind) => {
                       const enabled = kind === "stroke" ? selectedGeoPaint.strokeEnabled : selectedGeoPaint.fillEnabled;
                       const currentColor = kind === "stroke" ? selectedGeoPaint.strokeColor : selectedGeoPaint.fillColor;
                       const opacity = kind === "stroke" ? selectedGeoPaint.strokeOpacity : selectedGeoPaint.fillOpacity;
-                      const label = kind === "stroke" ? "描边" : "填充";
+                      const label = kind === "stroke" ? t("描边") : t("填充");
                       return (
                         <section key={kind} className="native-whiteboard-color-section native-whiteboard-menu-section rounded-xl bg-[#f7f8fb] p-2">
                           <div className="mb-2 flex items-center justify-between">
                             <b className="text-[0.6875rem] text-[#3d4358]">{label}</b>
                             <button
                               type="button"
-                              aria-label={`${enabled ? "关闭" : "启用"}选中图形${label}`}
+                              aria-label={t("{0}选中图形{1}", enabled ? t("关闭") : t("启用"), label)}
                               aria-pressed={enabled}
                               onClick={() => updateSelectedGeoPaint(kind === "stroke" ? { strokeEnabled: !enabled } : { fillEnabled: !enabled })}
                               className={`native-whiteboard-edit-control grid size-7 place-items-center rounded-lg ${enabled ? "bg-[#ebeafd] text-[#625bc5]" : "bg-[#eceef3] text-[#858b9d]"}`}
@@ -7749,7 +7748,7 @@ export function NativeWhiteboard({
                               <button
                                 type="button"
                                 key={`${kind}:${option.value}`}
-                                aria-label={`选中图形${label}颜色 ${option.label}`}
+                                aria-label={t("选中图形{0}颜色 {1}", label, option.label)}
                                 aria-pressed={currentColor === option.value}
                                 onClick={() => updateSelectedGeoPaint(kind === "stroke" ? { strokeColor: option.value } : { fillColor: option.value })}
                                 className={`native-whiteboard-color-swatch size-7 min-h-0 min-w-7 shrink-0 rounded-full border border-black/5 p-0 ${currentColor === option.value ? "ring-2 ring-[#625bc5] ring-offset-1" : ""}`}
@@ -7766,9 +7765,9 @@ export function NativeWhiteboard({
                             ))}
                           </div>
                           <label className={`mt-2 flex items-center gap-2 text-[0.625rem] font-bold text-[#73798b] ${enabled ? "" : "pointer-events-none opacity-35"}`}>
-                            <span>透明度</span>
+                            <span>{t("透明度")}</span>
                             <input
-                              aria-label={`选中图形${label}透明度`}
+                              aria-label={t("选中图形{0}透明度", label)}
                               type="range"
                               min="0"
                               max="100"
@@ -7785,7 +7784,7 @@ export function NativeWhiteboard({
                   <button
                     type="button"
                     key={option.value}
-                    aria-label={`选中内容颜色 ${option.label}`}
+                    aria-label={t("选中内容颜色 {0}", option.label)}
                     aria-pressed={selectedPaintColor === option.value}
                     onClick={() => updateSelectedPaintColor(option.value)}
                     className={`native-whiteboard-color-swatch size-5 min-h-0 min-w-5 shrink-0 rounded-full border border-black/5 p-0 ${selectedPaintColor === option.value ? "ring-2 ring-[#625bc5] ring-offset-1" : ""}`}
@@ -7809,7 +7808,7 @@ export function NativeWhiteboard({
       <div ref={pageMenuRef} data-whiteboard-page-toolbar data-whiteboard-control-surface className="absolute left-3 top-3 z-40 flex items-center gap-1 rounded-xl border border-[#e2e4ed] bg-white/95 p-1 shadow-sm backdrop-blur">
         <button
           type="button"
-          aria-label="打开白板页面菜单"
+          aria-label={t("打开白板页面菜单")}
           aria-expanded={pageMenuOpen}
           onClick={() => {
             setPageMenuOpen((open) => !open);
@@ -7823,8 +7822,8 @@ export function NativeWhiteboard({
         </button>
         {!readOnly&&<><button
           type="button"
-          aria-label="新建白板页面"
-          title="新建页面"
+          aria-label={t("新建白板页面")}
+          title={t("新建页面")}
           onClick={() => {
             const id = editor.createPage();
             setPageMenuOpen(true);
@@ -7838,8 +7837,8 @@ export function NativeWhiteboard({
         <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-[#e2e4ed]" />
         <button
           type="button"
-          aria-label="撤回"
-          title="撤回"
+          aria-label={t("撤回")}
+          title={t("撤回")}
           disabled={!editor.canUndo()}
           onClick={() => editor.undo()}
           className="grid size-8 place-items-center rounded-lg text-[#555b70] transition hover:bg-[#f0efff] hover:text-[#625bc5] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#555b70]"
@@ -7848,8 +7847,8 @@ export function NativeWhiteboard({
         </button>
         <button
           type="button"
-          aria-label="重做"
-          title="重做"
+          aria-label={t("重做")}
+          title={t("重做")}
           disabled={!editor.canRedo()}
           onClick={() => editor.redo()}
           className="grid size-8 place-items-center rounded-lg text-[#555b70] transition hover:bg-[#f0efff] hover:text-[#625bc5] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-[#555b70]"
@@ -7860,7 +7859,7 @@ export function NativeWhiteboard({
         {pageMenuOpen && (
           <div
             role="dialog"
-            aria-label="白板页面管理"
+            aria-label={t("白板页面管理")} data-moki-ui="page-manager"
             onKeyDown={(event) => {
               if (event.key !== "Escape" || renamingPageId) return;
               event.preventDefault();
@@ -7874,33 +7873,33 @@ export function NativeWhiteboard({
               <input
                 autoFocus={!renamingPageId}
                 type="search"
-                aria-label="搜索白板页面"
+                aria-label={t("搜索白板页面")}
                 value={pageQuery}
                 onChange={(event) => setPageQuery(event.target.value)}
-                placeholder="搜索页面或分组"
+                placeholder={t("搜索页面或分组")}
                 className="min-w-0 flex-1 bg-transparent text-xs font-semibold text-[#30364d] outline-none placeholder:text-[#9ba0b1]"
               />
             </label>
             <div className="mt-2 flex items-center justify-between px-1">
-              <span className="text-[.625rem] font-bold text-[#9ba0b1]">页面与分组</span>
+              <span className="text-[.625rem] font-bold text-[#9ba0b1]">{t("页面与分组")}</span>
               {!readOnly&&<button
                 type="button"
-                aria-label="新建页面分组"
-                title="以当前页创建分组"
+                aria-label={t("新建页面分组")}
+                title={t("以当前页创建分组")}
                 onClick={() => {
                   const id = editor.createPageGroup();
-                  if (id) startPageGroupRename(id, "新分组");
+                  if (id) startPageGroupRename(id, t("新分组"));
                 }}
                 className="grid size-7 place-items-center rounded-lg text-[#625bc5] transition hover:bg-[#f0efff]"
               >
                 <Plus className="size-3.5" />
               </button>}
             </div>
-            <ul aria-label="白板页面列表" className="mt-1 max-h-[min(32rem,calc(100dvh-11rem))] space-y-1 overflow-y-auto overscroll-y-auto pr-0.5">
+            <ul aria-label={t("白板页面列表")} data-moki-ui="page-list" className="mt-1 max-h-[min(32rem,calc(100dvh-11rem))] space-y-1 overflow-y-auto overscroll-y-auto pr-0.5">
               {readOnly ? <>
-                {pageGroups.map(group=>{const collapsed=collapsedPageGroupIds.has(group.id)&&!normalizedPageQuery;return <li key={group.id} className="mb-4 rounded-lg last:mb-0"><div data-page-group-header={group.id} className="relative mb-2 flex min-h-8 items-center gap-1 px-1 text-xs font-extrabold text-[#6f7488]"><span data-page-group-accent={group.accent.id} className={`grid size-6 shrink-0 place-items-center rounded-lg ${group.accent.className}`}><Folder className="size-3.5"/></span><span className="min-w-0 flex-1 truncate">{group.name}</span><button type="button" aria-label={`${collapsed?'展开':'收起'}页面分组 ${group.name}`} aria-expanded={!collapsed} onClick={()=>setCollapsedPageGroupIds(current=>{const next=new Set(current);if(next.has(group.id))next.delete(group.id);else next.add(group.id);return next;})} className="grid size-7 shrink-0 place-items-center border-0 bg-transparent p-0 text-[#959aac] hover:text-[#625bc5]"><ChevronDown size={13} className={collapsed?'-rotate-90':''}/></button><span className="rounded-full bg-[#f0effa] px-1.5 text-[.5625rem] font-bold text-[#7770a7]">{group.pages.length}</span></div>{!collapsed?<ul aria-label={`页面分组 ${group.name}`} className="space-y-2">{group.pages.map(renderPageRow)}</ul>:null}</li>;})}
-                <li>{pageGroups.length>0?<div className="mb-2 flex h-7 items-center gap-1.5 px-1 text-xs font-extrabold text-[#858b9d]"><span className="grid size-6 shrink-0 place-items-center rounded-lg bg-[#edf0f5] text-[#747b8f]"><FileText className="size-3.5"/></span>未分组</div>:null}<ul aria-label="未分组页面" className="space-y-2">{ungroupedPages.map(renderPageRow)}</ul></li>
-                {!hasVisiblePageMenuItems?<li className="px-3 py-7 text-center text-xs font-semibold text-[#9297a7]">未找到匹配页面</li>:null}
+                {pageGroups.map(group=>{const collapsed=collapsedPageGroupIds.has(group.id)&&!normalizedPageQuery;return <li key={group.id} className="mb-4 rounded-lg last:mb-0"><div data-page-group-header={group.id} className="relative mb-2 flex min-h-8 items-center gap-1 px-1 text-xs font-extrabold text-[#6f7488]"><span data-page-group-accent={group.accent.id} className={`grid size-6 shrink-0 place-items-center rounded-lg ${group.accent.className}`}><Folder className="size-3.5"/></span><span className="min-w-0 flex-1 truncate">{group.name}</span><button type="button" aria-label={t("{0}页面分组 {1}", collapsed?t("展开"):t("收起"), group.name)} aria-expanded={!collapsed} onClick={()=>setCollapsedPageGroupIds(current=>{const next=new Set(current);if(next.has(group.id))next.delete(group.id);else next.add(group.id);return next;})} className="grid size-7 shrink-0 place-items-center border-0 bg-transparent p-0 text-[#959aac] hover:text-[#625bc5]"><ChevronDown size={13} className={collapsed?'-rotate-90':''}/></button><span className="rounded-full bg-[#f0effa] px-1.5 text-[.5625rem] font-bold text-[#7770a7]">{group.pages.length}</span></div>{!collapsed?<ul aria-label={t("页面分组 {0}", group.name)} className="space-y-2">{group.pages.map(renderPageRow)}</ul>:null}</li>;})}
+                <li>{pageGroups.length>0?<div className="mb-2 flex h-7 items-center gap-1.5 px-1 text-xs font-extrabold text-[#858b9d]"><span className="grid size-6 shrink-0 place-items-center rounded-lg bg-[#edf0f5] text-[#747b8f]"><FileText className="size-3.5"/></span>{t("未分组")}</div>:null}<ul aria-label={t("未分组页面")} className="space-y-2">{ungroupedPages.map(renderPageRow)}</ul></li>
+                {!hasVisiblePageMenuItems?<li className="px-3 py-7 text-center text-xs font-semibold text-[#9297a7]">{t("未找到匹配页面")}</li>:null}
               </> : <>
               {pageGroups.map((group) => {
                 const isGroupDropTarget = pageDropTarget?.type === "group" && pageDropTarget.id === group.id;
@@ -7926,7 +7925,7 @@ export function NativeWhiteboard({
                         event.preventDefault();
                         draggedPageGroupIdRef.current = drag.id;
                         setDraggedPageGroupId(drag.id);
-                        const list = pageMenuRef.current?.querySelector<HTMLElement>('[aria-label="白板页面列表"]');
+                        const list = pageMenuRef.current?.querySelector<HTMLElement>(`[aria-label="${t("白板页面列表")}"]`);
                         const bounds = list?.getBoundingClientRect();
                         drag.target = undefined;
                         if (list && bounds && event.clientX >= bounds.left && event.clientX <= bounds.right && event.clientY >= bounds.top && event.clientY <= bounds.bottom) {
@@ -7964,7 +7963,7 @@ export function NativeWhiteboard({
                       className="relative mb-2 flex min-h-8 touch-none select-none cursor-grab items-center gap-1 px-1 text-xs font-extrabold text-[#6f7488] active:cursor-grabbing"
                     >
                       {pageGroupDropTarget?.id === group.id ? <span aria-hidden="true" className={`pointer-events-none absolute inset-x-0 h-0.5 rounded-full bg-[#8178d5] ${pageGroupDropTarget.position === "before" ? "-top-1" : "-bottom-1"}`} /> : null}
-                      <GripVertical aria-label={`拖动排序分组 ${group.name}`} className="size-3.5 shrink-0 text-[#a2a6b6]" />
+                      <GripVertical aria-label={t("拖动排序分组 {0}", group.name)} className="size-3.5 shrink-0 text-[#a2a6b6]" />
                       <span data-page-group-accent={group.accent.id} className={`grid size-6 shrink-0 place-items-center rounded-lg ${group.accent.className}`}>
                         <Folder className="size-3.5" />
                       </span>
@@ -7972,7 +7971,7 @@ export function NativeWhiteboard({
                         <>
                           <input
                             autoFocus
-                            aria-label={`重命名页面分组 ${group.name}`}
+                            aria-label={t("重命名页面分组 {0}", group.name)}
                             value={pageGroupNameDraft}
                             maxLength={80}
                             onFocus={(event) => event.currentTarget.select()}
@@ -7991,8 +7990,8 @@ export function NativeWhiteboard({
                           />
                           <button
                             type="button"
-                            aria-label={`${isCollapsed ? "展开" : "收起"}页面分组 ${group.name}`}
-                            title={isCollapsed ? "展开分组" : "收起分组"}
+                            aria-label={t("{0}页面分组 {1}", isCollapsed ? t("展开") : t("收起"), group.name)}
+                            title={isCollapsed ? t("展开分组") : t("收起分组")}
                             aria-expanded={!isCollapsed}
                             onClick={(event) => {
                               event.stopPropagation();
@@ -8011,7 +8010,7 @@ export function NativeWhiteboard({
                       ) : (
                         <>
                           <span
-                            title="双击重命名分组"
+                            title={t("双击重命名分组")}
                             onDoubleClick={() => startPageGroupRename(group.id, group.name)}
                             className="min-w-0 flex-1 cursor-text truncate"
                           >
@@ -8019,8 +8018,8 @@ export function NativeWhiteboard({
                           </span>
                           <button
                             type="button"
-                            aria-label={`${isCollapsed ? "展开" : "收起"}页面分组 ${group.name}`}
-                            title={isCollapsed ? "展开分组" : "收起分组"}
+                            aria-label={t("{0}页面分组 {1}", isCollapsed ? t("展开") : t("收起"), group.name)}
+                            title={isCollapsed ? t("展开分组") : t("收起分组")}
                             aria-expanded={!isCollapsed}
                             onClick={(event) => {
                               event.stopPropagation();
@@ -8038,8 +8037,8 @@ export function NativeWhiteboard({
                           <span className="rounded-full bg-[#f0effa] px-1.5 text-[.5625rem] font-bold text-[#7770a7]">{group.pages.length}</span>
                           <button
                             type="button"
-                            aria-label={`取消页面分组 ${group.name}`}
-                            title="取消分组，保留页面"
+                            aria-label={t("取消页面分组 {0}", group.name)}
+                            title={t("取消分组，保留页面")}
                             onClick={() => editor.deletePageGroup(group.id)}
                             className="grid size-7 place-items-center rounded-lg text-[#a0a5b4] transition hover:bg-[#fff0f3] hover:text-[#bd4568]"
                           >
@@ -8048,7 +8047,7 @@ export function NativeWhiteboard({
                         </>
                       )}
                     </div>
-                    {!isCollapsed ? <ul aria-label={`页面分组 ${group.name}`} className="space-y-2">
+                    {!isCollapsed ? <ul aria-label={t("页面分组 {0}", group.name)} className="space-y-2">
                       {group.pages.map(renderPageRow)}
                     </ul> : null}
                   </li>
@@ -8072,19 +8071,18 @@ export function NativeWhiteboard({
                 {pageGroups.length > 0 && (
                   <div className="mb-2 flex h-7 items-center gap-1.5 px-1 text-xs font-extrabold text-[#858b9d]">
                     <span className="grid size-6 shrink-0 place-items-center rounded-lg bg-[#edf0f5] text-[#747b8f]"><FileText className="size-3.5" /></span>
-                    未分组
-                  </div>
+                    {t("未分组")}</div>
                 )}
-                <ul aria-label="未分组页面" className="space-y-2">
+                <ul aria-label={t("未分组页面")} className="space-y-2">
                   {ungroupedPages.map(renderPageRow)}
                 </ul>
               </li>
               {!hasVisiblePageMenuItems && (
-                <li className="px-3 py-7 text-center text-xs font-semibold text-[#9297a7]">未找到匹配页面</li>
+                <li className="px-3 py-7 text-center text-xs font-semibold text-[#9297a7]">{t("未找到匹配页面")}</li>
               )}
               </>}
             </ul>
-            <p className="px-2 pb-1 pt-2 text-[.625rem] font-semibold text-[#9ba0b1]">{readOnly?'只读共享 · 搜索页面或展开分组进行查看':'拖拽分组标题可排序；拖拽页面可排序、移入或移出分组'}</p>
+            <p className="px-2 pb-1 pt-2 text-[.625rem] font-semibold text-[#9ba0b1]">{readOnly?t("只读共享 · 搜索页面或展开分组进行查看"):t("拖拽分组标题可排序；拖拽页面可排序、移入或移出分组")}</p>
           </div>
         )}
       </div>
@@ -8109,11 +8107,10 @@ export function NativeWhiteboard({
               </span>
               <div className="min-w-0">
                 <h3 id="whiteboard-delete-page-title" className="text-base font-black text-[#20263b]">
-                  删除“{pendingPageDelete.name}”？
+                  {t("删除“")}{pendingPageDelete.name}”？
                 </h3>
                 <p id="whiteboard-delete-page-description" className="mt-1 text-sm leading-6 text-[#747b90]">
-                  删除后无法恢复，该页面中的所有内容和历史版本都会被永久删除。是否确认删除？
-                </p>
+                  {t("删除后无法恢复，该页面中的所有内容和历史版本都会被永久删除。是否确认删除？")}</p>
               </div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-2">
@@ -8123,8 +8120,7 @@ export function NativeWhiteboard({
                 onClick={() => setPendingPageDelete(undefined)}
                 className="min-h-10 rounded-xl border border-[#dfe2ec] bg-white px-4 text-sm font-bold text-[#4f566c] transition hover:bg-[#f7f8fb]"
               >
-                取消
-              </button>
+                {t("取消")}</button>
               <button
                 type="button"
                 onClick={() => {
@@ -8133,8 +8129,7 @@ export function NativeWhiteboard({
                 }}
                 className="min-h-10 rounded-xl bg-[#c43e68] px-4 text-sm font-bold text-white transition hover:bg-[#ad3159]"
               >
-                确认删除
-              </button>
+                {t("确认删除")}</button>
             </div>
           </section>
         </div>
@@ -8143,16 +8138,16 @@ export function NativeWhiteboard({
         <canvas
           ref={minimapRef}
           data-whiteboard-control-surface
-          aria-label="画布导航缩略图"
-          title="点击缩略图快速定位画布"
+          aria-label={t("画布导航缩略图")}
+          title={t("点击缩略图快速定位画布")}
           onPointerDown={navigateFromMinimap}
           className="h-[108px] w-full cursor-crosshair rounded-xl border border-[#dfe2ec] bg-white/95 shadow-[0_8px_24px_rgba(35,39,61,.12)]"
         />
-        <div data-whiteboard-control-surface aria-label="白板缩放工具" className="flex w-full items-center rounded-xl border border-[#e2e4ed] bg-white/95 p-1 text-[.6875rem] font-bold text-[#62687a] shadow-sm">
+        <div data-whiteboard-control-surface aria-label={t("白板缩放工具")} data-moki-ui="canvas-zoom" className="flex w-full items-center rounded-xl border border-[#e2e4ed] bg-white/95 p-1 text-[.6875rem] font-bold text-[#62687a] shadow-sm">
           <button
             type="button"
-            aria-label="缩小白板"
-            title="缩小"
+            aria-label={t("缩小白板")}
+            title={t("缩小")}
             disabled={zoomLabel <= WHITEBOARD_MIN_ZOOM * 100}
             onClick={() => changeZoom(-1)}
             className="grid size-7 place-items-center rounded-lg transition hover:bg-[#f0efff] active:scale-90 disabled:cursor-not-allowed disabled:opacity-35"
@@ -8164,16 +8159,16 @@ export function NativeWhiteboard({
           </span>
           <button
             type="button"
-            aria-label="放大白板"
-            title="放大"
+            aria-label={t("放大白板")}
+            title={t("放大")}
             disabled={zoomLabel >= WHITEBOARD_MAX_ZOOM * 100}
             onClick={() => changeZoom(1)}
             className="grid size-7 place-items-center rounded-lg transition hover:bg-[#f0efff] active:scale-90 disabled:cursor-not-allowed disabled:opacity-35"
           >
             <Plus size={13} strokeWidth={2.2} />
           </button>
-          <button type="button" aria-label="重置画布" title="重置视图（100%，回到原点）" onClick={()=>editor.resetView()} className="grid size-7 place-items-center rounded-lg transition hover:bg-[#f0efff] active:scale-90"><RotateCcw size={13}/></button>
-          {dshEmbed && <button type="button" aria-label="画布缩略导航" title={navigationOpen ? '收起缩略导航' : '展开缩略导航'} aria-expanded={navigationOpen} onClick={() => setNavigationOpen(value => !value)} className="grid size-7 place-items-center rounded-lg"><MapIcon size={13} /></button>}
+          <button type="button" aria-label={t("重置画布")} title={t("重置视图（100%，回到原点）")} onClick={()=>editor.resetView()} className="grid size-7 place-items-center rounded-lg transition hover:bg-[#f0efff] active:scale-90"><RotateCcw size={13}/></button>
+          {dshEmbed && <button type="button" aria-label={t("画布缩略导航")} title={navigationOpen ? t("收起缩略导航") : t("展开缩略导航")} aria-expanded={navigationOpen} onClick={() => setNavigationOpen(value => !value)} className="grid size-7 place-items-center rounded-lg"><MapIcon size={13} /></button>}
           {navigationActions}
         </div>
       </div>

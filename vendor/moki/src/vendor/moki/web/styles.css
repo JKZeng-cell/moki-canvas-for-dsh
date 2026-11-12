@@ -1244,14 +1244,14 @@ button.library-history-tag-button {
   flex-shrink: 0;
 }
 
-[data-whiteboard-embedded="true"] > header [aria-label="白板保存状态"] {
+[data-whiteboard-embedded="true"] > header [data-moki-ui="save-status"] {
   min-width: 0;
   flex: 0 1 auto;
   padding: 6px;
   font-size: 10px;
 }
 
-[data-whiteboard-embedded="true"] > header [aria-label="白板保存状态"] > svg {
+[data-whiteboard-embedded="true"] > header [data-moki-ui="save-status"] > svg {
   flex-shrink: 0;
 }
 
