@@ -8,13 +8,13 @@
 
 MOKI Canvas brings an editable infinite canvas into DSH's side workspace. Sketch an idea, grow it into a mind map, collect references, and keep notes, images, files, audio, and video together. The compact interface follows DSH's light or dark theme and leaves more room for your work.
 
-Work with DSH in both directions: let the agent read and edit your boards, or click the **chat icon beside a selection** to quote it in the current conversation. Selected objects include their details and a screenshot; highlighting text in the canvas editor quotes only that excerpt. Your existing draft stays intact and the DSH composer receives focus. You decide when to send it. A six-page, fully editable introduction board lets you explore the tools through a playful camping-film project.
+Work with DSH in both directions: let the agent read and edit your boards, or click the **chat icon beside a selection** to quote it in the current conversation. Selected objects include their details and a screenshot; highlighting text in the canvas editor quotes only that excerpt. The whale opens a compact input beside the selection, matching MOKI Library. Add an instruction and optional attachments, then press Send to enter the main conversation. Existing DSH draft text and attachments stay intact; failed sends retain the quick input for retry. A six-page, fully editable introduction board lets you explore the tools through a playful camping-film project.
 
 ## See it in action
 
 These are real, dark-theme DSH interface captures from a separate demo profile containing the bundled introduction and example content. The sidebar entry, conversation composer and side workspace stay visible, so you can see how the plugin works inside DSH. No personal boards, accounts, chat history, or local paths are included. The visible prompts are unsent demonstration drafts.
 
-**New in 1.8: quote directly beside your selection.** Select one or more canvas objects, or double-click a text element and highlight an excerpt, then click **Quote in DSH**. The floating action stays within narrow workspaces and follows zoom. The existing **Add to chat** hint beside the composer remains available.
+**New in 1.8.1: write instructions beside your selection.** Select one or more canvas objects, or double-click a text element and highlight an excerpt, then click **Quote in DSH**. The compact input stays inside narrow workspaces, supports file selection, drag-and-drop and pasted images, and sends with Enter (Shift+Enter adds a line). Attachments use DSH’s native pipeline, with a 32 MB limit per file. The existing **Add to chat** hint beside the composer remains available.
 
 ![Floating chat action beside selected canvas content in DSH](docs/images/quick-quote-objects.png)
 
@@ -56,12 +56,12 @@ These are real, dark-theme DSH interface captures from a separate demo profile c
 - **Keep references nearby:** add images, files, links, audio, and video; search, locate, rename, and preview items from the page's materials list.
 - **Organize a project:** multiple pages and page groups, editable boards, version history, `.moki` import/export, and image export.
 - **Collaborate with DSH:** canvas tools register automatically. Ask the agent to inspect, create, update, arrange, or export content without setting up a separate MCP server.
-- **Quote beside the selection:** the floating chat icon quotes selected objects with a screenshot, or only the words you highlight while editing text. It preserves your draft, focuses the DSH composer, and prevents duplicate insertion. The composer selection hint is also available; messages are never sent automatically.
+- **Quote beside the selection:** the floating chat icon quotes selected objects with a screenshot, or only the words you highlight while editing text. It opens the shared compact input for instructions and attachments. Sending enters the main conversation without changing the existing draft. The composer selection hint still adds a quote to the draft without sending it.
 - **Learn by editing:** the bundled introduction contains six pages, native mind-map nodes, an expandable materials group, and small offline media examples.
 
 ## Supported imports
 
-Drop files onto the canvas, paste images or URLs, or add materials from the toolbar. The following describes importing and previewing in **DSH plugin v1.8.0**:
+Drop files onto the canvas, paste images or URLs, or add materials from the toolbar. The following describes importing and previewing in **DSH plugin v1.8.1**:
 
 | Type | Formats | Behavior in the canvas |
 | --- | --- | --- |
@@ -91,13 +91,13 @@ After updating a plugin while DSH is running, fully quit and reopen DSH before s
 Open a DSH conversation with plugin management available. Copy the entire prompt below into the composer and send it:
 
 ```text
-Please install and enable MOKI Canvas for DSH v1.8.0.
+Please install and enable MOKI Canvas for DSH v1.8.1.
 
 Project: https://github.com/JKZeng-cell/moki-canvas-for-dsh
 Read the project's installation instructions, then use plugin_manager in the current DSH environment:
 First call list_bundles. If this version is installed, confirm it is enabled or enable it with set_bundle; do not reinstall it.
 If it is not installed, call install_bundle with enabled=true and this prebuilt package as the target:
-https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.8.0/dsh-moki-canvas-1.8.0.tgz
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.8.1/dsh-moki-canvas-1.8.1.tgz
 
 After installation, check the version and enabled state of dsh-moki-canvas and explain how to open it from the sidebar or side workspace.
 If the result is restart-required, tell me to restart DSH. Preserve existing boards, attachments, and other plugins.
@@ -107,12 +107,12 @@ This uses the plugin manager in your current DSH environment. If the tool is una
 
 ### Manual installation
 
-1. Download `dsh-moki-canvas-1.8.0.tgz` from [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.8.0).
+1. Download `dsh-moki-canvas-1.8.1.tgz` from [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.8.1).
 2. For Desktop, use **Manage dsh Command…** in the application menu to install or repair the bundled command. Open a new terminal and run `dsh --version` to confirm it matches Desktop. Then fully quit DSH from its application or tray menu; closing the window may leave it running.
 3. In the directory containing the downloaded package, run:
 
    ```sh
-   dsh plugin --profile desktop add ./dsh-moki-canvas-1.8.0.tgz
+   dsh plugin --profile desktop add ./dsh-moki-canvas-1.8.1.tgz
    dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 

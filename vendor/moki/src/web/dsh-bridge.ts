@@ -35,12 +35,18 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
    sharing=true;
    const sharedBoardId=latest.current.boardId;
    const inline=quick?.requestId===requestId?quick:undefined;
+   const isTextQuote=(()=>{try{return JSON.parse(inline?.selection?.content??'{}').kind==='whiteboard_text_selection';}catch{return false;}})();
    const initialKey=dshSelectionKey(sharedBoardId,selection());
    const readCurrent=()=>{
     if(disposed||!active)throw new Error(t("白板已隐藏，请重新打开后加入对话"));
     const current=selection();
     if(latest.current.boardId!==sharedBoardId||(inline?.selection?dshSelectionScope(sharedBoardId,current)!==inline.scope:dshSelectionKey(sharedBoardId,current)!==initialKey))throw new Error(t("选区已变化，请重新点击加入对话"));
     if(inline&&quick!==inline)throw new Error(t("选区已变化，请重新点击加入对话"));
+    if(inline?.selection&&!isTextQuote&&dshSelectionKey(sharedBoardId,current)===dshSelectionKey(sharedBoardId,inline.selection)){
+     // Keep the captured objects, but allow their debounced image export to finish.
+     const captured=JSON.parse(inline.selection.content),live=JSON.parse(current?.content??'{}');
+     return {...inline.selection,content:JSON.stringify({...captured,...(live.visualAttachments?{visualAttachments:live.visualAttachments}:{})})};
+    }
     return inline?.selection??current;
    };
    try{
@@ -50,7 +56,7 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
     // Native selection export is debounced; allow its actual canvas image to settle.
     let selected=readCurrent();
     const imagesOf=()=>{try{return JSON.parse(selected?.content??'{}').visualAttachments??[];}catch{return [];}};
-    for(let attempt=0;!inline?.selection&&selected&&imagesOf().length===0&&attempt<30;attempt++){await new Promise(resolve=>setTimeout(resolve,100));selected=readCurrent();}
+    for(let attempt=0;!isTextQuote&&selected&&imagesOf().length===0&&attempt<30;attempt++){await new Promise(resolve=>setTimeout(resolve,100));selected=readCurrent();}
     const results=await Promise.allSettled(imagesOf().slice(0,3).map(async(image:{imageSource?:string;name?:string})=>{
      if(typeof image.imageSource!=='string')throw new Error(t("选区图片地址无效"));
      const url=new URL(image.imageSource,location.href);
@@ -63,7 +69,7 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
     selected=readCurrent();
     await publish();
     readCurrent();
-    send('moki:quote',{requestId,boardId:sharedBoardId,selection:selected,prompt:prompt??'',images,imageWarning:results.some(result=>result.status==='rejected')});
+    send('moki:quote',{requestId,boardId:sharedBoardId,selection:selected,prompt:prompt??'',images,imageWarning:results.some(result=>result.status==='rejected'),...(inline?.submission?{submission:inline.submission}:{})});
    }
    catch(error){if(!disposed&&active)send('moki:error',{requestId,message:t("加入选区失败：")+String(error)});}
    finally{sharing=false;}
@@ -85,7 +91,7 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
    const current=selection(),key=dshSelectionKey(boardId,current);
    const scope=dshSelectionScope(boardId,current);
    quick={...request,boardId,key,scope};
-   send('moki:quote-request',{requestId:request.requestId,boardId,selectionKey:key,...(request.selection?{selectionScope:scope}:{}),quoteKey:dshSelectionKey(boardId,request.selection??current)});
+   send('moki:quote-request',{requestId:request.requestId,boardId,selectionKey:key,...(request.selection?{selectionScope:scope}:{}),quoteKey:dshSelectionKey(boardId,request.selection??current),submit:Boolean(request.submission)});
   };
   const onCancel=(event:Event)=>{
    const {requestId}=(event as CustomEvent<{requestId:string}>).detail;

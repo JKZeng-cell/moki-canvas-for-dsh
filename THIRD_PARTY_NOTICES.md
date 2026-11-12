@@ -94,3 +94,5 @@ Inter and Noto Sans SC use the SIL Open Font License 1.1. Their original license
 The built-in introduction, camping checklist, short synthetic video and audio example were created for this project. The cover illustrations were generated for the project; the interface images are real captures of the bundled demo.
 
 The DeepSeek Harness whale, wordmark and HARNESS badge on the promotional covers are referenced from the application's bundled `renderer/assets/welcome-brand.svg`. These marks identify the host application and belong to their respective owner.
+
+The canvas selection's “Quote in DSH” action uses the same DeepSeek whale SVG and 17 × 14 display size as MOKI Library for DSH (`web/dsh-whale.svg`). It identifies the DSH conversation action and inherits the current interface color.

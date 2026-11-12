@@ -3,8 +3,8 @@ export const DSH_QUICK_QUOTE = 'moki:dsh-quick-quote';
 export const DSH_CANCEL_QUOTE = 'moki:dsh-cancel-quote';
 export const DSH_QUOTE_RESULT = 'moki:dsh-quote-result';
 /** Acknowledged by the owning DSH composer, never by merely posting a message. */
-export function quoteDshSelection(selection, signal) {
-    const requestId = crypto.randomUUID();
+export function quoteDshSelection(selection, signal, submission) {
+    const requestId = submission?.id ?? crypto.randomUUID();
     return new Promise((resolve) => {
         const finish = (result) => {
             clearTimeout(timer);
@@ -24,12 +24,12 @@ export function quoteDshSelection(selection, signal) {
         const timer = setTimeout(() => {
             dispatchEvent(new CustomEvent(DSH_CANCEL_QUOTE, { detail: { requestId } }));
             finish({ requestId, ok: false, message: t('读取选区超时，请重试') });
-        }, 16000);
+        }, submission ? 180000 : 16000);
         addEventListener(DSH_QUOTE_RESULT, receive);
         signal.addEventListener('abort', cancel, { once: true });
         if (signal.aborted)
             cancel();
         else
-            dispatchEvent(new CustomEvent(DSH_QUICK_QUOTE, { detail: { requestId, selection } }));
+            dispatchEvent(new CustomEvent(DSH_QUICK_QUOTE, { detail: { requestId, selection, ...(submission ? { submission } : {}) } }));
     });
 }

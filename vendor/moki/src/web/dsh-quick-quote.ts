@@ -1,15 +1,16 @@
 import type {WorkbenchSelectionContext} from '../vendor/moki/web/lib/workbench-selection-context.js';
 import {t} from './i18n.js';
+import type {QuickSubmission} from './selection-composer.js';
 
 export const DSH_QUICK_QUOTE = 'moki:dsh-quick-quote';
 export const DSH_CANCEL_QUOTE = 'moki:dsh-cancel-quote';
 export const DSH_QUOTE_RESULT = 'moki:dsh-quote-result';
-export type QuickQuoteRequest = {requestId: string; selection?: WorkbenchSelectionContext | undefined};
+export type QuickQuoteRequest = {requestId: string; selection?: WorkbenchSelectionContext | undefined;submission?:QuickSubmission};
 export type QuoteResult = {requestId: string; ok: boolean; message?: string};
 
 /** Acknowledged by the owning DSH composer, never by merely posting a message. */
-export function quoteDshSelection(selection: WorkbenchSelectionContext | undefined, signal: AbortSignal): Promise<QuoteResult> {
-  const requestId = crypto.randomUUID();
+export function quoteDshSelection(selection: WorkbenchSelectionContext | undefined, signal: AbortSignal,submission?:QuickSubmission): Promise<QuoteResult> {
+  const requestId = submission?.id??crypto.randomUUID();
   return new Promise((resolve) => {
     const finish = (result: QuoteResult) => {
       clearTimeout(timer);
@@ -28,10 +29,10 @@ export function quoteDshSelection(selection: WorkbenchSelectionContext | undefin
     const timer = setTimeout(() => {
       dispatchEvent(new CustomEvent(DSH_CANCEL_QUOTE, {detail: {requestId}}));
       finish({requestId, ok: false, message: t('读取选区超时，请重试')});
-    }, 16000);
+    }, submission?180000:16000);
     addEventListener(DSH_QUOTE_RESULT, receive);
     signal.addEventListener('abort', cancel, {once: true});
     if (signal.aborted) cancel();
-    else dispatchEvent(new CustomEvent<QuickQuoteRequest>(DSH_QUICK_QUOTE, {detail: {requestId, selection}}));
+    else dispatchEvent(new CustomEvent<QuickQuoteRequest>(DSH_QUICK_QUOTE, {detail: {requestId, selection,...(submission?{submission}:{})}}));
   });
 }

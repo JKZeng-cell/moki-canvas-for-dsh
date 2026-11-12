@@ -16,13 +16,16 @@ async function harness(t){
   const dom=new JSDOM('<div id="root"></div>',{url:'http://dsh.test/'}),win=dom.window
   const previous=new Map()
   for(const [key,value] of Object.entries({window:win,document:win.document,HTMLElement:win.HTMLElement,IS_REACT_ACT_ENVIRONMENT:true})){previous.set(key,Object.getOwnPropertyDescriptor(globalThis,key));Object.defineProperty(globalThis,key,{configurable:true,writable:true,value})}
-  const components=new Map(),requests=[],inserted=[],attachments=[],timeouts=new Set()
+  const components=new Map(),requests=[],inserted=[],attachments=[],sent=[],timeouts=new Set()
   const state={value:{draft:'原有草稿',phase:'plain',attachmentIds:[]},listeners:new Set(),get:()=>state.value,subscribe:fn=>{state.listeners.add(fn);return()=>state.listeners.delete(fn)},set:patch=>{state.value={...state.value,...patch};for(const fn of state.listeners)fn()}}
   let plugin,failImages=false,visible=true
   win.__ModuleLoader__={load:entry=>{plugin=entry.factory(require)}}
-  runInNewContext(clientSource,{window:win,document:win.document,location:win.location,localStorage:win.localStorage,console,crypto:globalThis.crypto,URL,URLSearchParams,ArrayBuffer,File,AbortController,MutationObserver:win.MutationObserver,getComputedStyle:win.getComputedStyle.bind(win),fetch:async()=>new Response(JSON.stringify({running:true,appUrl:'http://moki.test/'})),
+  runInNewContext(clientSource,{window:win,document:win.document,location:win.location,localStorage:win.localStorage,console,crypto:globalThis.crypto,URL,URLSearchParams,ArrayBuffer,File,AbortController,MutationObserver:win.MutationObserver,getComputedStyle:win.getComputedStyle.bind(win),requestAnimationFrame:fn=>setImmediate(fn),CSS:{escape:value=>value},fetch:async()=>new Response(JSON.stringify({running:true,appUrl:'http://moki.test/'})),
     setTimeout:(fn,ms)=>{if(ms!==15000)return setTimeout(fn,ms);const timer={fn};timeouts.add(timer);return timer},clearTimeout:timer=>{if(timeouts.has(timer))timeouts.delete(timer);else clearTimeout(timer)}})
   const ctx={effect:fn=>fn(),locale:{register:()=>()=>{},bind:()=>key=>({selectionHint:'白板选区',selected:'已选 {count} 项',add:'加入对话',added:'已加入草稿',textOnly:'截图未就绪',changed:'选区已变化',timedOut:'读取超时'}[key]??key)},slots:{inject:(_name,fn)=>fn(),register:(spec,component)=>{components.set(spec.name,component);return()=>{}}},sidebarRightTabs:{register:()=>()=>{}},conversation:{createDrafts:(_id,files)=>{if(failImages)throw new Error('upload failed');return files.map((file,i)=>({id:`image-${i}`,file}))},releaseDraftAttachments:()=>{}},layout:{},sidebarRight:{},uiWorkspace:{}}
+  ctx.sessions={retain:sessionId=>({ready:Promise.resolve(),binding:{session:{sessionId,getSnapshot:()=>({subagent:null})}},release(){}})}
+  ctx.conversation.fileUploads={getSnapshot:()=>({'image-0':{status:'ready'},'image-1':{status:'ready'}})}
+  ctx.conversation.sendSession=async(session,text,ids)=>{sent.push({sessionId:session.sessionId,text,ids});return{kind:'success'}}
   const registrations=new Map(), panelListeners=new Set(), sessionListeners=new Set()
   const navigation={panel:null,session:'a',ready:true,starts:0,opened:[]}
   const register=ctx.slots.register
@@ -57,7 +60,7 @@ async function harness(t){
   const message=async(data,origin='http://moki.test',source=frame.contentWindow)=>act(async()=>{win.dispatchEvent(new win.MessageEvent('message',{origin,source,data:{bridgeId,...data}}))})
   const select=selection=>message({type:'moki:state',boardId:'board:a',selection})
   await message({type:'moki:ready'});await select(null)
-  return {win,state,inserted,attachments,message,select,requests,timeouts,navigation,registrations,changeLocale,selectPanel:ctx.layout.selectPanel,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
+  return {win,state,inserted,attachments,sent,message,select,requests,timeouts,navigation,registrations,changeLocale,selectPanel:ctx.layout.selectPanel,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
 }
 
 test('the native sidebar row returns to the same chat and opens its canvas',async t=>{
@@ -219,4 +222,20 @@ test('busy input and request timeouts leave the draft intact; attachment failure
   await h.message({type:'moki:quote',requestId:second.requestId,boardId:'board:a',selection,images:[{name:'选区.png',mediaType:'image/png',bytes:new ArrayBuffer(4)}]})
   assert.equal(h.inserted.length,1);assert.equal(h.attachments.length,0)
   assert.match(h.hint().textContent,/截图未就绪/)
+})
+
+
+test('quick instructions send their captured selection and attachments without appending or sending the existing draft',async t=>{
+  const h=await harness(t),selection=makeSelection()
+  await h.select(selection)
+  const key=wireKey(selection)
+  await h.message({type:'moki:quote-request',requestId:'quick-1',boardId:'board:a',selectionKey:key,quoteKey:key,submit:true})
+  assert.equal(h.requests.at(-1).type,'dsh:quote')
+  await h.message({type:'moki:quote',requestId:'quick-1',boardId:'board:a',selection,images:[],submission:{id:'quick-1',prompt:'Only edit this selection',files:[new File(['Attached brief'],'brief.txt',{type:'text/plain'})]}})
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20))})
+  assert.equal(h.sent.length,1);assert.equal(h.sent[0].sessionId,'a')
+  assert.match(h.sent[0].text,/Only edit this selection/);assert.match(h.sent[0].text,/露营装备/)
+  assert.equal(h.state.value.draft,'原有草稿');assert.equal(h.inserted.length,0);assert.equal(h.attachments.length,0)
+  assert.equal(h.sent[0].ids.length,1)
+  assert.equal(h.requests.find(r=>r.type==='dsh:quote-result'&&r.requestId==='quick-1')?.ok,true)
 })

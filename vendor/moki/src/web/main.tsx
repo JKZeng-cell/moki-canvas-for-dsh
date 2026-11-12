@@ -6,6 +6,7 @@ import "./styles.css";
 import './lan-sharing.css';
 import './sharing-ui.css';
 import './dsh-embed.css';
+import './selection-composer.css';
 import './dsh-surfaces.css';
 import { installModalOutsideDismiss } from '../vendor/moki/web/lib/modal-outside-dismiss.js';
 import {installBrowserResourceBridge} from './library-adapter.js';

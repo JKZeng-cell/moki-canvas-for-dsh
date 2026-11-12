@@ -114,6 +114,20 @@ describe('DSH selection transfer',()=>{
     expect(messages('moki:quote')[0].images[0].bytes.byteLength).toBe(3);
   });
 
+  it('retains the frozen object selection while its image finishes during quick input',async()=>{
+    await mount();const before=selected('准备帐篷',false);await choose(before);
+    const {quoteDshSelection}=await import('../src/web/dsh-quick-quote.js');
+    const controller=new AbortController(),submission={id:'quick-image',prompt:'编辑这项',files:[]};
+    const pending=quoteDshSelection({...before,source:'whiteboard'},controller.signal,submission);
+    const start=messages('moki:quote-request').at(-1);
+    await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://dsh.test',data:{type:'dsh:quote',bridgeId:'bridge-a',requestId:start.requestId,selectionKey:start.selectionKey}})));
+    await choose(selected());
+    await waitFor(()=>expect(messages('moki:quote')).toHaveLength(1));
+    expect(messages('moki:quote')[0]).toMatchObject({submission,images:[{name:'选区.png',mediaType:'image/png'}]});
+    expect(messages('moki:quote')[0].selection.content).toContain('准备帐篷');
+    controller.abort();await pending;
+  });
+
   it.each(['save','image'] as const)('rejects a selection changed while awaiting %s',async stage=>{
     let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve;});
     if(stage==='image')fetchMock.mockImplementation(async(url:string)=>{if(!String(url).startsWith('/api/dsh/context'))await pending;return new Response(String(url).startsWith('/api/dsh/context')?'{}':'png',{headers:{'content-type':String(url).startsWith('/api/dsh/context')?'application/json':'image/png'}});});

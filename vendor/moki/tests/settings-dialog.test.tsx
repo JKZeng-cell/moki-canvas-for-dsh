@@ -8,7 +8,7 @@ import type {ThemeMode} from '../src/web/use-theme.js';
 import {WorkbenchPageHeader} from '../src/vendor/moki/web/components/workbench-page-header.js';
 import {NativeControlsContext} from '../src/web/native-context.js';
 const APP_VERSION='9.8.7'; // The UI renders the supplied server version, not a hard-coded product version.
-import {APP_DEVELOPER_EMAIL,DEVELOPER_CONTACT_URL,isAllowedExternalUrl} from '../src/shared/app-metadata.js';
+import {DEVELOPER_CONTACT_URL,isAllowedExternalUrl} from '../src/shared/app-metadata.js';
 import type {DesktopSettingsState} from '../src/shared/desktop-settings-contract.js';
 const initial={path:'C:/MOKI/whiteboard-materials',defaultPath:'C:/MOKI/whiteboard-materials',pendingPath:null,error:null};
 afterEach(()=>{cleanup();delete window.mokiDesktop;vi.unstubAllGlobals();});
@@ -30,15 +30,15 @@ describe('unified settings',()=>{
   for(const name of ['外观','MCP','素材缓存']){fireEvent.click(screen.getByRole('tab',{name}));expect(screen.getByText('MOKI 白板 · v'+APP_VERSION)).toBeInTheDocument();expect(screen.getByRole('link',{name:'联系开发者'})).toHaveAttribute('href',DEVELOPER_CONTACT_URL);}
   await screen.findByLabelText('素材目录');screen.getByRole('link',{name:'联系开发者'}).focus();fireEvent.keyDown(document,{key:'Tab'});expect(screen.getByRole('button',{name:'关闭设置'})).toHaveFocus();
  });
- it('uses the native external URL bridge for developer mail without navigating away',async()=>{
+ it('uses the native external URL bridge for the public contact page without navigating away',async()=>{
   const open=vi.fn(async()=>true);window.mokiDesktop={captureWhiteboardLinkPreview:async()=>null,resourceCache:{get:async()=>initial,set:vi.fn()},openExternalUrl:open};render(<Demo/>);fireEvent.click(screen.getByRole('link',{name:'联系开发者'}));await waitFor(()=>expect(open).toHaveBeenCalledWith(DEVELOPER_CONTACT_URL));expect(screen.getByRole('dialog',{name:'设置'})).toBeInTheDocument();
  });
- it('shows the email address when the device cannot open its mail application',async()=>{
-  window.mokiDesktop={captureWhiteboardLinkPreview:async()=>null,resourceCache:{get:async()=>initial,set:vi.fn()},openExternalUrl:async()=>false};render(<Demo/>);fireEvent.click(screen.getByRole('link',{name:'联系开发者'}));expect(await screen.findByRole('alert')).toHaveTextContent(APP_DEVELOPER_EMAIL);
+ it('shows the public contact URL when the device cannot open its browser',async()=>{
+  window.mokiDesktop={captureWhiteboardLinkPreview:async()=>null,resourceCache:{get:async()=>initial,set:vi.fn()},openExternalUrl:async()=>false};render(<Demo/>);fireEvent.click(screen.getByRole('link',{name:'联系开发者'}));expect(await screen.findByRole('alert')).toHaveTextContent(DEVELOPER_CONTACT_URL);
  });
- it('allows only developer mail and existing http links, not arbitrary external protocols',()=>{
+ it('allows web links, not arbitrary external protocols',()=>{
   expect(isAllowedExternalUrl(DEVELOPER_CONTACT_URL)).toBe(true);expect(isAllowedExternalUrl('https://example.com')).toBe(true);
-  for(const value of ['mailto:other@example.com',DEVELOPER_CONTACT_URL+'?attach=C:/private.txt','javascript:alert(1)','file:///C:/private.txt','not a url'])expect(isAllowedExternalUrl(value)).toBe(false);
+  for(const value of ['mailto:other@example.com','javascript:alert(1)','file:///C:/private.txt','not a url'])expect(isAllowedExternalUrl(value)).toBe(false);
  });
  it('uses a single settings entry in the editor header instead of a separate MCP button',()=>{
   const settings=vi.fn();render(<NativeControlsContext.Provider value={{back:vi.fn(),settings}}><WorkbenchPageHeader title="白板"/></NativeControlsContext.Provider>);fireEvent.click(screen.getByRole('button',{name:'设置'}));expect(settings).toHaveBeenCalledOnce();expect(screen.queryByRole('button',{name:'MCP 连接'})).not.toBeInTheDocument();

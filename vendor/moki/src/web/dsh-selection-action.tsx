@@ -1,9 +1,10 @@
 import {useEffect, useRef, useState, type RefObject} from 'react';
-import {Check, LoaderCircle, MessageSquare, RotateCcw} from 'lucide-react';
-import type {WorkbenchSelectionContext} from '../vendor/moki/web/lib/workbench-selection-context.js';
+import {Check, LoaderCircle, RotateCcw} from 'lucide-react';
+import {readWorkbenchSelectionContext,type WorkbenchSelectionContext} from '../vendor/moki/web/lib/workbench-selection-context.js';
 import {t, useI18n} from './i18n.js';
 import {quoteDshSelection} from './dsh-quick-quote.js';
 import {selectionActionPosition, textareaSelectionBox, type SelectionBox} from './dsh-selection-anchor.js';
+import {SelectionComposer} from './selection-composer.js';
 
 type Props = {
   root: RefObject<HTMLDivElement | null>;
@@ -27,6 +28,7 @@ export function DshSelectionAction({root, textarea, bounds, selectionId, pageId,
   const [size, setSize] = useState({width: 0, height: 0});
   const [status, setStatus] = useState<'ready' | 'pending' | 'added' | 'error'>('ready');
   const [notice, setNotice] = useState('');
+  const [composer,setComposer]=useState<{selection:WorkbenchSelectionContext;anchor:{x:number;y:number}}>();
   const pending = useRef<AbortController | undefined>(undefined);
   const action = useRef<HTMLButtonElement | null>(null);
 
@@ -49,10 +51,10 @@ export function DshSelectionAction({root, textarea, bounds, selectionId, pageId,
       });
     };
     const down = (event: PointerEvent) => {
-      if (!(event.target instanceof Element && event.target.closest('.dsh-selection-action'))) setPinnedText(undefined);
+      if (!(event.target instanceof Element && event.target.closest('.dsh-selection-action,[data-selection-composer]'))) setPinnedText(undefined);
       if (event.target === container.querySelector('canvas.native-whiteboard-canvas')) setDragging(true);
     };
-    const clearPinned = (event: Event) => { if (!(event.target instanceof Element && event.target.closest('.dsh-selection-action'))) setPinnedText(undefined); };
+    const clearPinned = (event: Event) => { if (!(event.target instanceof Element && event.target.closest('.dsh-selection-action,[data-selection-composer]'))) setPinnedText(undefined); };
     const up = () => { setDragging(false); measure(); };
     const blur = () => { setDragging(false); setTextTarget(undefined); };
     const observer = new ResizeObserver(measure); observer.observe(container);
@@ -84,36 +86,37 @@ export function DshSelectionAction({root, textarea, bounds, selectionId, pageId,
   const key = blocked || dragging ? '' : targetText?.key ?? (editing ? '' : selectionId);
   const position = box && key ? selectionActionPosition(box, size.width, size.height) : undefined;
   useEffect(() => {
-    setStatus('ready'); setNotice('');
+    setStatus('ready'); setNotice('');setComposer(undefined);
     return () => { pending.current?.abort(); pending.current = undefined; };
   }, [key, pageId]);
   useEffect(() => { setPinnedText(undefined); }, [pageId]);
 
-  if (!position) return null;
+  if (!position&&!composer) return null;
   const label = status === 'pending' ? t('正在加入对话…') : status === 'added' ? t('已加入对话草稿') : status === 'error' ? t('重试加入对话') : t('引用到 DSH');
-  const Icon = status === 'pending' ? LoaderCircle : status === 'added' ? Check : status === 'error' ? RotateCcw : MessageSquare;
-  const quote = async () => {
-    if (pending.current) return;
-    const controller = new AbortController(); pending.current = controller;
+  const Icon = status === 'pending' ? LoaderCircle : status === 'added' ? Check : status === 'error' ? RotateCcw : undefined;
+  const quote = () => {
+    if (pending.current||composer) return;
     const selectedText = targetText;
     if (selectedText) setPinnedText(selectedText);
-    setStatus('pending'); setNotice('');
+    const selected=selectedText?.selection??readWorkbenchSelectionContext();
+    if(!selected)return;
+    const rect=action.current?.getBoundingClientRect();
+    setComposer({selection:structuredClone(selected),anchor:{x:rect?.left??8,y:rect?.bottom??8}});
     // Capture the exact substring before committing the editor. DSH may focus its
     // composer during the handshake; that blur must not discard the chosen quote.
     if (selectedText && editing) {
       finishEditing();
-      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     }
-    if (controller.signal.aborted) return;
-    const result = await quoteDshSelection(selectedText?.selection, controller.signal);
-    if (controller.signal.aborted) return;
-    pending.current = undefined;
-    setStatus(result.ok ? 'added' : 'error'); setNotice(result.message ?? '');
   };
-  return <div className="dsh-selection-action" style={position} data-whiteboard-control-surface data-dsh-selection-kind={targetText ? 'text' : 'objects'}>
+  let excerpt='';if(composer)try{const data=JSON.parse(composer.selection.content);excerpt=String(data.selectedText??data.selectedShapes?.map((shape:{text?:string;name?:string})=>shape.text??shape.name??'').filter(Boolean).join(' · ')??'').slice(0,180)}catch{}
+  return <>{composer&&<SelectionComposer anchor={composer.anchor} label={composer.selection.label} excerpt={excerpt} t={t} onClose={()=>setComposer(undefined)} onSend={async submission=>{
+    const controller=new AbortController();pending.current=controller;
+    try{const result=await quoteDshSelection(composer.selection,controller.signal,submission);if(!result.ok)throw new Error(result.message??t('发送失败，请重试'));}
+    finally{if(pending.current===controller)pending.current=undefined;}
+  }}/>}{position&&!composer&&<div className="dsh-selection-action" style={position} data-whiteboard-control-surface data-dsh-selection-kind={targetText ? 'text' : 'objects'}>
     <button ref={action} type="button" aria-label={label} aria-busy={status === 'pending'} aria-disabled={status === 'pending'} title={notice || label} onPointerDown={event => {event.preventDefault(); event.stopPropagation();}} onBlur={event => {if (editing && !pending.current && event.relatedTarget !== textarea.current) finishEditing();}} onClick={event => {event.stopPropagation(); void quote();}}>
-      <Icon size={17} aria-hidden="true" className={status === 'pending' ? 'animate-spin' : undefined} />
+      {Icon ? <Icon size={17} aria-hidden="true" className={status === 'pending' ? 'animate-spin' : undefined} /> : <span className="dsh-whale" aria-hidden="true" />}
     </button>
     <span className="dsh-selection-action-label" role="status" style={position.left < 210 ? {left: 0, right: 'auto', maxWidth: Math.min(200, size.width - position.left - 8)} : undefined}>{notice || label}</span>
-  </div>;
+  </div>}</>;
 }
