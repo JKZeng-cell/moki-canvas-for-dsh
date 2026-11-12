@@ -1,5 +1,18 @@
 # Release validation
 
+## 1.7.0 · Follow DSH language
+
+Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. The release tarball was installed in a new isolated DSH Web profile.
+
+- Fresh installation defaults to Follow DSH. Selecting Chinese, English and Japanese in DSH's own Settings immediately updated the following canvas to Chinese, English and the English fallback. The canvas iframe did not reload, and its board contents and unsent chat draft remained unchanged.
+- Selecting English manually kept the canvas in English while DSH switched languages. Selecting Follow DSH again adopted the current DSH language immediately. Existing saved manual preferences remain valid.
+- The stored value stays `dsh` instead of the currently resolved language. Restarting the DSH service assigned a new canvas port; the following preference survived and adopted DSH's saved Chinese language even though the browser language was English.
+- All 25 focused language, startup, persistence and bridge tests, and all 9 plugin integration tests passed. These include forged-parent message rejection, no preference writes on host-language events, unchanged manual choices and restart guidance for older hosts. Type checking and the production build passed.
+- At 360 px width the dark settings dialog is 344 px wide, has no horizontal overflow and retains four 34 px tabs.
+- The local development plugin and actual DSH Desktop were updated and reopened normally. Discovery reported 1.7.0; Settings retained the user's current manual Simplified Chinese choice, and all six existing boards matched their pre-update versions and contents.
+
+![Follow DSH language in the side workspace](images/follow-dsh-language.png)
+
 ## 1.6.1 · Language saving after an upgrade
 
 Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64.

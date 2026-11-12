@@ -10,7 +10,12 @@ export class LanguageSaveError extends Error {
 }
 export const LANGUAGE_STORAGE_KEY = 'moki-whiteboard-language';
 const listeners = new Set();
-const valid = (value) => value === 'zh-CN' || value === 'en';
+const valid = (value) => value === 'dsh' || value === 'zh-CN' || value === 'en';
+function hostLanguage(value) {
+    if (typeof value !== 'string' || !/^[a-z]{2,8}(?:[-_][a-z0-9]{1,8})*$/i.test(value))
+        return;
+    return /^zh(?:[-_]|$)/i.test(value) ? 'zh-CN' : 'en';
+}
 function readLanguage() {
     try {
         const value = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -18,14 +23,20 @@ function readLanguage() {
             return value;
     }
     catch { /* Storage may be unavailable in embedded browsers. */ }
-    return 'zh-CN';
+    return typeof window !== 'undefined' && window.mokiDshEmbed ? 'dsh' : 'zh-CN';
 }
-let language = readLanguage();
+let preference = readLanguage();
+let dshLanguage = (typeof window !== 'undefined' && window.mokiDshEmbed
+    ? hostLanguage(new URLSearchParams(location.search).get('dshLanguage')) : undefined)
+    ?? (typeof navigator !== 'undefined' ? hostLanguage(navigator.language) : undefined) ?? 'zh-CN';
+let language = preference === 'dsh' ? dshLanguage : preference;
 let revision = 0;
 let pendingSave = Promise.resolve();
 export function getLanguage() { return language; }
+export function getLanguagePreference() { return preference; }
 export function subscribeLanguage(listener) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 export function useI18n() { return useSyncExternalStore(subscribeLanguage, getLanguage, getLanguage); }
+export function useLanguagePreference() { return useSyncExternalStore(subscribeLanguage, getLanguagePreference, getLanguagePreference); }
 /** Translate interface copy only. Values such as titles and document text stay untouched. */
 export function t(message, ...values) {
     const copy = language === 'en' && Object.hasOwn(en, message) ? en[message] : message;
@@ -35,17 +46,33 @@ export function setLanguage(value) {
     if (!valid(value))
         return;
     revision++;
-    const changed = language !== value;
-    language = value;
+    const resolved = value === 'dsh' ? dshLanguage : value;
+    const changed = preference !== value || language !== resolved;
+    preference = value;
+    language = resolved;
     try {
         localStorage.setItem(LANGUAGE_STORAGE_KEY, value);
     }
     catch { /* Server persistence remains available. */ }
     if (typeof document !== 'undefined')
-        document.documentElement.lang = value;
+        document.documentElement.lang = language;
     if (changed)
         for (const listener of listeners)
             listener();
+}
+/** Host language changes never turn an explicit choice into a following preference. */
+export function setDshLanguage(value) {
+    const resolved = hostLanguage(value);
+    if (!resolved)
+        return;
+    dshLanguage = resolved;
+    if (preference !== 'dsh' || language === resolved)
+        return;
+    language = resolved;
+    if (typeof document !== 'undefined')
+        document.documentElement.lang = language;
+    for (const listener of listeners)
+        listener();
 }
 // DSH can keep several canvas frames mounted at once. Keep their menus in sync.
 if (typeof window !== 'undefined')
@@ -77,7 +104,7 @@ export function saveLanguage(value) {
         const response = await fetch('/api/preferences', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ language: value }), signal: AbortSignal.timeout(10000) });
         // A linked plugin can serve new UI files while DSH still runs its old host.
         // Retrying cannot add a route that only exists after the host restarts.
-        if (response.status === 404 || response.status === 405)
+        if (response.status === 404 || response.status === 405 || value === 'dsh' && response.status === 400)
             throw new LanguageSaveError('restart-required');
         if (!response.ok)
             throw new LanguageSaveError('save-failed');

@@ -55,7 +55,7 @@ These are real, dark-theme DSH interface captures from a separate demo profile c
 
 ## Supported imports
 
-Drop files onto the canvas, paste images or URLs, or add materials from the toolbar. The following describes importing and previewing in **DSH plugin v1.6.1**:
+Drop files onto the canvas, paste images or URLs, or add materials from the toolbar. The following describes importing and previewing in **DSH plugin v1.7.0**:
 
 | Type | Formats | Behavior in the canvas |
 | --- | --- | --- |
@@ -76,7 +76,7 @@ Tested with **DeepSeek Harness 0.2.2-rc.1 on Windows x64**. Other operating syst
 
 ### Interface language
 
-Open the canvas's **More actions → Canvas settings → General → Interface language** and choose **English** or **简体中文**. From the canvas list, use the Settings button. The change applies immediately to the editor, menus, materials, dialogs and DSH selection controls, and is saved across restarts. Your canvas content, page names and files are preserved. The built-in introduction is a Chinese example canvas.
+Open the canvas's **More actions → Canvas settings → General → Interface language** and choose **Follow DSH**, **简体中文** or **English**. From the canvas list, use the Settings button. New installations follow DSH by default; existing manual choices are preserved. In Follow DSH mode, changing DSH's language immediately updates the editor, menus, materials, dialogs and selection controls without reloading the canvas. Chinese DSH locales use Simplified Chinese; other DSH languages use English. Manual choices stay fixed, and all three preferences survive restarts. Your canvas content, page names and files are preserved. The built-in introduction is a Chinese example canvas.
 
 After updating a plugin while DSH is running, fully quit and reopen DSH before saving the language. Refreshing the canvas alone does not load the new plugin service. If the older service is still running, Settings shows a restart instruction; after restarting, select your language again to save it.
 
@@ -85,13 +85,13 @@ After updating a plugin while DSH is running, fully quit and reopen DSH before s
 Open a DSH conversation with plugin management available. Copy the entire prompt below into the composer and send it:
 
 ```text
-Please install and enable MOKI Canvas for DSH v1.6.1.
+Please install and enable MOKI Canvas for DSH v1.7.0.
 
 Project: https://github.com/JKZeng-cell/moki-canvas-for-dsh
 Read the project's installation instructions, then use plugin_manager in the current DSH environment:
 First call list_bundles. If this version is installed, confirm it is enabled or enable it with set_bundle; do not reinstall it.
 If it is not installed, call install_bundle with enabled=true and this prebuilt package as the target:
-https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.6.1/dsh-moki-canvas-1.6.1.tgz
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.7.0/dsh-moki-canvas-1.7.0.tgz
 
 After installation, check the version and enabled state of dsh-moki-canvas and explain how to open it from the sidebar or side workspace.
 If the result is restart-required, tell me to restart DSH. Preserve existing boards, attachments, and other plugins.
@@ -101,12 +101,12 @@ This uses the plugin manager in your current DSH environment. If the tool is una
 
 ### Manual installation
 
-1. Download `dsh-moki-canvas-1.6.1.tgz` from [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.6.1).
+1. Download `dsh-moki-canvas-1.7.0.tgz` from [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.7.0).
 2. For Desktop, use **Manage dsh Command…** in the application menu to install or repair the bundled command. Open a new terminal and run `dsh --version` to confirm it matches Desktop. Then fully quit DSH from its application or tray menu; closing the window may leave it running.
 3. In the directory containing the downloaded package, run:
 
    ```sh
-   dsh plugin --profile desktop add ./dsh-moki-canvas-1.6.1.tgz
+   dsh plugin --profile desktop add ./dsh-moki-canvas-1.7.0.tgz
    dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 

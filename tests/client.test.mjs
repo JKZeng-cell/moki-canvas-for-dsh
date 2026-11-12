@@ -39,6 +39,10 @@ async function harness(t){
       navigation.opened.push([kind,navigation.session])
     },
   }
+  let activeLocale='zh';const localeListeners=new Set()
+  ctx.locale.getSnapshot=()=>({active:activeLocale})
+  ctx.locale.subscribe=fn=>{localeListeners.add(fn);return()=>localeListeners.delete(fn)}
+  const changeLocale=async value=>act(async()=>{activeLocale=value;for(const fn of localeListeners)fn()})
   plugin.apply(ctx)
   const actions={insertQuote:text=>{inserted.push(text);state.set({draft:state.value.draft+'\n\n'+text.split('\n').map(line=>'> '+line).join('\n')});return true},addAttachments:ids=>{attachments.push(...ids);state.set({attachmentIds:[...state.value.attachmentIds,...ids]});return true},persistDraft:()=>{}}
   const useInput=select=>select(React.useSyncExternalStore(state.subscribe,state.get,state.get))
@@ -51,7 +55,7 @@ async function harness(t){
   const message=async(data,origin='http://moki.test',source=frame.contentWindow)=>act(async()=>{win.dispatchEvent(new win.MessageEvent('message',{origin,source,data:{bridgeId,...data}}))})
   const select=selection=>message({type:'moki:state',boardId:'board:a',selection})
   await message({type:'moki:ready'});await select(null)
-  return {win,state,inserted,attachments,message,select,requests,timeouts,navigation,registrations,selectPanel:ctx.layout.selectPanel,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
+  return {win,state,inserted,attachments,message,select,requests,timeouts,navigation,registrations,changeLocale,selectPanel:ctx.layout.selectPanel,failImages:()=>{failImages=true},hint:()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main'),click:()=>act(async()=>win.document.querySelector('[data-chat="a"] .moki-composer-selection-main').click()),hide:()=>act(async()=>{visible=false;render()})}
 }
 
 test('the native sidebar row returns to the same chat and opens its canvas',async t=>{
@@ -124,6 +128,19 @@ test('canvas language updates selection controls, preserving the draft and rejec
   assert.match(h.hint().textContent,/Whiteboard selection/)
   await h.message({type:'moki:language',language:'zh-CN'})
   assert.match(h.hint().textContent,/白板选区/)
+})
+
+test('passes the actual DSH locale at startup and forwards changes without reloading the canvas or draft',async t=>{
+  const h=await harness(t),frame=h.win.document.querySelector('iframe'),url=frame.src,draft=h.state.value.draft
+  assert.equal(new URL(url).searchParams.get('dshLanguage'),'zh')
+  assert.equal(h.requests.filter(r=>r.type==='dsh:language').at(-1).language,'zh')
+  await h.select(makeSelection()); await h.changeLocale('en')
+  assert.equal(h.requests.filter(r=>r.type==='dsh:language').at(-1).language,'en')
+  await h.changeLocale('ja'); await h.message({type:'moki:ready'})
+  assert.equal(h.requests.filter(r=>r.type==='dsh:language').at(-1).language,'ja')
+  assert.equal(h.win.document.querySelector('iframe'),frame)
+  assert.equal(frame.src,url);assert.equal(h.state.value.draft,draft)
+  assert.equal(h.hint().disabled,false)
 })
 
 test('rejects foreign messages, changed selections and late responses after hiding the panel',async t=>{

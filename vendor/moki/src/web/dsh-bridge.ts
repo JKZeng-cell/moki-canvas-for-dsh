@@ -1,4 +1,4 @@
-import {t, getLanguage, subscribeLanguage} from './i18n.js';
+import {t, getLanguage, setDshLanguage, subscribeLanguage} from './i18n.js';
 import {useEffect,useRef} from 'react';
 import {readWorkbenchSelectionContext,WORKBENCH_SELECTION_EVENT,MOKI_ASSISTANT_COMPOSE_EVENT,type MokiAssistantComposeRequest} from '../vendor/moki/web/lib/workbench-selection-context.js';
 import type {ThemeMode} from './use-theme.js';
@@ -66,6 +66,7 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
   const receive=(event:MessageEvent)=>{
    if(event.source!==parent||event.origin!==parentOrigin||event.data?.bridgeId!==instanceId)return;
    const data=event.data;
+   if(data.type==='dsh:language')setDshLanguage(data.language);
    if(data.type==='dsh:theme'&&(data.theme==='light'||data.theme==='dark'))latest.current.setTheme(data.theme);
    if(data.type==='dsh:active'){active=data.active===true;void publish();}
    if(data.type==='dsh:quote'&&active)void share(undefined,data.requestId,data.selectionKey);

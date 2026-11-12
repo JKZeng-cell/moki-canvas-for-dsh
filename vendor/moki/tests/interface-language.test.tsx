@@ -5,12 +5,12 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 import {useState} from 'react';
 import {SettingsDialog, type SettingsTab} from '../src/web/settings-dialog.js';
 import {BoardCardMenu} from '../src/web/board-card-menu.js';
-import {getLanguage, initializeLanguage, LANGUAGE_STORAGE_KEY, saveLanguage, setLanguage, t} from '../src/web/i18n.js';
+import {getLanguage, getLanguagePreference, initializeLanguage, LANGUAGE_STORAGE_KEY, saveLanguage, setDshLanguage, setLanguage, t} from '../src/web/i18n.js';
 import {newMindMapLabel, newCanvasSnapshot} from '../src/web/new-content-labels.js';
 import {NATIVE_COLOR_OPTIONS} from '../src/vendor/moki/web/components/native-whiteboard.js';
 import {dismissTopModalFromTarget} from '../src/vendor/moki/web/lib/modal-outside-dismiss.js';
 
-afterEach(() => { cleanup(); setLanguage('zh-CN'); localStorage.clear(); delete window.mokiDshEmbed; vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); setLanguage('zh-CN'); setDshLanguage('zh'); localStorage.clear(); delete window.mokiDshEmbed; vi.unstubAllGlobals(); });
 function Demo() {
   const [tab, setTab] = useState<SettingsTab>('general');
   const [draft, setDraft] = useState('已有文字 · My idea');
@@ -20,6 +20,55 @@ function Demo() {
 }
 const respond = (value: unknown, ok = true) => Promise.resolve(new Response(JSON.stringify(value), {status: ok ? 200 : 500}));
 describe('interface language', () => {
+  it('follows live DSH changes while preserving the preference, draft and manual overrides', async () => {
+    const writes: string[] = [];
+    vi.stubGlobal('fetch', vi.fn((url: string, options?: RequestInit) => {
+      if (url === '/api/preferences' && options?.method === 'PUT') writes.push(JSON.parse(String(options.body)).language);
+      return respond({});
+    }));
+    setDshLanguage('en'); render(<Demo/>);
+    fireEvent.change(screen.getByLabelText('界面语言'), {target: {value: 'dsh'}});
+    await waitFor(() => expect(screen.getByLabelText('Interface language')).not.toBeDisabled());
+    expect(screen.getByLabelText('Interface language')).toHaveValue('dsh');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('dsh');
+    expect(writes).toEqual(['dsh']);
+    act(() => setDshLanguage('zh-CN'));
+    expect(screen.getByRole('dialog', {name: '设置'})).toBeInTheDocument();
+    expect(screen.getByLabelText('界面语言')).toHaveValue('dsh');
+    expect(screen.getByLabelText('Unsubmitted draft')).toHaveValue('已有文字 · My idea');
+    expect(writes).toEqual(['dsh']);
+    fireEvent.change(screen.getByLabelText('界面语言'), {target: {value: 'en'}});
+    await waitFor(() => expect(screen.getByLabelText('Interface language')).not.toBeDisabled());
+    act(() => { setDshLanguage('en'); setDshLanguage('zh'); });
+    expect(screen.getByRole('dialog', {name: 'Settings'})).toBeInTheDocument();
+    expect(getLanguagePreference()).toBe('en');
+    fireEvent.change(screen.getByLabelText('Interface language'), {target: {value: 'dsh'}});
+    await waitFor(() => expect(screen.getByLabelText('界面语言')).not.toBeDisabled());
+    act(() => setDshLanguage('fr'));
+    expect(screen.getByLabelText('Interface language')).toHaveValue('dsh');
+    expect(writes).toEqual(['dsh', 'en', 'dsh']);
+  });
+  it('updates the selector when following mode and a manual choice resolve to the same language', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => respond({})));
+    setDshLanguage('en'); setLanguage('en'); render(<Demo/>);
+    fireEvent.change(screen.getByLabelText('Interface language'), {target: {value: 'dsh'}});
+    await waitFor(() => expect(screen.getByLabelText('Interface language')).not.toBeDisabled());
+    expect(screen.getByLabelText('Interface language')).toHaveValue('dsh');
+    act(() => window.dispatchEvent(new StorageEvent('storage', {key: LANGUAGE_STORAGE_KEY, newValue: 'en'})));
+    expect(screen.getByLabelText('Interface language')).toHaveValue('en');
+    act(() => window.dispatchEvent(new StorageEvent('storage', {key: LANGUAGE_STORAGE_KEY, newValue: 'dsh'})));
+    act(() => setDshLanguage('zh'));
+    expect(screen.getByLabelText('界面语言')).toHaveValue('dsh');
+  });
+  it('explains restarting an older host that does not yet accept follow mode', async () => {
+    window.mokiDshEmbed = true; setDshLanguage('en');
+    vi.stubGlobal('fetch', vi.fn((url: string) => url === '/api/preferences'
+      ? Promise.resolve(new Response('{}', {status: 400})) : respond({})));
+    render(<Demo/>);
+    fireEvent.change(screen.getByLabelText('界面语言'), {target: {value: 'dsh'}});
+    expect(await screen.findByText(/Quit and reopen DSH/)).toHaveAttribute('role', 'status');
+    expect(screen.queryByRole('button', {name: 'Retry'})).not.toBeInTheDocument();
+  });
   it('switches settings and an open portal menu immediately without replacing a user draft', async () => {
     const fetcher = vi.fn((url: string) => respond(url === '/api/config' ? {resourceCache: {path: 'C:/cache', defaultPath: 'C:/cache'}} : {}));
     vi.stubGlobal('fetch', fetcher);

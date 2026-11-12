@@ -1037,6 +1037,8 @@ export const en: Record<string, string> = {
   "界面语言": "Interface language",
   "切换后立即生效，白板内容保持原样。": "Applies immediately. Your canvas content stays unchanged.",
   "语言已切换，但保存失败，请重试。": "Language changed, but could not be saved. Please retry.",
+  "跟随 DSH": "Follow DSH",
+  "随 DSH 语言自动切换；中文以外的语言使用英文。": "Matches DSH automatically. Languages other than Chinese use English.",
   "语言已切换。请完全退出并重新打开 DSH，再选择语言以保存设置。": "Language changed. Quit and reopen DSH, then select your language again to save it.",
   "语言已切换。请重新启动白板应用，再选择语言以保存设置。": "Language changed. Restart MOKI Canvas, then select your language again to save it.",
   "重试": "Retry",

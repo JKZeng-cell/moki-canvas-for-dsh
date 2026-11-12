@@ -83,7 +83,7 @@ window.__ModuleLoader__.load({
         expanded&&selected?h('div',{className:'moki-composer-selection-details'},selectionPreview(view.selection).slice(0,2000)):null)
     }}
 
-    function panel(fallback,conversation){return function BoardPanel({sessionId,inputActions,useTabInfo,useSession,useInput}){
+    function panel(fallback,conversation,locale){return function BoardPanel({sessionId,inputActions,useTabInfo,useSession,useInput}){
       const t=useCanvasTranslation(fallback)
       const {tab}=useTabInfo()
       const canUploadImages=useSession(snapshot=>snapshot.subagent===null)
@@ -121,7 +121,7 @@ window.__ModuleLoader__.load({
           const target=new URL(info.appUrl);let board
           try{board=localStorage.getItem(`moki:dsh:board:${sessionId}`)}catch{}
           if(board)target.pathname='/board/'+encodeURIComponent(board)
-          target.search=new URLSearchParams({dshEmbed:'1',dshSession:sessionId,dshBridge:bridge.current,dshParent:location.origin,theme:theme()}).toString()
+          target.search=new URLSearchParams({dshEmbed:'1',dshSession:sessionId,dshBridge:bridge.current,dshParent:location.origin,theme:theme(),dshLanguage:locale.getSnapshot().active}).toString()
           if(!disposed)setUrl(target.toString())
         })().catch(error=>{if(!disposed){setNotice(error.message);setPhase('failed')}})
         return()=>{disposed=true;abort.abort()}
@@ -132,7 +132,7 @@ window.__ModuleLoader__.load({
           if(event.source!==frame.current?.contentWindow||event.origin!==new URL(url).origin||event.data?.bridgeId!==bridge.current)return
           const data=event.data
           if(data.type==='moki:language')setCanvasLanguage(data.language)
-          if(data.type==='moki:ready'){setPhase('ready');send('dsh:theme',{theme:theme()});send('dsh:active',{active:latest.current.tab.visible})}
+          if(data.type==='moki:ready'){setPhase('ready');send('dsh:theme',{theme:theme()});send('dsh:language',{language:locale.getSnapshot().active});send('dsh:active',{active:latest.current.tab.visible})}
           if(data.type==='moki:state'){
             const nextKey=selectionKey(data.boardId,data.selection),oldKey=selectionKey(latest.current.boardId,latest.current.selection)
             if(nextKey!==oldKey){setShareError('');setTextOnly(false)}
@@ -172,11 +172,12 @@ window.__ModuleLoader__.load({
           }
         }
         window.addEventListener('message',receive)
+        const unsubscribeLocale=locale.subscribe(()=>send('dsh:language',{language:locale.getSnapshot().active}))
         const observer=new MutationObserver(()=>send('dsh:theme',{theme:theme()}))
         observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-color-scheme','data-ds-theme-source','class','style']})
         observer.observe(document.body,{attributes:true,attributeFilter:['data-ds-dark-theme']})
         const timeout=setTimeout(()=>setPhase(current=>current==='loading'?'failed':current),20000)
-        return()=>{clearTimeout(timeout);observer.disconnect();window.removeEventListener('message',receive);send('dsh:active',{active:false})}
+        return()=>{clearTimeout(timeout);observer.disconnect();unsubscribeLocale();window.removeEventListener('message',receive);send('dsh:active',{active:false})}
       },[url,send,sessionId,canUploadImages])
       React.useEffect(()=>{send('dsh:active',{active:tab.visible})},[tab.visible,send])
       React.useEffect(()=>{if(!notice.startsWith(t('sent')))return;const timer=setTimeout(()=>setNotice(''),5000);return()=>clearTimeout(timer)},[notice])
@@ -249,7 +250,7 @@ window.__ModuleLoader__.load({
         try {
         const NS='mokiWhiteboard';ctx.effect(()=>ctx.locale.register(NS,COPY),'moki: locale');const t=ctx.locale.bind(NS)
         ctx.effect(()=>ctx.sidebarRightTabs.register({id:TYPE,kind:KIND,title:()=>t('title'),keepMounted:true,guide:[{id:KIND,order:25,title:()=>t('title'),description:()=>t('guide'),icon:Icon}]}),'moki: tab')
-        ctx.slots.inject('sidebar.right.pane.tab',()=>ctx.slots.register({name:'sidebar.right.pane.tab',key:TYPE,locale:NS},panel(t,ctx.conversation)))
+        ctx.slots.inject('sidebar.right.pane.tab',()=>ctx.slots.register({name:'sidebar.right.pane.tab',key:TYPE,locale:NS},panel(t,ctx.conversation,ctx.locale)))
         ctx.slots.inject('sidebar.right.pane.tab.title',()=>ctx.slots.register({name:'sidebar.right.pane.tab.title',key:TYPE},BoardTitle))
         ctx.slots.inject('conversation.input.dock',()=>ctx.slots.register({name:'conversation.input.dock',id:'moki-whiteboard-selection',order:10,locale:NS},composerSelection(t)))
         registerSidebarLauncher(ctx,t)

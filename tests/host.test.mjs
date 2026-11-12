@@ -73,12 +73,15 @@ test('DSH tools use valid JSON Schema, share the real canvas, and reject stale w
     assert.equal((await exec('whiteboard_inspect',{boardId})).board.version,batch.version)
     const blocked=await fetch(new URL('api/boards',url),{method:'POST',headers:{'content-type':'application/json','sec-fetch-site':'cross-site'},body:JSON.stringify({title:'Blocked'})})
     assert.equal(blocked.status,403)
+    const following=await fetch(new URL('api/preferences',url),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({language:'dsh'})})
+    assert.equal(following.status,200)
+    assert.deepEqual(await following.json(),{language:'dsh'})
   }finally{
     for(const dispose of cleanups.reverse())await dispose?.()
   }
   const reopened=await createRuntime({dataDir:dir})
   try{
-    assert.deepEqual(await (await fetch(new URL('api/preferences',reopened.appUrl))).json(),{language:'en'})
+    assert.deepEqual(await (await fetch(new URL('api/preferences',reopened.appUrl))).json(),{language:'dsh'})
     assert.equal(reopened.store.get(boardId).title,'DSH integration test')
     assert.ok(JSON.stringify(reopened.store.get(boardId).snapshot).includes('Batch leaf'))
     assert.ok(!JSON.stringify(reopened.store.get(boardId).snapshot).includes('Must roll back'))

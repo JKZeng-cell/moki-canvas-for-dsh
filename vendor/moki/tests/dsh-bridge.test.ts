@@ -8,7 +8,7 @@ const storageKey='moki.current-workbench-selection';
 const selected=(text='准备帐篷',image=true)=>({source:'whiteboard',label:'白板已选 1 项',itemCount:1,capturedAt:new Date().toISOString(),content:JSON.stringify({kind:'whiteboard_selection',pageId:'page:moki',selectedShapes:[{id:'shape:a',text}],...(image?{visualAttachments:[{name:'选区.png',imageSource:'/api/whiteboard/assets/selection.png'}]}:{})})});
 let parentWindow: Window, post: ReturnType<typeof vi.fn>, fetchMock: ReturnType<typeof vi.fn>;
 beforeEach(()=>{
-  vi.resetModules();sessionStorage.clear();window.mokiDshEmbed=true;
+  vi.resetModules();sessionStorage.clear();localStorage.clear();localStorage.setItem('moki-whiteboard-language','zh-CN');window.mokiDshEmbed=true;
   history.replaceState({},'','/?dshSession=chat-a&dshBridge=bridge-a&dshParent=http%3A%2F%2Fdsh.test');
   const iframe=document.createElement('iframe');document.body.append(iframe);parentWindow=iframe.contentWindow!;
   post=vi.fn();Object.defineProperty(parentWindow,'postMessage',{configurable:true,value:post});vi.stubGlobal('parent',parentWindow);
@@ -29,6 +29,24 @@ async function request(selection:ReturnType<typeof selected>,origin='http://dsh.
 function messages(type:string){return post.mock.calls.map(call=>call[0]).filter(message=>message.type===type);}
 
 describe('DSH selection transfer',()=>{
+  it('only follows language messages from its authenticated DSH parent and preserves manual choices',async()=>{
+    localStorage.setItem('moki-whiteboard-language','dsh');
+    await mount();
+    const {getLanguage,getLanguagePreference,setDshLanguage,setLanguage}=await import('../src/web/i18n.js');
+    act(()=>setDshLanguage('zh'));
+    const change=async(language:unknown,origin='http://dsh.test',bridgeId='bridge-a',source:Window=parentWindow)=>act(async()=>{
+      dispatchEvent(new MessageEvent('message',{source,origin,data:{type:'dsh:language',bridgeId,language}}));
+    });
+    await change('en','http://untrusted.test'); await change('en','http://dsh.test','wrong'); await change('en','http://dsh.test','bridge-a',window);
+    expect(getLanguage()).toBe('zh-CN');
+    await change('en');
+    expect(getLanguage()).toBe('en'); expect(getLanguagePreference()).toBe('dsh');
+    expect(messages('moki:language').at(-1)).toMatchObject({language:'en'});
+    await change(null); expect(getLanguage()).toBe('en');
+    act(()=>setLanguage('zh-CN')); await change('en');
+    expect(getLanguage()).toBe('zh-CN'); expect(getLanguagePreference()).toBe('zh-CN');
+    expect(fetchMock.mock.calls.some(call=>call[0]==='/api/preferences')).toBe(false);
+  });
   it('waits for the matching selection image and sends a correlated snapshot',async()=>{
     await mount();const before=selected('准备帐篷',false);await choose(before);await request(before);
     const withImage=selected();expect(dshSelectionKey('board:a',before)).toBe(dshSelectionKey('board:a',withImage));
