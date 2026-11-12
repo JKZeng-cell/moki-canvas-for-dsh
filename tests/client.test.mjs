@@ -9,6 +9,8 @@ const require=createRequire(process.env.MOKI_REPO ? resolve(process.env.MOKI_REP
 const React=require('react'),{act}=React,{createRoot}=require('react-dom/client'),{JSDOM}=require('jsdom')
 const clientSource=await readFile(new URL('../client.js',import.meta.url),'utf8')
 function makeSelection(text='露营装备',count=1){return {source:'whiteboard',label:`白板已选 ${count} 项`,itemCount:count,capturedAt:new Date().toISOString(),content:JSON.stringify({kind:'whiteboard_selection',pageId:'page:moki',selectedShapes:[{id:'shape:a',type:'geo',text}],visualAttachments:[{imageSource:'/api/whiteboard/assets/one.png'}]})}}
+function wireKey(selection){const {visualAttachments,...content}=JSON.parse(selection.content);return JSON.stringify(['board:a',selection.source,selection.itemCount,JSON.stringify(content)])}
+function wireScope(selection){const content=JSON.parse(selection.content);return JSON.stringify(['board:a',selection.source,content.pageId,content.selectedShapes.map(shape=>shape.id).sort()])}
 
 async function harness(t){
   const dom=new JSDOM('<div id="root"></div>',{url:'http://dsh.test/'}),win=dom.window
@@ -141,6 +143,49 @@ test('passes the actual DSH locale at startup and forwards changes without reloa
   assert.equal(h.win.document.querySelector('iframe'),frame)
   assert.equal(frame.src,url);assert.equal(h.state.value.draft,draft)
   assert.equal(h.hint().disabled,false)
+})
+
+test('inline text action inserts only the highlighted excerpt, acknowledges it, and never warns about an intentional text-only quote',async t=>{
+  const h=await harness(t),whole=makeSelection('只引用这一句。其他私人内容不要加入。')
+  const text={...whole,label:'白板划选文字',content:JSON.stringify({kind:'whiteboard_text_selection',pageId:'page:moki',shapeId:'shape:a',selectedText:'只引用这一句。',range:{start:0,end:7}})}
+  await h.select(whole)
+  const start=()=>h.message({type:'moki:quote-request',requestId:'inline-a',boardId:'board:a',selectionKey:wireKey(whole),selectionScope:wireScope(whole),quoteKey:wireKey(text)})
+  const reply=()=>h.message({type:'moki:quote',requestId:'inline-a',boardId:'board:a',selection:text,images:[]})
+  await start()
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote').at(-1).requestId,'inline-a')
+  const committed={...whole,content:JSON.stringify({...JSON.parse(whole.content),selectedShapes:[{id:'shape:a',type:'text',text:'只引用这一句。其他私人内容不要加入。',width:310}]})}
+  await h.select(committed)
+  await reply();await reply()
+  assert.equal(h.inserted.length,1)
+  assert.ok(h.state.value.draft.startsWith('原有草稿'))
+  assert.ok(h.inserted[0].includes('只引用这一句。'))
+  assert.ok(!h.inserted[0].includes('其他私人内容'))
+  assert.equal(h.attachments.length,0)
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote-result').at(-1).ok,true)
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote-result').at(-1).message,undefined)
+  await start();await reply()
+  assert.equal(h.inserted.length,1,'re-clicking the same excerpt does not duplicate the quote')
+  await start();await h.select({...committed,content:JSON.stringify({pageId:'page:moki',selectedShapes:[{id:'shape:b',text:'另一个对象'}]})});await reply()
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote-result').at(-1).ok,false)
+  assert.equal(h.inserted.length,1,'a different object still invalidates the text snapshot')
+})
+
+test('inline quote cannot bypass busy input, cancellation, changed selections or a hidden conversation',async t=>{
+  const h=await harness(t),selection=makeSelection()
+  await h.select(selection)
+  const start=()=>h.message({type:'moki:quote-request',requestId:'inline-a',boardId:'board:a',selectionKey:wireKey(selection),quoteKey:wireKey(selection)})
+  const reply=()=>h.message({type:'moki:quote',requestId:'inline-a',boardId:'board:a',selection,images:[]})
+  await act(async()=>h.state.set({phase:'sending'}));await start()
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote').length,0)
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote-result').at(-1).ok,false)
+  await act(async()=>h.state.set({phase:'plain'}));await start()
+  await h.message({type:'moki:quote-cancel',requestId:'inline-a'});await reply()
+  assert.equal(h.inserted.length,0)
+  await start();await h.select(makeSelection('另一个选区'));await reply()
+  assert.equal(h.inserted.length,0)
+  await h.select(selection);await start();await h.hide();await reply()
+  assert.equal(h.inserted.length,0)
+  assert.equal(h.requests.filter(r=>r.type==='dsh:quote-result').at(-1).ok,false)
 })
 
 test('rejects foreign messages, changed selections and late responses after hiding the panel',async t=>{

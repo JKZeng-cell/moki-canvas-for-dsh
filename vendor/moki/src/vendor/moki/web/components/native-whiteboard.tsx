@@ -1,4 +1,5 @@
 import {t, useI18n, getLanguage} from '../../../../web/i18n.js';
+import {DshSelectionAction} from '../../../../web/dsh-selection-action.js';
 import {
   useCallback,
   useEffect,
@@ -6647,6 +6648,8 @@ export function NativeWhiteboard({
     textDraft?.shapeId,
     textDraft?.value,
   ]);
+  const dshSelectedShapes = dshEmbed ? editor.getSelectedShapeIds().map(id => editor.getShape(id)).filter((shape): shape is NativeWhiteboardShape => Boolean(shape)) : [];
+  const dshSelectionBounds = selectionBounds(dshSelectedShapes);
   const selectedTextShapes = editor.getSelectedShapeIds()
     .map((id) => editor.getShape(id))
     .filter((shape): shape is NativeWhiteboardShape => Boolean(
@@ -7025,6 +7028,19 @@ export function NativeWhiteboard({
         onDragLeave={() => setDraggingFile(false)}
         onDrop={dropFiles}
       />
+      {dshEmbed && !readOnly ? <DshSelectionAction
+        root={rootRef} textarea={textInputRef}
+        pageId={currentPageId} pageName={currentPageName}
+        editing={Boolean(textDraft)} finishEditing={commitTextDraft} textValue={textDraft?.value}
+        blocked={Boolean(pageMenuOpen || shapeContextMenu || textColorMenu || selectedPaintMenuOpen || mindMapConnectionDraft || draggingFile)}
+        selectionId={JSON.stringify(dshSelectedShapes.map(shape => [shape.id, shape.x, shape.y, shape.rotation, shape.props]))}
+        bounds={dshSelectionBounds ? {
+          left: toOverlayPixel((dshSelectionBounds.x - cameraRef.current.x) * cameraRef.current.zoom),
+          top: toOverlayPixel((dshSelectionBounds.y - cameraRef.current.y) * cameraRef.current.zoom),
+          width: toOverlayPixel(dshSelectionBounds.w * cameraRef.current.zoom),
+          height: toOverlayPixel(dshSelectionBounds.h * cameraRef.current.zoom),
+        } : undefined}
+      /> : null}
       <input ref={menuMediaInputRef} type="file" accept="image/*,video/*,.mkv,.avi" multiple className="hidden" aria-label={t("添加图片或视频")} onChange={event => {const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; if (files.length) void onImageFiles?.(files, menuMediaPointRef.current);}} />
       {mindMapConnectionDraft && connectionPath ? (
         <svg aria-hidden="true" className="pointer-events-none absolute inset-0 z-[42] h-full w-full overflow-visible">
@@ -7539,7 +7555,7 @@ export function NativeWhiteboard({
               textDraftRef.current = next;
               setTextDraft(next);
             }}
-            onBlur={(event) => { if (!textWidthHandleRef.current || event.relatedTarget !== textWidthHandleRef.current) commitTextDraft(); }}
+            onBlur={(event) => { if (event.relatedTarget instanceof Element && event.relatedTarget.closest('.dsh-selection-action')) return; if (!textWidthHandleRef.current || event.relatedTarget !== textWidthHandleRef.current) commitTextDraft(); }}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 event.preventDefault();

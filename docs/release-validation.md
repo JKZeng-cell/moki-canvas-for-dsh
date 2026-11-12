@@ -1,5 +1,21 @@
 # Release validation
 
+## 1.8.0 · Quote beside a canvas selection
+
+Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64, using the actual DSH conversation composer and side workspace in an isolated demo profile.
+
+- Selecting one or multiple canvas objects reveals a compact chat icon beside the selection. Clicking it adds the native DSH quote and selection screenshot, preserves existing draft text, and focuses the composer. Clearing the selection hides the action; repeated clicks do not duplicate a quote.
+- Highlighting text in the canvas text editor reveals the same action beside the highlighted line. Mouse-selected substrings, a full line, and a two-line selection were quoted exactly. Other text in the element was excluded and no missing-screenshot warning was shown for intentional text-only quotes.
+- Committing the text editor before quoting preserves the captured substring. A same-object size change during commit does not invalidate the quote; selecting a different object, changing page/board, hiding the conversation, cancellation, or a busy composer cannot insert a stale result. Failed requests retain the captured excerpt for Retry.
+- At 359 px workspace width and approximately 70% canvas zoom, the action stayed within the visible canvas, moved to the left of an object near the right edge, and successfully quoted text selected with the mouse. Both Chinese and English action labels are provided.
+- All 50 focused canvas regression tests and 11 plugin integration tests passed. Type checking and the production build passed. No model request or automatic message submission was made.
+- The local linked plugin was backed up and updated. DSH Desktop was exited normally and reopened; discovery reported 1.8.0 and the served canvas contained the new action. The user's saved Simplified Chinese preference and all six existing boards' versions and snapshot hashes were unchanged.
+- The two new public captures use only a purpose-built demo board and unsent example drafts; they contain no personal account, conversation history, or local paths.
+
+![Quote beside selected canvas objects](images/quick-quote-objects.png)
+
+![Quote only highlighted canvas text](images/quick-quote-text.png)
+
 ## 1.7.0 · Follow DSH language
 
 Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. The release tarball was installed in a new isolated DSH Web profile.

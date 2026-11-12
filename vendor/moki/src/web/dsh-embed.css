@@ -127,3 +127,11 @@ html[data-dsh-embed] #root .manager-footer { display: none; }
   html[data-dsh-embed] #root [data-dsh-canvas-fullscreen=true] :is([data-moki-ui="page-materials"], [data-moki-ui="version-history"]) { top: 80px; }
   html[data-dsh-embed] #root :is([data-moki-ui="selected-text-tools"], [data-moki-ui="text-font-size"]) { left: 50% !important; }
 }
+
+html[data-dsh-embed] #root .dsh-selection-action { position: absolute; z-index: 48; width: 32px; height: 32px; border: 1px solid var(--dsh-line); border-radius: 8px; }
+html[data-dsh-embed] #root .dsh-selection-action > button { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; min-height: 0; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--dsh-label); cursor: pointer; }
+html[data-dsh-embed] #root .dsh-selection-action > button:hover { background: var(--dsh-hover); }
+html[data-dsh-embed] #root .dsh-selection-action > button:focus-visible { outline: 2px solid var(--dsh-focus, #6b83df); outline-offset: 2px; }
+html[data-dsh-embed] #root .dsh-selection-action > button[aria-busy=true] { cursor: progress; }
+.dsh-selection-action-label { position: absolute; top: 38px; right: 0; width: max-content; max-width: 200px; padding: 5px 8px; font-size: 11px; line-height: 1.5; border: 1px solid var(--dsh-line); border-radius: 5px; color: var(--dsh-label); background: var(--dsh-surface); box-shadow: var(--dsh-shadow); pointer-events: none; opacity: 0; }
+.dsh-selection-action:hover .dsh-selection-action-label, .dsh-selection-action:focus-within .dsh-selection-action-label { opacity: 1; }

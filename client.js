@@ -60,7 +60,9 @@ window.__ModuleLoader__.load({
     }
     function selectionContent(selection){try{const {visualAttachments,...content}=JSON.parse(selection.content);return JSON.stringify(content)}catch{return selection?.content??''}}
     function selectionKey(boardId,selection){return selection?.itemCount?JSON.stringify([boardId,selection.source,selection.itemCount,selectionContent(selection)]):''}
-    function quoteText(boardId,selection,prompt=''){return [`MOKI 白板 ID：${boardId}`,selection?`选区：${selection.label}\n${selectionContent(selection)}`:'',prompt?`请求：${prompt}`:'请结合此选区和 whiteboard_get_selection 读取、分析或编辑白板。'].filter(Boolean).join('\n\n')}
+    function selectionScope(boardId,selection){try{const content=JSON.parse(selection?.content??'{}');if(selection?.source==='whiteboard'&&Array.isArray(content.selectedShapes))return JSON.stringify([boardId,selection.source,content.pageId,content.selectedShapes.map(shape=>shape.id).sort()])}catch{}return selectionKey(boardId,selection)}
+    function isTextSelection(selection){try{return JSON.parse(selection.content).kind==='whiteboard_text_selection'}catch{return false}}
+    function quoteText(boardId,selection,prompt=''){return [`MOKI 白板 ID：${boardId}`,selection?`选区：${selection.label}\n${selectionContent(selection)}`:'',prompt?`请求：${prompt}`:isTextSelection(selection)?'仅针对引用中 selectedText 的划选文字进行对话；其他文字未被引用。':'请结合此选区和 whiteboard_get_selection 读取、分析或编辑白板。'].filter(Boolean).join('\n\n')}
     function draftIncludes(draft,text){return !!text&&String(draft??'').replace(/^> ?/gm,'').includes(text)}
     function selectionPreview(selection){
       try{const data=JSON.parse(selection.content),items=data.selectedShapes??data.annotations??[];return items.map(item=>item.text??item.annotation??item.name??item.title??item.type??'').filter(Boolean).join(' · ')||selection.label}catch{return selection?.label??''}
@@ -95,7 +97,7 @@ window.__ModuleLoader__.load({
       const frame=React.useRef(null),bridge=React.useRef(crypto.randomUUID()),latest=React.useRef({tab,inputActions})
       latest.current={tab,inputActions,input,phase,boardId,selection}
       const send=React.useCallback((type,body={})=>{if(url)frame.current?.contentWindow?.postMessage({type,bridgeId:bridge.current,...body},new URL(url).origin)},[url])
-      const finish=React.useCallback(error=>{const current=pendingRef.current;if(current)clearTimeout(current.timer);pendingRef.current=null;setPending(null);setShareError(error??'')},[])
+      const finish=React.useCallback((error,warning)=>{const current=pendingRef.current;if(current)clearTimeout(current.timer);pendingRef.current=null;setPending(null);setShareError(error??'');if(current?.inline)send('dsh:quote-result',{requestId:current.requestId,ok:!error,message:error||warning})},[send])
       const share=React.useCallback(()=>{
         const current=latest.current
         if(pendingRef.current||!current.tab.visible||current.phase!=='ready'||!current.boardId||!current.selection?.itemCount)return
@@ -111,7 +113,7 @@ window.__ModuleLoader__.load({
         else updateSelectionView(sessionId,bridge.current,null)
         return()=>updateSelectionView(sessionId,bridge.current,null)
       },[sessionId,tab.visible,phase,boardId,selection,pending,shareError,textOnly,share])
-      React.useEffect(()=>{if(!tab.visible){finish();setSelection(null)}},[tab.visible,finish])
+      React.useEffect(()=>{if(!tab.visible){finish(t('changed'));setSelection(null)}},[tab.visible,finish])
       React.useEffect(()=>()=>{if(pendingRef.current)clearTimeout(pendingRef.current.timer);pendingRef.current=null;updateSelectionView(sessionId,bridge.current,null)},[sessionId])
       React.useEffect(()=>{
         let disposed=false;const abort=new AbortController();setPhase('loading');setNotice('');setUrl(undefined);setFullscreen(false);setSelection(null);setBoardId(null);finish()
@@ -136,7 +138,7 @@ window.__ModuleLoader__.load({
           if(data.type==='moki:state'){
             const nextKey=selectionKey(data.boardId,data.selection),oldKey=selectionKey(latest.current.boardId,latest.current.selection)
             if(nextKey!==oldKey){setShareError('');setTextOnly(false)}
-            if(pendingRef.current&&pendingRef.current.key!==nextKey)finish(t('changed'))
+            if(pendingRef.current&&(pendingRef.current.scope!==undefined?pendingRef.current.scope!==selectionScope(data.boardId,data.selection):pendingRef.current.key!==nextKey))finish(t('changed'))
             setSelection(data.selection)
             setBoardId(data.boardId)
             try{if(data.boardId)localStorage.setItem(`moki:dsh:board:${sessionId}`,data.boardId);else localStorage.removeItem(`moki:dsh:board:${sessionId}`)}catch{}
@@ -145,13 +147,24 @@ window.__ModuleLoader__.load({
             if(!data.requestId||pendingRef.current?.requestId===data.requestId){setNotice(data.message);if(data.requestId)finish(data.message)}
           }
           if(data.type==='moki:layout')setFullscreen(data.fullscreen===true)
+          if(data.type==='moki:quote-request'){
+            const current=latest.current
+            const matches=data.selectionScope!==undefined?data.selectionScope===selectionScope(current.boardId,current.selection):data.selectionKey===selectionKey(current.boardId,current.selection)
+            const error=!current.tab.visible||current.phase!=='ready'||data.boardId!==current.boardId||!matches?t('changed'):current.input?.phase!=='plain'||pendingRef.current?t('plainOnly'):!data.quoteKey?t('noSelection'):null
+            if(error){send('dsh:quote-result',{requestId:data.requestId,ok:false,message:error});return}
+            const timer=setTimeout(()=>{if(pendingRef.current?.requestId===data.requestId){finish(t('timedOut'));setNotice(t('timedOut'))}},15000)
+            pendingRef.current={requestId:data.requestId,key:data.selectionKey,scope:data.selectionScope,quoteKey:data.quoteKey,inline:true,timer};setPending(data.requestId);setShareError('');setTextOnly(false)
+            send('dsh:quote',{requestId:data.requestId,selectionKey:data.selectionKey})
+          }
+          if(data.type==='moki:quote-cancel'&&pendingRef.current?.requestId===data.requestId)finish(t('changed'))
           if(data.type==='moki:quote'&&latest.current.tab.visible){
             if(data.requestId&&pendingRef.current?.requestId!==data.requestId)return
-            if(data.requestId&&selectionKey(data.boardId,data.selection)!==pendingRef.current?.key){finish(t('changed'));return}
+            if(data.requestId&&selectionKey(data.boardId,data.selection)!==(pendingRef.current?.quoteKey??pendingRef.current?.key)){finish(t('changed'));return}
             if(data.boardId!==latest.current.boardId){finish(t('changed'));return}
             if(!data.selection&&!data.prompt){finish(t('noSelection'));setNotice(t('noSelection'));return}
             const text=quoteText(data.boardId,data.selection,data.prompt)
             if(draftIncludes(latest.current.input?.draft,text)){finish();return}
+            if(latest.current.input?.phase!=='plain'){finish(t('plainOnly'));setNotice(t('plainOnly'));return}
             const ok=latest.current.inputActions?.insertQuote(text)
             if(ok){
               try{
@@ -166,8 +179,9 @@ window.__ModuleLoader__.load({
                 }
                 transfers.current.set(key,known);if(transfers.current.size>20)transfers.current.delete(transfers.current.keys().next().value)
                 const hasImage=[...known.values()].some(id=>activeIds.has(id))
-                latest.current.inputActions.persistDraft();setTextOnly(!!data.imageWarning||!hasImage&&!!data.selection);setNotice(data.imageWarning||!hasImage&&data.selection?t('textOnly'):t('sent'));finish()
-              }catch(error){latest.current.inputActions.persistDraft();setTextOnly(true);finish();setNotice(t('textOnly')+'：'+error.message)}
+                const partial=!!data.imageWarning||!hasImage&&!!data.selection&&!isTextSelection(data.selection)
+                latest.current.inputActions.persistDraft();setTextOnly(partial);setNotice(partial?t('textOnly'):t('sent'));finish(undefined,partial?t('textOnly'):undefined)
+              }catch(error){latest.current.inputActions.persistDraft();setTextOnly(true);finish(undefined,t('textOnly')+'：'+error.message);setNotice(t('textOnly')+'：'+error.message)}
             }else{finish(t('busy'));setNotice(t('busy'))}
           }
         }

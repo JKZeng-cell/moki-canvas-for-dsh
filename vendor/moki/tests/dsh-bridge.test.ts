@@ -29,6 +29,64 @@ async function request(selection:ReturnType<typeof selected>,origin='http://dsh.
 function messages(type:string){return post.mock.calls.map(call=>call[0]).filter(message=>message.type===type);}
 
 describe('DSH selection transfer',()=>{
+  it('quotes an exact text snapshot without waiting for or attaching the whole-object screenshot, then waits for the real composer receipt',async()=>{
+    await mount();const whole=selected('引用这一句。未选中的其他文字。');await choose(whole);
+    const {quoteDshSelection}=await import('../src/web/dsh-quick-quote.js');
+    const text={...whole,source:'whiteboard' as const,label:'白板划选文字',content:JSON.stringify({kind:'whiteboard_text_selection',pageId:'page:moki',shapeId:'shape:a',selectedText:'引用这一句。',range:{start:0,end:6}})};
+    let resolved=false;
+    const pending=quoteDshSelection(text,new AbortController().signal).then(result=>{resolved=true;return result;});
+    const start=messages('moki:quote-request').at(-1);
+    expect(start).toMatchObject({boardId:'board:a',selectionKey:dshSelectionKey('board:a',whole),quoteKey:dshSelectionKey('board:a',text)});
+    await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://dsh.test',data:{type:'dsh:quote',bridgeId:'bridge-a',requestId:start.requestId,selectionKey:start.selectionKey}})));
+    await waitFor(()=>expect(messages('moki:quote')).toHaveLength(1),{timeout:800});
+    expect(messages('moki:quote')[0]).toMatchObject({requestId:start.requestId,selection:{content:text.content},images:[],imageWarning:false});
+    expect(fetchMock.mock.calls.every(call=>call[0]==='/api/dsh/context')).toBe(true);
+    expect(resolved).toBe(false);
+    const receipt={type:'dsh:quote-result',bridgeId:'bridge-a',requestId:start.requestId,ok:true};
+    await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://untrusted.test',data:receipt})));
+    expect(resolved).toBe(false);
+    await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://dsh.test',data:receipt})));
+    expect(await pending).toMatchObject({ok:true,requestId:start.requestId});
+  });
+
+  it('cancels an inline quote while saving instead of sending a stale selection',async()=>{
+    let release!:()=>void;const saving=new Promise<void>(resolve=>{release=resolve;});
+    await mount(()=>saving);const whole=selected();await choose(whole);
+    const {quoteDshSelection}=await import('../src/web/dsh-quick-quote.js');
+    const controller=new AbortController(),pending=quoteDshSelection(undefined,controller.signal);
+    const start=messages('moki:quote-request').at(-1);
+    await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://dsh.test',data:{type:'dsh:quote',bridgeId:'bridge-a',requestId:start.requestId,selectionKey:start.selectionKey}})));
+    controller.abort();await act(async()=>release());
+    expect(await pending).toMatchObject({ok:false});
+    expect(messages('moki:quote-cancel')).toHaveLength(1);
+    expect(messages('moki:quote')).toHaveLength(0);
+  });
+
+  it('keeps a captured text quote when committing resizes its original object, but rejects a different object',async()=>{
+    let release!:()=>void;let saving=new Promise<void>(resolve=>{release=resolve;});
+    await mount(()=>saving);const whole=selected();await choose(whole);
+    const {quoteDshSelection}=await import('../src/web/dsh-quick-quote.js');
+    const text={...whole,source:'whiteboard' as const,content:JSON.stringify({kind:'whiteboard_text_selection',selectedText:'准备帐篷'})};
+    const begin=async()=>{
+      const controller=new AbortController();const receipt=quoteDshSelection(text,controller.signal);
+      const start=messages('moki:quote-request').at(-1);
+      await act(async()=>dispatchEvent(new MessageEvent('message',{source:parentWindow,origin:'http://dsh.test',data:{type:'dsh:quote',bridgeId:'bridge-a',requestId:start.requestId,selectionKey:start.selectionKey}})));
+      return {controller,receipt};
+    };
+    const first=await begin();
+    const content=JSON.parse(whole.content);content.selectedShapes[0].width=321;
+    await choose({...whole,content:JSON.stringify(content)});await act(async()=>release());
+    await waitFor(()=>expect(messages('moki:quote')).toHaveLength(1));
+    expect(messages('moki:quote')[0].selection.content).toBe(text.content);
+    first.controller.abort();await first.receipt;
+    saving=new Promise<void>(resolve=>{release=resolve;});
+    const second=await begin();content.selectedShapes[0].id='shape:another';
+    await choose({...whole,content:JSON.stringify(content)});await act(async()=>release());
+    await waitFor(()=>expect(messages('moki:error')).toHaveLength(1));
+    expect(messages('moki:quote')).toHaveLength(1);
+    second.controller.abort();await second.receipt;
+  });
+
   it('only follows language messages from its authenticated DSH parent and preserves manual choices',async()=>{
     localStorage.setItem('moki-whiteboard-language','dsh');
     await mount();

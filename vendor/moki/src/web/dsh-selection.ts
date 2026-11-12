@@ -10,3 +10,13 @@ export function dshSelectionContent(selection: Selection): string {
 export function dshSelectionKey(boardId: string | undefined | null, selection: Selection | undefined | null): string {
   return selection?.itemCount ? JSON.stringify([boardId, selection.source, selection.itemCount, dshSelectionContent(selection)]) : '';
 }
+
+/** Inline text is a captured substring. Committing its editor may resize the same
+ * shape; only a different board, page or selected object invalidates that quote. */
+export function dshSelectionScope(boardId: string | undefined | null, selection: Selection | undefined | null): string {
+  try {
+    const content = JSON.parse(selection?.content ?? '{}');
+    if (selection?.source === 'whiteboard' && Array.isArray(content.selectedShapes)) return JSON.stringify([boardId, selection.source, content.pageId, content.selectedShapes.map((shape: {id: string}) => shape.id).sort()]);
+  } catch { /* Other workbench selections retain their full identity. */ }
+  return dshSelectionKey(boardId, selection);
+}

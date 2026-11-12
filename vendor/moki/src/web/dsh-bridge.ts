@@ -2,7 +2,8 @@ import {t, getLanguage, setDshLanguage, subscribeLanguage} from './i18n.js';
 import {useEffect,useRef} from 'react';
 import {readWorkbenchSelectionContext,WORKBENCH_SELECTION_EVENT,MOKI_ASSISTANT_COMPOSE_EVENT,type MokiAssistantComposeRequest} from '../vendor/moki/web/lib/workbench-selection-context.js';
 import type {ThemeMode} from './use-theme.js';
-import {dshSelectionKey} from './dsh-selection.js';
+import {dshSelectionKey,dshSelectionScope} from './dsh-selection.js';
+import {DSH_QUICK_QUOTE,DSH_CANCEL_QUOTE,DSH_QUOTE_RESULT,type QuickQuoteRequest,type QuoteResult} from './dsh-quick-quote.js';
 
 declare global {interface Window {mokiDshEmbed?:boolean;}}
 const query=new URLSearchParams(location.search);
@@ -16,7 +17,9 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
   if(!config?.sessionId||!config.instanceId||!config.parentOrigin||parent===window)return;
   const {sessionId,instanceId,parentOrigin}=config;
   let active=true,disposed=false,sharing=false,serial=Promise.resolve();
+  let quick: (QuickQuoteRequest & {boardId:string;key:string;scope:string}) | undefined;
   const send=(type:string,detail:Record<string,unknown>={})=>parent.postMessage({type,bridgeId:instanceId,...detail},parentOrigin);
+  const result=(detail:QuoteResult)=>dispatchEvent(new CustomEvent(DSH_QUOTE_RESULT,{detail}));
   const publishLanguage=()=>send('moki:language',{language:getLanguage()});
   const unsubscribeLanguage=subscribeLanguage(publishLanguage);
   const selection=()=>{const value=readWorkbenchSelectionContext();return value?{...value,label:value.label.slice(0,1000),content:value.content.slice(0,200000)}:null;};
@@ -31,21 +34,23 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
    if(sharing){if(requestId)send('moki:error',{requestId,message:t("正在读取选区，请稍后重试")});return;}
    sharing=true;
    const sharedBoardId=latest.current.boardId;
+   const inline=quick?.requestId===requestId?quick:undefined;
    const initialKey=dshSelectionKey(sharedBoardId,selection());
    const readCurrent=()=>{
     if(disposed||!active)throw new Error(t("白板已隐藏，请重新打开后加入对话"));
     const current=selection();
-    if(latest.current.boardId!==sharedBoardId||dshSelectionKey(sharedBoardId,current)!==initialKey)throw new Error(t("选区已变化，请重新点击加入对话"));
-    return current;
+    if(latest.current.boardId!==sharedBoardId||(inline?.selection?dshSelectionScope(sharedBoardId,current)!==inline.scope:dshSelectionKey(sharedBoardId,current)!==initialKey))throw new Error(t("选区已变化，请重新点击加入对话"));
+    if(inline&&quick!==inline)throw new Error(t("选区已变化，请重新点击加入对话"));
+    return inline?.selection??current;
    };
    try{
-    if(expectedKey&&expectedKey!==initialKey)throw new Error(t("选区已变化，请重新点击加入对话"));
-    if(!initialKey&&!prompt)throw new Error(t("请先在白板中选择内容"));
+    if((!inline?.selection&&expectedKey!==undefined&&expectedKey!==initialKey)||(inline&&inline.boardId!==sharedBoardId))throw new Error(t("选区已变化，请重新点击加入对话"));
+    if(!initialKey&&!prompt&&!inline?.selection)throw new Error(t("请先在白板中选择内容"));
     await latest.current.flush();
     // Native selection export is debounced; allow its actual canvas image to settle.
     let selected=readCurrent();
     const imagesOf=()=>{try{return JSON.parse(selected?.content??'{}').visualAttachments??[];}catch{return [];}};
-    for(let attempt=0;selected&&imagesOf().length===0&&attempt<30;attempt++){await new Promise(resolve=>setTimeout(resolve,100));selected=readCurrent();}
+    for(let attempt=0;!inline?.selection&&selected&&imagesOf().length===0&&attempt<30;attempt++){await new Promise(resolve=>setTimeout(resolve,100));selected=readCurrent();}
     const results=await Promise.allSettled(imagesOf().slice(0,3).map(async(image:{imageSource?:string;name?:string})=>{
      if(typeof image.imageSource!=='string')throw new Error(t("选区图片地址无效"));
      const url=new URL(image.imageSource,location.href);
@@ -70,6 +75,21 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
    if(data.type==='dsh:theme'&&(data.theme==='light'||data.theme==='dark'))latest.current.setTheme(data.theme);
    if(data.type==='dsh:active'){active=data.active===true;void publish();}
    if(data.type==='dsh:quote'&&active)void share(undefined,data.requestId,data.selectionKey);
+   if(data.type==='dsh:quote-result'&&data.requestId===quick?.requestId){quick=undefined;result({requestId:data.requestId,ok:data.ok===true,message:data.message});}
+  };
+  const onQuick=(event:Event)=>{
+   const request=(event as CustomEvent<QuickQuoteRequest>).detail;
+   if(!request?.requestId)return;
+   const boardId=latest.current.boardId;
+   if(!active||!boardId||quick||sharing){result({requestId:request.requestId,ok:false,message:t('正在读取选区，请稍后重试')});return;}
+   const current=selection(),key=dshSelectionKey(boardId,current);
+   const scope=dshSelectionScope(boardId,current);
+   quick={...request,boardId,key,scope};
+   send('moki:quote-request',{requestId:request.requestId,boardId,selectionKey:key,...(request.selection?{selectionScope:scope}:{}),quoteKey:dshSelectionKey(boardId,request.selection??current)});
+  };
+  const onCancel=(event:Event)=>{
+   const {requestId}=(event as CustomEvent<{requestId:string}>).detail;
+   if(quick?.requestId===requestId){quick=undefined;send('moki:quote-cancel',{requestId});}
   };
   const onSelection=()=>void publish();
   const onCompose=(event:Event)=>{event.stopImmediatePropagation();const request=(event as CustomEvent<MokiAssistantComposeRequest>).detail;void share(request?.prompt);};
@@ -77,13 +97,15 @@ export function useDshBridge(boardId:string|undefined,flush:()=>Promise<void>,se
   const layout=(event:Event)=>send('moki:layout',{fullscreen:(event as CustomEvent<boolean>).detail===true});
   addEventListener('moki:dsh-fullscreen',layout);
   addEventListener('message',receive);
+  addEventListener(DSH_QUICK_QUOTE,onQuick);
+  addEventListener(DSH_CANCEL_QUOTE,onCancel);
   addEventListener(WORKBENCH_SELECTION_EVENT,onSelection);
   addEventListener(MOKI_ASSISTANT_COMPOSE_EVENT,onCompose,true);
   addEventListener('focus',focus);
   publishRef.current=()=>void publish();
   const timer=setInterval(()=>{if(active)void publish();},15000);
   send('moki:ready');publishLanguage();void publish();
-  return()=>{disposed=true;unsubscribeLanguage();clearInterval(timer);publishRef.current=undefined;removeEventListener('moki:dsh-fullscreen',layout);removeEventListener('message',receive);removeEventListener(WORKBENCH_SELECTION_EVENT,onSelection);removeEventListener(MOKI_ASSISTANT_COMPOSE_EVENT,onCompose,true);removeEventListener('focus',focus);void publish();};
+  return()=>{disposed=true;quick=undefined;unsubscribeLanguage();clearInterval(timer);publishRef.current=undefined;removeEventListener('moki:dsh-fullscreen',layout);removeEventListener('message',receive);removeEventListener(DSH_QUICK_QUOTE,onQuick);removeEventListener(DSH_CANCEL_QUOTE,onCancel);removeEventListener(WORKBENCH_SELECTION_EVENT,onSelection);removeEventListener(MOKI_ASSISTANT_COMPOSE_EVENT,onCompose,true);removeEventListener('focus',focus);void publish();};
  },[]);
  useEffect(()=>{if(config){sessionStorage.removeItem('moki.current-workbench-selection');publishRef.current?.();}},[boardId]);
 }

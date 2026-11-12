@@ -8,11 +8,17 @@
 
 MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限画布带进 DeepSeek Harness 侧边工作区。你可以随手画下想法，将它展开成思维导图，把便签、图片、文件、链接、音视频放在同一处，逐步整理成完整项目。紧凑界面跟随 DSH 的深浅色主题，让画布保留更多空间。
 
-白板与对话可以双向协作：让 DSH 读取、创建和修改画布，或选中画布内容，点击输入框旁的“加入对话”，将文字引用和选区截图放进当前草稿，再由你决定何时发送。插件内置六页可编辑的“星空露营短片”简介，用真实的白板工具带你边玩边学。
+白板与对话可以双向协作：让 DSH 读取、创建和修改画布，或点击**选区旁的对话图标**，直接引用到当前对话。选中对象时附带元素信息与截图；编辑文字时划选一段，则只引用选中的文字。原有草稿会保留，焦点自动回到 DSH 输入框，再由你决定何时发送。插件内置六页可编辑的“星空露营短片”简介，用真实的白板工具带你边玩边学。
 
 ## 界面预览
 
-以下均为独立演示环境中的 DSH 暗调主界面实拍。左侧白板入口、对话输入框和右侧工作区同时保留，展示插件在 DSH 中的状态与交互方式。只使用内置示例，不包含个人白板、账号、聊天记录和本机路径；输入框中的文字是未发送的演示草稿。
+以下均为独立演示环境中的 DSH 暗调主界面实拍。左侧白板入口、对话输入框和右侧工作区同时保留，展示插件在 DSH 中的状态与交互方式。只使用内置简介和演示内容，不包含个人白板、账号、聊天记录和本机路径；输入框中的文字是未发送的演示草稿。
+
+**1.8 新增：在选区旁直接引用。** 选中一个或多个画布对象，或双击文字进入编辑后划选片段，点击旁边的“引用到 DSH”即可。按钮适配窄工作区和画布缩放；输入框旁原有的“加入对话”入口继续可用。
+
+![在 DSH 中点击选中对象旁的对话图标](docs/images/quick-quote-objects.png)
+
+![划选一段白板文字，只将该片段引用到 DSH](docs/images/quick-quote-text.png)
 
 **1. 从左侧入口打开白板，与对话并排工作。**
 
@@ -50,12 +56,12 @@ MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限�
 - **把素材放在手边：**加入图片、文件、链接、音视频，通过当前页面素材列表搜索、定位、重命名和预览。
 - **整理整个项目：**多页面与页面分组、版本历史、`.moki` 导入导出、图片导出，让内容持续可编辑。
 - **让 DSH 参与：**工具和活动白板上下文自动接入，可通过对话读取、创建、修改、排版和导出，无需单独配置 MCP。
-- **选中后加入对话：**点击输入框旁的选区提示，将文字与截图加入草稿，保留已输入内容；不会自动发送消息。
+- **选区旁直接引用：**点击浮动对话图标，将所选对象与截图加入草稿，或只引用编辑时划选的文字。保留已输入内容，自动聚焦 DSH 输入框，防止重复插入；也可继续使用输入框旁的选区提示，不会自动发送消息。
 - **在介绍里直接试：**六页内置简介包含可编辑对象、真实脑图节点、可展开的素材分组，以及可离线使用的小型图片、音频和视频示例。
 
 ## 支持置入的格式
 
-可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.7.0** 的置入与预览方式：
+可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.8.0** 的置入与预览方式：
 
 | 类型 | 格式 | 在白板中的使用方式 |
 | --- | --- | --- |
@@ -85,13 +91,13 @@ Markdown、JSON、CSV 和 TSV 文件在当前 DSH 素材窗口中按原文展示
 在 DSH 中打开一个可使用插件管理工具的对话，将下面整段文字复制到输入框并发送：
 
 ```text
-请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.7.0。
+请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.8.0。
 
 项目地址：https://github.com/JKZeng-cell/moki-canvas-for-dsh
 请先阅读项目安装说明，然后使用当前环境的 plugin_manager 工具：
 先用 list_bundles 检查已安装插件；同版本已安装时直接确认或用 set_bundle 启用，无需重复安装。
 尚未安装时，用 install_bundle 安装下面的预构建包，并设置 enabled=true：
-https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.7.0/dsh-moki-canvas-1.7.0.tgz
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.8.0/dsh-moki-canvas-1.8.0.tgz
 
 安装后检查 dsh-moki-canvas 的版本和启用状态，告诉我从左侧栏或右侧工作区打开白板的方法。
 如果结果为 restart-required，请提醒我重启 DSH。保留现有白板、附件及其他插件。
@@ -101,12 +107,12 @@ https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.7.0/dsh-
 
 ### 手动安装
 
-1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.7.0) 下载 `dsh-moki-canvas-1.7.0.tgz`。
+1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.8.0) 下载 `dsh-moki-canvas-1.8.0.tgz`。
 2. 桌面版用户从应用菜单的“管理 dsh 命令…”安装或修复桌面版自带命令，在新终端运行 `dsh --version` 确认版本与桌面端一致。然后从应用菜单或托盘完全退出 DSH；仅关闭窗口可能仍在后台运行。
 3. 在安装包所在目录执行：
 
    ```sh
-   dsh plugin --profile desktop add ./dsh-moki-canvas-1.7.0.tgz
+   dsh plugin --profile desktop add ./dsh-moki-canvas-1.8.0.tgz
    dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 

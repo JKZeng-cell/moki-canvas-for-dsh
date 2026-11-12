@@ -1,5 +1,12 @@
 /** English interface copy. Chinese source strings are stable catalog keys. */
 export const en = {
+    "引用到 DSH": "Quote in DSH",
+    "正在加入对话…": "Adding to chat…",
+    "已加入对话草稿": "Added to chat draft",
+    "重试加入对话": "Retry adding to chat",
+    "读取选区超时，请重试": "Selection request timed out. Try again.",
+    "白板划选文字": "Highlighted canvas text",
+    "仅引用划选的文字；未包含该元素中的其他文字。": "Only the highlighted text is quoted; other text in this element is excluded.",
     "请求失败": "Request failed",
     "白板 ID：{0}\n请先通过 whiteboard_inspect 读取 agentContext，确认当前选区和编辑请求。\n\n{1}": "Board ID: {0}\nFirst use whiteboard_inspect to read agentContext and confirm the current selection and edit request.\n\n{1}",
     "白板正在加载，请稍后保存": "The canvas is loading. Please try saving again shortly.",
