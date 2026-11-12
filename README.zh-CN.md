@@ -55,7 +55,7 @@ MOKI 白板 for DSH（英文名 **MOKI Canvas for DSH**）将可编辑的无限�
 
 ## 支持置入的格式
 
-可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.6.0** 的置入与预览方式：
+可以拖入文件、粘贴图片或网址，也可以通过工具栏添加素材。以下是 **DSH 插件 v1.6.1** 的置入与预览方式：
 
 | 类型 | 格式 | 在白板中的使用方式 |
 | --- | --- | --- |
@@ -78,18 +78,20 @@ Markdown、JSON、CSV 和 TSV 文件在当前 DSH 素材窗口中按原文展示
 
 在白板右上角打开 **更多白板操作 → 白板设置 → 常规 → 界面语言**，选择 **English** 或 **简体中文**；也可以从白板列表的设置按钮进入。编辑器、菜单、素材列表、弹窗和 DSH 选区提示会立即切换，重新打开后保留语言选择。已有的白板内容、页面名称和文件保持原样，内置简介仍为中文示例白板。
 
+在 DSH 运行期间更新插件后，请先完全退出并重新打开 DSH，再保存语言设置。仅刷新白板页面不会加载新版插件服务。如果旧版服务仍在运行，设置中会明确提示重启；重启后重新选择一次语言即可保存。
+
 ### 通过对话安装
 
 在 DSH 中打开一个可使用插件管理工具的对话，将下面整段文字复制到输入框并发送：
 
 ```text
-请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.6.0。
+请帮我安装并启用 MOKI 白板 for DSH（MOKI Canvas for DSH）v1.6.1。
 
 项目地址：https://github.com/JKZeng-cell/moki-canvas-for-dsh
 请先阅读项目安装说明，然后使用当前环境的 plugin_manager 工具：
 先用 list_bundles 检查已安装插件；同版本已安装时直接确认或用 set_bundle 启用，无需重复安装。
 尚未安装时，用 install_bundle 安装下面的预构建包，并设置 enabled=true：
-https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.6.0/dsh-moki-canvas-1.6.0.tgz
+https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.6.1/dsh-moki-canvas-1.6.1.tgz
 
 安装后检查 dsh-moki-canvas 的版本和启用状态，告诉我从左侧栏或右侧工作区打开白板的方法。
 如果结果为 restart-required，请提醒我重启 DSH。保留现有白板、附件及其他插件。
@@ -99,12 +101,12 @@ https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/download/v1.6.0/dsh-
 
 ### 手动安装
 
-1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.6.0) 下载 `dsh-moki-canvas-1.6.0.tgz`。
+1. 在 [Releases](https://github.com/JKZeng-cell/moki-canvas-for-dsh/releases/tag/v1.6.1) 下载 `dsh-moki-canvas-1.6.1.tgz`。
 2. 桌面版用户从应用菜单的“管理 dsh 命令…”安装或修复桌面版自带命令，在新终端运行 `dsh --version` 确认版本与桌面端一致。然后从应用菜单或托盘完全退出 DSH；仅关闭窗口可能仍在后台运行。
 3. 在安装包所在目录执行：
 
    ```sh
-   dsh plugin --profile desktop add ./dsh-moki-canvas-1.6.0.tgz
+   dsh plugin --profile desktop add ./dsh-moki-canvas-1.6.1.tgz
    dsh plugin --profile desktop list dsh-moki-canvas --depth 0
    ```
 

@@ -10,7 +10,7 @@ import {newMindMapLabel, newCanvasSnapshot} from '../src/web/new-content-labels.
 import {NATIVE_COLOR_OPTIONS} from '../src/vendor/moki/web/components/native-whiteboard.js';
 import {dismissTopModalFromTarget} from '../src/vendor/moki/web/lib/modal-outside-dismiss.js';
 
-afterEach(() => { cleanup(); setLanguage('zh-CN'); localStorage.clear(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); setLanguage('zh-CN'); localStorage.clear(); delete window.mokiDshEmbed; vi.unstubAllGlobals(); });
 function Demo() {
   const [tab, setTab] = useState<SettingsTab>('general');
   const [draft, setDraft] = useState('已有文字 · My idea');
@@ -62,6 +62,22 @@ describe('interface language', () => {
     fireEvent.click(screen.getByRole('button', {name: 'Retry'}));
     await waitFor(() => expect(screen.queryByText(/Language changed, but could not be saved/)).not.toBeInTheDocument());
     expect(getLanguage()).toBe('en');
+  });
+  it.each([404, 405])('explains that an old DSH host must restart when the save route returns %s', async status => {
+    window.mokiDshEmbed = true;
+    vi.stubGlobal('fetch', vi.fn((url: string) => url === '/api/preferences'
+      ? Promise.resolve(new Response(JSON.stringify({error: '资源不存在'}), {status}))
+      : respond({})));
+    render(<Demo/>);
+    fireEvent.change(screen.getByLabelText('界面语言'), {target: {value: 'en'}});
+    expect(await screen.findByText(/Quit and reopen DSH/)).toHaveAttribute('role', 'status');
+    expect(screen.queryByRole('button', {name: 'Retry'})).not.toBeInTheDocument();
+    expect(screen.queryByText(/could not be saved/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Interface language')).not.toBeDisabled();
+    expect(screen.getByLabelText('Unsubmitted draft')).toHaveValue('已有文字 · My idea');
+    expect(getLanguage()).toBe('en');
+    fireEvent.change(screen.getByLabelText('Interface language'), {target: {value: 'zh-CN'}});
+    expect(await screen.findByText(/请完全退出并重新打开 DSH/)).toHaveAttribute('role', 'status');
   });
   it('serializes preference writes and preserves parameter text verbatim', async () => {
     const saved: string[] = []; let release!: () => void;

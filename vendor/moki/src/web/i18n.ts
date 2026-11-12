@@ -2,6 +2,12 @@ import {useSyncExternalStore} from 'react';
 import {en} from './locales/en.js';
 
 export type InterfaceLanguage = 'zh-CN' | 'en';
+export class LanguageSaveError extends Error {
+  constructor(readonly code: 'restart-required' | 'save-failed') {
+    super(code);
+    this.name = 'LanguageSaveError';
+  }
+}
 export const LANGUAGE_STORAGE_KEY = 'moki-whiteboard-language';
 const listeners = new Set<() => void>();
 const valid = (value: unknown): value is InterfaceLanguage => value === 'zh-CN' || value === 'en';
@@ -54,7 +60,10 @@ export function saveLanguage(value: InterfaceLanguage): Promise<void> {
   // Serialize rapid switches so an older request cannot overwrite the newest choice.
   pendingSave = pendingSave.catch(() => {}).then(async () => {
     const response = await fetch('/api/preferences', {method: 'PUT', headers: {'content-type': 'application/json'}, body: JSON.stringify({language: value}), signal: AbortSignal.timeout(10000)});
-    if (!response.ok) throw new Error(t('语言已切换，但保存失败，请重试。'));
+    // A linked plugin can serve new UI files while DSH still runs its old host.
+    // Retrying cannot add a route that only exists after the host restarts.
+    if (response.status === 404 || response.status === 405) throw new LanguageSaveError('restart-required');
+    if (!response.ok) throw new LanguageSaveError('save-failed');
   });
   return pendingSave;
 }

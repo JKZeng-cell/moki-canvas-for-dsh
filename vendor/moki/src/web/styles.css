@@ -31,6 +31,7 @@ html[data-color-scheme=dark] .native-mcp-modal{background:#242a3c;color:#eef0f8}
  html[data-color-scheme=dark] .whiteboard-window-progress>span{background:#242a3c;border-color:#3a4157}
 html[data-color-scheme=dark] #root .whiteboard-canvas-frame{border-color:#30384c!important;box-shadow:0 12px 38px rgba(5,8,18,.12)}
 .settings-language-section { padding-bottom: 14px; border-bottom: 1px solid var(--dsh-line, #dde0e9); }
+.settings-language-notice { margin: 8px 0 0; font-size: 12px; line-height: 1.6; color: var(--dsh-muted, #8b90a1); }
 .settings-language-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .settings-language-row > span { min-width: 0; }
 .settings-language-row strong, .settings-language-row small { display: block; }

@@ -24,6 +24,10 @@ test('DSH tools use valid JSON Schema, share the real canvas, and reject stale w
     const info=await (await routes[0].resource()).json();url=info.appUrl
     assert.equal(routes[0].kind,'exact')
     assert.equal((await fetch(new URL('api/health',url))).status,200)
+    assert.deepEqual(await (await fetch(new URL('api/preferences',url))).json(),{language:null})
+    const languageSaved=await fetch(new URL('api/preferences',url),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({language:'en'})})
+    assert.equal(languageSaved.status,200)
+    assert.deepEqual(await languageSaved.json(),{language:'en'})
     const exec=(name,args={},sessionId='chat-a')=>tools.get(name).execute(args,{agent:{session:{id:sessionId}}})
     const created=await exec('whiteboard_create',{title:'DSH integration test'})
     boardId=created.board.id
@@ -74,6 +78,7 @@ test('DSH tools use valid JSON Schema, share the real canvas, and reject stale w
   }
   const reopened=await createRuntime({dataDir:dir})
   try{
+    assert.deepEqual(await (await fetch(new URL('api/preferences',reopened.appUrl))).json(),{language:'en'})
     assert.equal(reopened.store.get(boardId).title,'DSH integration test')
     assert.ok(JSON.stringify(reopened.store.get(boardId).snapshot).includes('Batch leaf'))
     assert.ok(!JSON.stringify(reopened.store.get(boardId).snapshot).includes('Must roll back'))

@@ -1,5 +1,16 @@
 # Release validation
 
+## 1.6.1 · Language saving after an upgrade
+
+Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64.
+
+- The running Desktop instance reported host 1.5.0 while its linked UI files had been updated to 1.6.0. Its `/api/preferences` endpoint returned 404. A page refresh could load the new UI without restarting the old service.
+- Missing language-save endpoints (404/405) now show a localized restart instruction and preserve the current language and draft. Transient save errors still offer Retry.
+- The 1.6.1 tarball was installed in the isolated DSH Web test profile. The actual plugin discovery reported 1.6.1; switching between Chinese and English saved successfully with no error. All three demo boards were compared before and after and remained unchanged.
+- The former 404 response was replayed in the browser: both language variants showed the restart instruction without the ineffective Retry control. Restoring the current endpoint allowed a successful save.
+- All 9 focused language tests and 8 plugin integration tests passed, including preference persistence across a real built-host restart. Type checking and the production build passed.
+- With the user's approval, the actual DSH Desktop app was exited normally from its application menu and reopened. Discovery then reported host 1.6.1 and the preference endpoint returned 200. English was saved and the reloaded desktop canvas and selection controls displayed English. All six existing boards matched their pre-restart contents and versions.
+
 ## 1.6.0 · Chinese and English interface
 
 Verified on 2026-11-12 with DeepSeek Harness 0.2.2-rc.1 on Windows x64. The release tarball was installed through the DSH CLI in the isolated Web demo profile and opened beside a real DSH conversation.
